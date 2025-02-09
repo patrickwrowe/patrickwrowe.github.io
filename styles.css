@@ -35,6 +35,7 @@ body {
     padding-top: 5%;
     padding-bottom: 5%;
 
+    -webkit-backdrop-filter: invert(1) blur(5px);
     backdrop-filter: invert(1) blur(7px);
     border-radius: 10px;
 
