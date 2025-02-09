@@ -1,0 +1,60 @@
+html {
+    margin: 0;
+    padding: 0;
+    font-size: 62.5%; /* 1rem = 10px for convenience*/
+
+    /* This is to make sure the background image fills the whole screen */
+    height: 100vh;
+    width: 100vw;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-size: 1.6rem; /* 16px */
+    font-family: Helvetica, sans-serif;
+    
+    overflow: hidden;
+}
+
+.welcome-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #323232;
+    z-index: 1;
+    padding: 5%;
+
+    backdrop-filter: invert(1) blur(7px);
+    border-radius: 10px;
+}
+
+.welcome-text h1 {
+    font-weight: 100;
+    font-size: 10rem;
+    text-align: center;
+}
+
+.welcome-text h2 {
+    font-size: 8rem;
+    text-align: center;
+}
+
+#img-container {
+    position: absolute;
+    min-width: 100vw;
+    margin-top: -10vh;
+    margin-left: -10vw;
+    height: 100vh;
+    width: 100vw;
+}
+
+#background-landing-image {
+    position: absolute;
+    min-width: 150vw;
+    object-fit: cover;
+    margin-top: -25vh;
+    margin-left: -15vw;
+}
