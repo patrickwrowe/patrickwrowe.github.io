@@ -25,10 +25,15 @@ body {
     text-align: center;
     color: #323232;
     z-index: 1;
-    padding: 5%;
+    padding-left: 7%;
+    padding-right: 7%;
+    padding-top: 8%;
+    padding-bottom: 8%;
 
     backdrop-filter: invert(1) blur(7px);
     border-radius: 10px;
+
+    animation: fadeIn 5s;
 }
 
 .welcome-text h1 {
@@ -57,4 +62,13 @@ body {
     object-fit: cover;
     margin-top: -25vh;
     margin-left: -15vw;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
