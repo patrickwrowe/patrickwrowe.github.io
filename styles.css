@@ -27,8 +27,8 @@ body {
     z-index: 1;
     padding-left: 7%;
     padding-right: 7%;
-    padding-top: 8%;
-    padding-bottom: 8%;
+    padding-top: 5%;
+    padding-bottom: 5%;
 
     backdrop-filter: invert(1) blur(7px);
     border-radius: 10px;
