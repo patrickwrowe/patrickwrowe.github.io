@@ -73,13 +73,13 @@ body {
     }
 }
 
-@media only screen and (max-width: 900px) {
+@media only screen and (max-width: 1200px) {
     .welcome-text h1 {
-        font-size: 5rem;
+        font-size: 8rem;
     }
 
     .welcome-text h2 {
-        font-size: 4rem;
+        font-size: 5rem;
     }
 
     #img-container {
@@ -88,6 +88,16 @@ body {
 
     #background-landing-image {
         margin-left: -25vw;
+    }
+}
+
+@media only screen and (max-width: 900px) {
+    .welcome-text h1 {
+        font-size: 8rem;
+    }
+
+    .welcome-text h2 {
+        font-size: 5rem;
     }
 }
 
