@@ -72,3 +72,27 @@ body {
         opacity: 1;
     }
 }
+
+@media only screen and (max-width: 900px) {
+    .welcome-text h1 {
+        font-size: 5rem;
+    }
+
+    .welcome-text h2 {
+        font-size: 4rem;
+    }
+
+    #img-container {
+        margin-left: -25vw;
+    }
+
+    #background-landing-image {
+        margin-left: -25vw;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    #background-landing-image {
+        margin-left: -40vw;
+    }
+}
