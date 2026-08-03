@@ -1,47 +1,36 @@
 ---
 import Base from "@/layouts/Base.astro";
-import DraftNotice from "@/components/DraftNotice.astro";
 import cv from "@/data/cv.yaml";
 
-// src/data/cv.yaml is the single source — spec 02 §5. The PDF rendering and the
-// publications block (from scripts/bib_to_json.py) are both still to come.
+// src/data/cv.yaml is the single source — spec 02 §5. Periods are rendered as the
+// free strings the source CV uses, so no date parsing or formatting happens here.
 //
 // The YAML is not schema-checked (see src/env.d.ts), so these shapes are asserted
-// here rather than validated. Every field is optional because the file is knowingly
-// incomplete — stub entries carry empty roles and dates.
-interface Job {
+// rather than validated.
+interface Entry {
   role?: string;
-  org: string;
-  location?: string;
-  from?: string;
-  to?: string;
-  stub?: boolean;
-  points: string[];
-}
-
-interface Study {
-  qualification: string;
+  qualification?: string;
   org?: string;
-  field?: string;
-  year?: string;
-  stub?: boolean;
+  location?: string;
+  period: string;
+  points?: string[];
+  links?: { label: string; url: string }[];
 }
 
-// timeZone: "UTC" is load-bearing. cv.yaml carries bare "YYYY-MM" values which parse
-// as UTC midnight; formatting those in a local zone behind UTC rolls them back a day
-// and prints the previous month — "2026-01" rendered as "Dec 2025".
-const MONTH = new Intl.DateTimeFormat("en-GB", {
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-const when = (value: string | null | undefined): string =>
-  value ? MONTH.format(new Date(`${value}-01T00:00:00Z`)) : "—";
+interface Skill {
+  label: string;
+  value: string;
+}
+
+const experience = cv.experience as Entry[];
+const education = cv.education as Entry[];
+const technical = cv.technical as Skill[];
+const additional = cv.additional as string[];
 ---
 
 <Base
   title="CV — Patrick Rowe"
-  description="Machine learning engineer working on molecules, materials and proteins."
+  description={cv.about}
   section="cv"
 >
   <section class="shell band">
@@ -50,24 +39,17 @@ const when = (value: string | null | undefined): string =>
       <span class="band__more">{cv.name}{cv.postnominals ? `, ${cv.postnominals}` : ""}</span>
     </div>
 
-    {
-      cv.draft && (
-        <DraftNotice>
-          Generated from <code>src/data/cv.yaml</code>, which is itself incomplete. The
-          Cambridge and UCL entries are named in the landing-page prototype but carry no
-          roles or dates, and there is an unexplained gap between Oct 2024 and Jan 2026.
-          A downloadable PDF does not exist yet.
-        </DraftNotice>
-      )
-    }
+    <p class="cv-about">{cv.about}</p>
 
     <div class="cv-block">
       <h2 class="label cv-block__head">Currently</h2>
       <div class="cv-entry">
-        <span class="cv-entry__when">{when(cv.current.from)} &ndash; present</span>
+        <span class="cv-entry__when">{cv.current.period}</span>
         <div>
           <h3 class="cv-entry__role">{cv.current.role}, {cv.current.org}</h3>
-          <p class="cv-entry__point">{cv.current.focus}</p>
+          <ul class="cv-entry__points">
+            <li class="cv-entry__point">{cv.current.focus}</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -75,22 +57,17 @@ const when = (value: string | null | undefined): string =>
     <div class="cv-block">
       <h2 class="label cv-block__head">Experience</h2>
       {
-        cv.experience.map((job: Job) => (
+        experience.map((job) => (
           <div class="cv-entry">
-            <span class="cv-entry__when">
-              {when(job.from)} &ndash; {when(job.to)}
-            </span>
+            <span class="cv-entry__when">{job.period}</span>
             <div>
               <h3 class="cv-entry__role">
-                {job.role ? `${job.role}, ` : ""}
-                {job.org}
-                {job.stub && <span class="cv-entry__stub">Incomplete</span>}
+                {job.role}
+                {job.org ? `, ${job.org}` : ""}
               </h3>
               {job.location && <p class="cv-entry__where">{job.location}</p>}
               <ul class="cv-entry__points">
-                {job.points.map((point: string) => (
-                  <li class="cv-entry__point">{point}</li>
-                ))}
+                {job.points?.map((point) => <li class="cv-entry__point">{point}</li>)}
               </ul>
             </div>
           </div>
@@ -101,25 +78,77 @@ const when = (value: string | null | undefined): string =>
     <div class="cv-block">
       <h2 class="label cv-block__head">Education</h2>
       {
-        cv.education.map((item: Study) => (
+        education.map((item) => (
           <div class="cv-entry">
-            <span class="cv-entry__when">{item.year ?? "—"}</span>
+            <span class="cv-entry__when">{item.period}</span>
             <div>
               <h3 class="cv-entry__role">
                 {item.qualification}
-                {item.field ? `, ${item.field}` : ""}
-                {item.org ? ` — ${item.org}` : ""}
-                {item.stub && <span class="cv-entry__stub">Incomplete</span>}
+                {item.org ? `, ${item.org}` : ""}
               </h3>
+              {item.location && <p class="cv-entry__where">{item.location}</p>}
+              <ul class="cv-entry__points">
+                {item.points?.map((point) => <li class="cv-entry__point">{point}</li>)}
+              </ul>
+              {item.links && (
+                <p class="cv-entry__links">
+                  {item.links.map((link) => (
+                    <a href={link.url}>{link.label} &nearr;</a>
+                  ))}
+                </p>
+              )}
             </div>
           </div>
         ))
       }
     </div>
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Technical</h2>
+      {
+        technical.map((skill) => (
+          <div class="cv-entry cv-entry--tight">
+            <span class="cv-entry__when">{skill.label}</span>
+            <p class="cv-entry__point">{skill.value}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Also</h2>
+      <div class="cv-entry cv-entry--tight">
+        <span class="cv-entry__when"></span>
+        <ul class="cv-entry__points cv-entry__points--flush">
+          {additional.map((item) => <li class="cv-entry__point">{item}</li>)}
+        </ul>
+      </div>
+    </div>
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Contact</h2>
+      <div class="cv-entry cv-entry--tight">
+        <span class="cv-entry__when">Elsewhere</span>
+        <p class="cv-entry__links">
+          <a class="cv-entry__email" href={`mailto:${cv.links.email}`}>{cv.links.email}</a>
+          <a href={cv.links.scholar}>Google Scholar &nearr;</a>
+          <a href={cv.links.github}>GitHub &nearr;</a>
+          <a href={cv.links.linkedin}>LinkedIn &nearr;</a>
+        </p>
+      </div>
+    </div>
   </section>
 </Base>
 
 <style>
+  .cv-about {
+    font-family: var(--serif);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--ink-soft);
+    max-width: var(--measure-prose);
+    margin-top: 2rem;
+  }
   .cv-block {
     margin-top: 3rem;
   }
@@ -133,6 +162,9 @@ const when = (value: string | null | undefined): string =>
     gap: 0 1.5rem;
     padding-block: 1.5rem;
     border-bottom: 1px solid var(--hairline);
+  }
+  .cv-entry--tight {
+    padding-block: 0.9rem;
   }
   .cv-entry__when {
     font-family: var(--mono);
@@ -148,20 +180,6 @@ const when = (value: string | null | undefined): string =>
     font-weight: 500;
     letter-spacing: -0.01em;
   }
-  .cv-entry__stub {
-    display: inline-block;
-    margin-left: 0.6rem;
-    vertical-align: 0.15em;
-    font-family: var(--mono);
-    font-size: 0.5625rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--lustre);
-    border: 1px solid currentColor;
-    border-radius: 2px;
-    padding: 0.15rem 0.4rem;
-  }
   .cv-entry__where {
     font-family: var(--mono);
     font-size: var(--t-label);
@@ -174,6 +192,9 @@ const when = (value: string | null | undefined): string =>
     margin: 0.6rem 0 0;
     padding-left: 1.1rem;
   }
+  .cv-entry__points--flush {
+    margin-top: 0;
+  }
   .cv-entry__point {
     font-family: var(--serif);
     font-size: var(--t-small);
@@ -184,6 +205,33 @@ const when = (value: string | null | undefined): string =>
   .cv-entry__points .cv-entry__point + .cv-entry__point {
     margin-top: 0.4rem;
   }
+  .cv-entry__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.5rem;
+    margin-top: 0.6rem;
+  }
+  .cv-entry--tight .cv-entry__links {
+    margin-top: 0;
+  }
+  .cv-entry__links a {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    transition: color var(--transition);
+  }
+  .cv-entry__links a:hover {
+    color: var(--lustre);
+  }
+  /* An address is a literal, not a label — uppercasing it misrepresents it.
+   * Needs to out-specify `.cv-entry__links a`, hence the compound selector. */
+  .cv-entry__links a.cv-entry__email {
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
   @media (max-width: 640px) {
     .cv-entry {
       grid-template-columns: 1fr;
@@ -191,6 +239,9 @@ const when = (value: string | null | undefined): string =>
     .cv-entry__when {
       padding-top: 0;
       margin-bottom: 0.5rem;
+    }
+    .cv-entry--tight .cv-entry__when:empty {
+      display: none;
     }
   }
 </style>

@@ -1,51 +1,67 @@
 ---
 import Prose from "@/layouts/Prose.astro";
 import DraftNotice from "@/components/DraftNotice.astro";
+import cv from "@/data/cv.yaml";
+
+// Spec 01 §4: short bio, photo, contact, the climbing/mountaineering paragraph.
+// Everything here is drawn from Patrick_Rowe_CV.pdf; the photo is still missing.
 ---
 
 <Prose
   title="About"
   description="Patrick Rowe — machine learning engineer working on molecules, materials and proteins."
 >
-  <DraftNotice>
-    Placeholder. Spec 01 §4 specifies this page as "short bio, photo, contact, the
-    climbing/mountaineering paragraph". The bio below is assembled from the landing-page
-    hero and the CV; the photo and the climbing paragraph are missing because there is
-    nothing in the repo to write them from.
-  </DraftNotice>
-
   <p>
     I build models that stand in for measurements too slow or too expensive to make:
     interatomic potentials for carbon, property prediction for small molecules, sequence
-    models for antibody engineering.
+    models for antibody engineering. The through-line is computational models for
+    real-world scientific problems, and getting them used by people who are not
+    modellers.
   </p>
 
   <p>
     I am currently a machine learning engineer at <strong>SandboxAQ</strong>, working on
-    drug discovery — small-molecule property prediction, ML engineering, and protein
+    drug discovery — small-molecule property prediction, ML engineering and protein
     language modelling. Before that I was a research scientist in protein engineering at
-    <strong>AbCellera</strong> in Vancouver, building AI and simulation-driven workflows
-    for antibody selection that were deployed across more than thirty clinical targets.
-    Earlier still, Cambridge and UCL.
+    <strong>AbCellera</strong> in Vancouver, where I built AI and simulation-driven
+    workflows for antibody selection and engineering, and led their deployment across
+    more than thirty clinical targets.
+  </p>
+
+  <p>
+    Earlier, I was an industrial research fellow split between the
+    <strong>University of Cambridge</strong> and Happy Electron, designing machine-learned
+    interatomic potentials for energy materials. My PhD was in physics at
+    <strong>UCL</strong>, on accuracy and transferability in machine learning potentials
+    for carbon — the work that produced GAP-20. Before that, chemistry at Warwick, and a
+    year at DSM in the Netherlands developing a 96% bio-renewable alternative to
+    petrochemical alkyd coatings.
+  </p>
+
+  <h2>Away from the desk</h2>
+
+  <p>
+    In 2025 I took a career break to travel, climb, mountaineer and hike. I also learned
+    web development and spent a good deal of time experimenting with language models —
+    this site is downstream of both. Ask me about any of it.
   </p>
 
   <h2>Elsewhere</h2>
 
   <p>
-    <a href="https://scholar.google.com/citations?user=nkR7SB8AAAAJ">Google Scholar</a> is
-    the canonical list of publications. Code is on
-    <a href="https://github.com/patrickwrowe">GitHub</a>. The
+    <a href={cv.links.scholar}>Google Scholar</a> is the canonical list of publications —
+    physics, chemistry, machine learning and cancer research. Code is on
+    <a href={cv.links.github}>GitHub</a>, and there is a
+    <a href={cv.links.linkedin}>LinkedIn</a> if that is more useful. The
     <a href="/cv/">CV</a> has the full record.
   </p>
 
   <p>
     The fastest way to reach me is
-    <a href="mailto:patrick.william.rowe@gmail.com">patrick.william.rowe@gmail.com</a>.
+    <a href={`mailto:${cv.links.email}`}>{cv.links.email}</a>.
   </p>
 
   <DraftNotice>
-    Still needed: a photo, the roles and dates for Cambridge and UCL, and the
-    climbing/mountaineering paragraph — the one part of this page that is meant to sound
-    like a person rather than a record.
+    Still missing: a photo. Spec 01 §4 calls for one on this page.
   </DraftNotice>
 </Prose>

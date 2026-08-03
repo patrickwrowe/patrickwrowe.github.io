@@ -1,69 +1,136 @@
 # Single source of truth for the CV — spec 02 §5.
 #
-# DRAFT. Everything below comes from spec 02 §5 and the landing-page prototype, which
-# were themselves drawn from the CV. Entries marked `stub: true` are known-incomplete:
-# the prototype's hero says "Previously AbCellera, Cambridge and UCL" but gives no
-# roles, dates or institutions beyond the names, and those have been left blank rather
-# than guessed at. There is also an unexplained gap between Oct 2024 and Jan 2026.
+# Transcribed from Patrick_Rowe_CV.pdf. Every line below comes from that document;
+# nothing here is inferred. The one exception is `current`, which the PDF predates —
+# it was confirmed separately and the PDF needs a refresh to match.
 #
-# The PDF rendering (public/patrick-rowe-cv.pdf) does not exist yet. Spec 02 §5
-# recommends keeping a hand-made PDF and adding a CI check that fails if this file
-# changes and the PDF does not.
-
-draft: true
+# Periods are free strings rather than parsed dates because the source CV uses mixed
+# precision ("May 2022 – Oct 2024" but also "2016 – 2020"), and rounding those to a
+# common format would assert precision the record does not have.
 
 name: Patrick Rowe
 postnominals: PhD
 statement: Machine learning for molecules, materials and proteins.
 
+about: >-
+  An experienced researcher with a strong background in machine learning, physics and
+  chemistry, specialising in developing computational models for real-world scientific
+  challenges. I'm looking for a role where I can apply my combined experience in AI/ML
+  and scientific research to the most exciting and challenging problems of today.
+
 current:
   role: Machine Learning Engineer
   org: SandboxAQ
-  from: 2026-01
-  focus: >
-    Small-molecule property prediction, ML engineering for drug discovery,
-    protein language modelling.
+  period: Jan 2026 – present
+  focus: >-
+    Small-molecule property prediction, ML engineering for drug discovery, protein
+    language modelling.
 
 experience:
-  - role: Research Scientist, Protein Engineering
+  - role: "Research Scientist: Protein Engineering"
     org: AbCellera Biologics
-    location: Vancouver, Canada
-    from: 2022-05
-    to: 2024-10
+    location: Canada
+    period: May 2022 – Oct 2024
     points:
-      - AI and simulation-driven workflows for antibody selection and engineering,
-        deployed across more than thirty clinical targets.
-      - Data architecture and automated pipelines for lab-automation data.
-      - Direct engagement with pharmaceutical partners, translating requirements
-        into selection strategies and securing contract milestones.
+      - Developed AI and simulation-driven workflows for selection and engineering of
+        antibodies, targeting discovery of viable therapeutic molecules. Led team
+        training, deployment and execution for >30 clinical targets, spanning early
+        screening to final delivery.
+      - Worked cross-functionally to implement data architecture and automated
+        processing pipelines supporting integration and downstream analysis of lab
+        automation data in internal databases.
+      - Engaged directly with major pharmaceutical partners to understand their needs,
+        translate them into actionable selection strategies and deliver therapeutic
+        candidate molecules, securing key contract milestones.
 
-  - role: # TODO
-    org: University of Cambridge
-    location: Cambridge, UK
-    from: # TODO
-    to: # TODO
-    stub: true
+  - role: Industrial Research Fellow
+    org: University of Cambridge and Happy Electron
+    location: UK
+    period: Jan 2021 – Mar 2022
     points:
-      - TODO — named in the landing-page prototype, no detail given.
+      - Designed specialised machine learning interatomic potentials for energy
+        materials, offering mechanistic insights into experimentally observed physical
+        properties.
+      - Led collaborations with international experimental research teams, connecting
+        modelling with practical applications.
 
-  - role: # TODO
+  - role: PhD Physics
     org: University College London
-    location: London, UK
-    from: # TODO
-    to: # TODO
-    stub: true
+    location: UK
+    period: 2016 – 2020
     points:
-      - TODO — named in the landing-page prototype, no detail given.
+      - Primary research on the development of machine learning techniques for atomistic
+        modelling. Created GAP-20, a world-leading machine learning atomistic potential
+        for carbon, adopted widely in academia and industry, where selected applications
+        include structure searching, phase-diagram prediction and studying
+        graphitisation.
+      - Contributed to creating a machine learning framework for modelling complex
+        solid–liquid interfaces, facilitating the rapid and robust development of
+        accurate simulation models.
+      - Led cross-disciplinary collaborations between UCL and experimentalists at the
+        National Graphene Institute, resulting in high-impact publications (Nature and
+        Nature Communications).
+      - Presented invited and contributed talks at international conferences. Awarded
+        prizes for best poster and presentation. Research featured on the front cover of
+        UCL's 2020 physics prospectus.
+
+  - role: Research Placement (full time)
+    org: DSM Speciality Resins
+    location: Zwolle, Netherlands
+    period: 2014 – 2015
+    points:
+      - Developed a 96% bio-renewable alternative to traditional petrochemical-based
+        polymer alkyd coatings.
 
 education:
-  - qualification: PhD
-    org: # TODO
-    field: # TODO
-    year: # TODO
-    stub: true
+  - qualification: PhD Physics
+    org: University College London
+    location: UK
+    period: 2016 – 2020
+    points:
+      - 'Thesis: "Accuracy and transferability in machine learning potentials for
+        carbon".'
+      - "Recipient: London Centre for Nanotechnology PhD scholarship."
+      - Fundraiser and organiser, "Hermes Summer School 2018". Raised £16,000 funding
+        from UK/EU sources.
+    links:
+      - { label: Thesis, url: "https://discovery.ucl.ac.uk/id/eprint/10130533/" }
+
+  - qualification: MSc Chemistry, 1st Class Honours
+    org: University of Warwick
+    location: UK
+    period: 2012 – 2016
+    points:
+      - Master's research project in theoretical quantum chemistry for energy transfer in
+        light-harvesting proteins for solar cells.
+      - "Recipient: Salters' Institute National Graduate Prize for Chemistry, Warwick
+        Enterprise Award, Warwick Undergraduate Research Scholarship."
+
+  - qualification: International Baccalaureate, 39 points
+    period: 2010 – 2012
+    points:
+      - "Higher level subjects: maths, physics, chemistry."
+
+technical:
+  - label: Languages
+    value: Python (9+ years), C, JavaScript, BASH, HTML, CSS, SQL
+  - label: ML & data
+    value: NumPy, PyTorch, Pandas, scikit-learn, SciPy, ASE
+  - label: Simulation
+    value: GAP, MACE, VASP, CP2K, LAMMPS, ASE, NWChem, Gaussian
+  - label: Practice
+    value: Version control and CI/CD best practices, HPC facilities, 3D modelling
+
+additional:
+  - In 2025 I took a career break to spend time travelling, climbing, mountaineering and
+    hiking. I also learned web development and experimented with language models. Ask me
+    about it.
+  - Strong publication record in physics, chemistry, machine learning and cancer
+    research.
+  - British citizenship, Canadian permanent resident.
 
 links:
   email: patrick.william.rowe@gmail.com
-  scholar: https://scholar.google.com/citations?user=nkR7SB8AAAAJ
+  scholar: https://scholar.google.com/citations?user=nkR7SB8AAAAJ&hl=en
   github: https://github.com/patrickwrowe
   linkedin: https://www.linkedin.com/in/patrick-w-rowe/

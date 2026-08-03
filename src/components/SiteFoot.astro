@@ -1,5 +1,8 @@
 ---
 // Footer. Carries the About link and the contact/elsewhere/documents columns.
+// Links come from cv.yaml so the CV stays the single source (spec 02 §5) and the
+// footer cannot drift out of step with /cv/.
+import cv from "@/data/cv.yaml";
 ---
 
 <footer class="site-foot">
@@ -7,13 +10,13 @@
     <div class="site-foot__grid">
       <div class="site-foot__col">
         <span class="label">Contact</span>
-        <a href="mailto:patrick.william.rowe@gmail.com">patrick.william.rowe@gmail.com</a>
+        <a href={`mailto:${cv.links.email}`}>{cv.links.email}</a>
       </div>
       <div class="site-foot__col">
         <span class="label">Elsewhere</span>
-        <a href="https://scholar.google.com/citations?user=nkR7SB8AAAAJ">Google Scholar</a>
-        <a href="https://github.com/patrickwrowe">GitHub</a>
-        <a href="https://www.linkedin.com/in/patrick-w-rowe/">LinkedIn</a>
+        <a href={cv.links.scholar}>Google Scholar</a>
+        <a href={cv.links.github}>GitHub</a>
+        <a href={cv.links.linkedin}>LinkedIn</a>
       </div>
       <div class="site-foot__col">
         <span class="label">Documents</span>
