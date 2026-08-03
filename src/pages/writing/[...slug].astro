@@ -1,0 +1,38 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection, render } from "astro:content";
+import Prose from "@/layouts/Prose.astro";
+import DraftNotice from "@/components/DraftNotice.astro";
+import { noteDate, isPublished } from "@/lib/content";
+
+export const getStaticPaths = (async () => {
+  const notes = await getCollection("writing", isPublished);
+  return notes.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const meta = noteDate(entry.data);
+---
+
+<Prose
+  title={entry.data.title}
+  description={entry.data.kicker}
+  section="writing"
+  math={entry.data.math}
+  meta={meta || undefined}
+>
+  <p class="kicker">{entry.data.kicker}</p>
+  {entry.data.stub && <DraftNotice>{entry.data.stubNote ?? "Placeholder — this post is an outline, not a finished piece."}</DraftNotice>}
+  <Content />
+</Prose>
+
+<style is:global>
+  .prose .kicker {
+    font-size: 1.1875rem;
+    line-height: 1.55;
+    color: var(--graphite);
+    margin-top: 0;
+    margin-bottom: 2.25em;
+  }
+</style>

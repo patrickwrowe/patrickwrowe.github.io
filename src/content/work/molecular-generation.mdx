@@ -1,0 +1,51 @@
+---
+title: Generative language models for small molecules
+year: "2025"
+featured: true
+order: 2
+stub: true
+summary: An autoregressive transformer over SMILES, trained from scratch, with
+  sampling and property filtering running in the browser.
+method: Autoregressive transformer over SMILES, trained from scratch
+system: Drug-like small molecules
+result: Sampling and property filtering, running in the browser
+tags: [generative-models, cheminformatics, demos]
+demo: molecular-generation
+---
+
+import DraftNotice from "@/components/DraftNotice.astro";
+
+<DraftNotice>
+Placeholder. The wall-label fields are carried over from the CV. The demo this entry
+advertises does not exist yet — it is Phase 5 in spec 01 §9, and the landing page
+currently flags it as live. Either build it or drop the flag before this goes public.
+</DraftNotice>
+
+## The problem
+
+Generating valid SMILES is harder than the papers make it sound. A model that
+produces syntactically correct strings most of the time still produces a stream of
+molecules that a chemist would not consider, and the failure modes are not the ones
+you would predict from validation loss.
+
+## What was built
+
+An autoregressive transformer over SMILES, trained from scratch rather than
+fine-tuned, with sampling and property filtering.
+
+## What it changed
+
+The sampling loop runs client-side. There is no server, no cold start and no cost per
+request.
+
+## How to check it
+
+The demo will let you sample from the model directly and see the validity and
+property statistics of what comes out, including where it fails.
+
+<DraftNotice>
+To finish this page: the training set and its provenance, tokenisation choices,
+validity and novelty rates measured honestly, and the Tier-0 precomputed molecule
+browser described in spec 03 §7 — which ships first and doubles as this page's static
+fallback.
+</DraftNotice>

@@ -1,0 +1,63 @@
+---
+// Footer. Carries the About link and the contact/elsewhere/documents columns.
+---
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="site-foot__grid">
+      <div class="site-foot__col">
+        <span class="label">Contact</span>
+        <a href="mailto:patrick.william.rowe@gmail.com">patrick.william.rowe@gmail.com</a>
+      </div>
+      <div class="site-foot__col">
+        <span class="label">Elsewhere</span>
+        <a href="https://scholar.google.com/citations?user=nkR7SB8AAAAJ">Google Scholar</a>
+        <a href="https://github.com/patrickwrowe">GitHub</a>
+        <a href="https://www.linkedin.com/in/patrick-w-rowe/">LinkedIn</a>
+      </div>
+      <div class="site-foot__col">
+        <span class="label">Documents</span>
+        <a href="/cv/">CV, web</a>
+        <a href="/about/">About</a>
+      </div>
+    </div>
+    <p class="site-foot__meta">Set in Instrument Sans, Source Serif 4 and IBM Plex Mono</p>
+  </div>
+</footer>
+
+<style>
+  .site-foot {
+    border-top: 1px solid var(--ink);
+    padding-block: 2.5rem 4rem;
+  }
+  .site-foot__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem 4rem;
+    justify-content: space-between;
+  }
+  .site-foot__col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .site-foot__col :global(.label) {
+    margin-bottom: 0.25rem;
+  }
+  .site-foot a {
+    font-size: var(--t-small);
+    color: var(--graphite);
+    transition: color var(--transition);
+  }
+  .site-foot a:hover {
+    color: var(--lustre);
+  }
+  .site-foot__meta {
+    font-family: var(--mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    color: var(--hairline);
+    margin-top: 3rem;
+    text-transform: uppercase;
+  }
+</style>

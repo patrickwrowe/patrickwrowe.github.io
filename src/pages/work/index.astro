@@ -1,0 +1,32 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import WallLabel from "@/components/WallLabel.astro";
+import { wallLabelFields, workSort, isPublished } from "@/lib/content";
+
+const work = (await getCollection("work", isPublished)).sort(workSort);
+---
+
+<Base
+  title="Work — Patrick Rowe"
+  description="Selected projects in machine learning for molecules, materials and proteins."
+  section="work"
+>
+  <section class="shell band">
+    <div class="band__head">
+      <h1 class="label">Work</h1>
+      <span class="band__more">{work.length} entries</span>
+    </div>
+    {
+      work.map((entry) => (
+        <WallLabel
+          year={entry.data.year}
+          title={entry.data.title}
+          href={`/work/${entry.id}/`}
+          fields={wallLabelFields(entry.data)}
+          flag={entry.data.demo ? "Live demo" : undefined}
+        />
+      ))
+    }
+  </section>
+</Base>

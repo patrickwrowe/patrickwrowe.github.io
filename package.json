@@ -16,12 +16,14 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.4.8",
-    "katex": "^0.18.1",
     "rehype-katex": "^7.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@rollup/plugin-yaml": "^5.0.0",
+    "katex": "^0.18.1",
     "typescript": "^5.9.3"
   }
 }

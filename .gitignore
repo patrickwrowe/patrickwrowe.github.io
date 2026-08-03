@@ -16,3 +16,6 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Playwright browser binaries (see scripts/shoot.py)
+.playwright/

@@ -14,10 +14,20 @@
   --hairline: #DEDDD7; /* rules, borders */
   --lustre: #4B4A7C; /* the only accent — state and anomaly, never decoration */
 
-  /* §5.2 Type — sans labels, serif reads, mono is data. */
-  --sans: "Instrument Sans", system-ui, sans-serif;
-  --serif: "Source Serif 4", Georgia, serif;
-  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Three tints the prototype uses that spec §5.1 does not name. Tokenised here
+   * rather than left as literals in components (CLAUDE.md: tokens only). They are
+   * steps between --ink and --graphite, not new hues. */
+  --ink-soft: #2A2C33; /* hero body prose */
+  --ink-quiet: #3A3C43; /* wall-label values */
+  --mark: #B6B5AE; /* the resting arrow on a wall label */
+  --lustre-wash: rgba(75, 74, 124, 0.028); /* wall-label hover ground */
+
+  /* §5.2 Type — sans labels, serif reads, mono is data.
+   * --font-* are injected by the Astro Fonts API (see astro.config.mjs) and already
+   * carry their fallback stacks. */
+  --sans: var(--font-sans, system-ui, sans-serif);
+  --serif: var(--font-serif, Georgia, serif);
+  --mono: var(--font-mono, ui-monospace, monospace);
 
   --t-statement: clamp(2rem, 5.1vw, 3.35rem); /* hero only, one per page max */
   --t-h2: 1.5rem; /* section headings inside prose */

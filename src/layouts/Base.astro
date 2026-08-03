@@ -1,0 +1,53 @@
+---
+import { Font } from "astro:assets";
+import SiteHead from "@/components/SiteHead.astro";
+import SiteFoot from "@/components/SiteFoot.astro";
+import "@/styles/tokens.css";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  section?: "work" | "writing" | "cv";
+  /** Load KaTeX CSS only where there is actually math — spec 02 §3.2. */
+  math?: boolean;
+}
+
+const { title, description, section, math = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="Writing" href="/rss.xml" />
+
+    <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-serif" preload />
+    <Font cssVariable="--font-mono" />
+
+    {
+      /* Self-hosted from public/vendor/katex/ rather than imported as a module.
+         A CSS import inside a component reachable from this layout gets merged
+         into the shared stylesheet and ships on every route — which is the exact
+         thing CLAUDE.md warns against. A plain conditional <link> is per-page. */
+      math && <link rel="stylesheet" href="/vendor/katex/katex.min.css" />
+    }
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+  </head>
+  <body>
+    <SiteHead section={section} />
+    <main>
+      <slot />
+    </main>
+    <SiteFoot />
+  </body>
+</html>

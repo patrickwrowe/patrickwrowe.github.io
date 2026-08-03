@@ -1,0 +1,43 @@
+---
+import Base from "@/layouts/Base.astro";
+---
+
+<Base title="Not found — Patrick Rowe" description="That page does not exist.">
+  <section class="shell notfound">
+    <p class="label">Error 404</p>
+    <h1 class="notfound__title">This page does not exist.</h1>
+    <p class="notfound__body">
+      It may have moved, or the link may be wrong. The <a href="/work/">work catalogue</a>
+      and the <a href="/writing/">writing index</a> are the two places most things live.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .notfound {
+    padding-block: clamp(4rem, 12vw, 9rem);
+  }
+  .notfound__title {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.022em;
+    margin-top: 1rem;
+    max-width: 20ch;
+  }
+  .notfound__body {
+    font-family: var(--serif);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--ink-soft);
+    max-width: var(--measure-hero);
+    margin-top: 1.5rem;
+  }
+  .notfound__body a {
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color var(--transition);
+  }
+  .notfound__body a:hover {
+    border-bottom-color: var(--lustre);
+  }
+</style>

@@ -1,0 +1,196 @@
+---
+import Base from "@/layouts/Base.astro";
+import DraftNotice from "@/components/DraftNotice.astro";
+import cv from "@/data/cv.yaml";
+
+// src/data/cv.yaml is the single source — spec 02 §5. The PDF rendering and the
+// publications block (from scripts/bib_to_json.py) are both still to come.
+//
+// The YAML is not schema-checked (see src/env.d.ts), so these shapes are asserted
+// here rather than validated. Every field is optional because the file is knowingly
+// incomplete — stub entries carry empty roles and dates.
+interface Job {
+  role?: string;
+  org: string;
+  location?: string;
+  from?: string;
+  to?: string;
+  stub?: boolean;
+  points: string[];
+}
+
+interface Study {
+  qualification: string;
+  org?: string;
+  field?: string;
+  year?: string;
+  stub?: boolean;
+}
+
+// timeZone: "UTC" is load-bearing. cv.yaml carries bare "YYYY-MM" values which parse
+// as UTC midnight; formatting those in a local zone behind UTC rolls them back a day
+// and prints the previous month — "2026-01" rendered as "Dec 2025".
+const MONTH = new Intl.DateTimeFormat("en-GB", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const when = (value: string | null | undefined): string =>
+  value ? MONTH.format(new Date(`${value}-01T00:00:00Z`)) : "—";
+---
+
+<Base
+  title="CV — Patrick Rowe"
+  description="Machine learning engineer working on molecules, materials and proteins."
+  section="cv"
+>
+  <section class="shell band">
+    <div class="band__head">
+      <h1 class="label">Curriculum vitae</h1>
+      <span class="band__more">{cv.name}{cv.postnominals ? `, ${cv.postnominals}` : ""}</span>
+    </div>
+
+    {
+      cv.draft && (
+        <DraftNotice>
+          Generated from <code>src/data/cv.yaml</code>, which is itself incomplete. The
+          Cambridge and UCL entries are named in the landing-page prototype but carry no
+          roles or dates, and there is an unexplained gap between Oct 2024 and Jan 2026.
+          A downloadable PDF does not exist yet.
+        </DraftNotice>
+      )
+    }
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Currently</h2>
+      <div class="cv-entry">
+        <span class="cv-entry__when">{when(cv.current.from)} &ndash; present</span>
+        <div>
+          <h3 class="cv-entry__role">{cv.current.role}, {cv.current.org}</h3>
+          <p class="cv-entry__point">{cv.current.focus}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Experience</h2>
+      {
+        cv.experience.map((job: Job) => (
+          <div class="cv-entry">
+            <span class="cv-entry__when">
+              {when(job.from)} &ndash; {when(job.to)}
+            </span>
+            <div>
+              <h3 class="cv-entry__role">
+                {job.role ? `${job.role}, ` : ""}
+                {job.org}
+                {job.stub && <span class="cv-entry__stub">Incomplete</span>}
+              </h3>
+              {job.location && <p class="cv-entry__where">{job.location}</p>}
+              <ul class="cv-entry__points">
+                {job.points.map((point: string) => (
+                  <li class="cv-entry__point">{point}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="cv-block">
+      <h2 class="label cv-block__head">Education</h2>
+      {
+        cv.education.map((item: Study) => (
+          <div class="cv-entry">
+            <span class="cv-entry__when">{item.year ?? "—"}</span>
+            <div>
+              <h3 class="cv-entry__role">
+                {item.qualification}
+                {item.field ? `, ${item.field}` : ""}
+                {item.org ? ` — ${item.org}` : ""}
+                {item.stub && <span class="cv-entry__stub">Incomplete</span>}
+              </h3>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cv-block {
+    margin-top: 3rem;
+  }
+  .cv-block__head {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .cv-entry {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 0 1.5rem;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .cv-entry__when {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    padding-top: 0.3rem;
+  }
+  .cv-entry__role {
+    font-size: var(--t-body);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .cv-entry__stub {
+    display: inline-block;
+    margin-left: 0.6rem;
+    vertical-align: 0.15em;
+    font-family: var(--mono);
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--lustre);
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: 0.15rem 0.4rem;
+  }
+  .cv-entry__where {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    margin-top: 0.35rem;
+  }
+  .cv-entry__points {
+    margin: 0.6rem 0 0;
+    padding-left: 1.1rem;
+  }
+  .cv-entry__point {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    line-height: 1.55;
+    color: var(--ink-quiet);
+    max-width: var(--measure-prose);
+  }
+  .cv-entry__points .cv-entry__point + .cv-entry__point {
+    margin-top: 0.4rem;
+  }
+  @media (max-width: 640px) {
+    .cv-entry {
+      grid-template-columns: 1fr;
+    }
+    .cv-entry__when {
+      padding-top: 0;
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>

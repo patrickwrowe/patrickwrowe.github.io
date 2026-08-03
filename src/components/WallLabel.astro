@@ -1,0 +1,137 @@
+---
+// The signature component — spec 01 §6.1.
+//
+// A gallery catalogue entry with the artist's Medium / Dimensions / Collection
+// replaced by METHOD / SYSTEM / RESULT. Every project, paper and demo is typeset
+// with this same set of fields, so the site reads as one catalogue rather than a
+// pile of cards.
+//
+// Fields are ALWAYS visible. Hiding them until hover would be a nice museum
+// gesture and a bad portfolio.
+interface Props {
+  year: string;
+  title: string;
+  href: string;
+  fields: { label: string; value: string }[];
+  flag?: string;
+}
+const { year, title, href, fields, flag } = Astro.props;
+---
+
+<a class="entry" href={href}>
+  <span class="entry__year">{year}</span>
+  <span class="entry__body">
+    <h3 class="entry__title">
+      {title}
+      {flag && <span class="entry__flag">{flag}</span>}
+    </h3>
+    <span class="entry__fields">
+      {
+        fields.map((f) => (
+          <>
+            <span class="label">{f.label}</span>
+            <span class="entry__val">{f.value}</span>
+          </>
+        ))
+      }
+    </span>
+  </span>
+  <span class="entry__mark" aria-hidden="true">&rarr;</span>
+</a>
+
+<style>
+  .entry {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    gap: 0 1.5rem;
+    align-items: start;
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--hairline);
+    transition: background-color 220ms;
+  }
+  .entry:hover {
+    background: var(--lustre-wash);
+  }
+  .entry__year {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    color: var(--graphite);
+    padding-top: 0.45rem;
+    transition: color var(--transition);
+  }
+  .entry:hover .entry__year {
+    color: var(--lustre);
+  }
+  .entry__title {
+    font-size: var(--t-title);
+    font-weight: 500;
+    letter-spacing: -0.016em;
+    line-height: 1.25;
+  }
+  .entry__fields {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.3rem 1.5rem;
+    margin-top: 0.85rem;
+    max-width: var(--measure-prose);
+  }
+  .entry__val {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    line-height: 1.45;
+    color: var(--ink-quiet);
+  }
+  .entry__mark {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--mark);
+    padding-top: 0.35rem;
+    transition:
+      color 200ms,
+      transform 200ms;
+  }
+  .entry:hover .entry__mark {
+    color: var(--lustre);
+    transform: translateX(3px);
+  }
+
+  /* A live demo is the only entry type that gets a visible flag. */
+  .entry__flag {
+    display: inline-block;
+    margin-left: 0.6rem;
+    vertical-align: 0.22em;
+    font-family: var(--mono);
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--lustre);
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    padding: 0.15rem 0.4rem;
+  }
+
+  @media (max-width: 640px) {
+    .entry {
+      grid-template-columns: 1fr auto;
+      gap: 0;
+    }
+    .entry__year {
+      grid-column: 1;
+      padding-top: 0;
+      margin-bottom: 0.5rem;
+    }
+    .entry__mark {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .entry__body {
+      grid-column: 1 / -1;
+    }
+    .entry__fields {
+      grid-template-columns: 4.75rem 1fr;
+    }
+  }
+</style>

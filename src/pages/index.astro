@@ -1,42 +1,103 @@
 ---
-// SCAFFOLD PLACEHOLDER — not the designed landing page.
-//
-// Phase 0 (spec 01 §9) still needs the prototype in
-// docs/001-initial-spec-docs/landing-page.html ported across: global.css, the label
-// primitive, WallLabel.astro, Plate.astro, the hero figure. That is design work and
-// CLAUDE.md requires the frontend-design skill for it. Replace this file then.
-import "@/styles/tokens.css";
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import Plate from "@/components/Plate.astro";
+import WallLabel from "@/components/WallLabel.astro";
+import Note from "@/components/Note.astro";
+import AmorphousCarbon from "@/components/figures/AmorphousCarbon.astro";
+import { wallLabelFields, workSort, noteDate, isPublished } from "@/lib/content";
+
+const work = (await getCollection("work", isPublished))
+  .filter((entry) => entry.data.featured)
+  .sort(workSort)
+  .slice(0, 4);
+
+const notes = (await getCollection("writing", isPublished))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
 ---
 
-<html lang="en-GB">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Patrick Rowe</title>
-  </head>
-  <body>
-    <main>
-      <h1>Scaffold</h1>
-      <p>Astro 6 is wired up. The landing page has not been built yet.</p>
-    </main>
-  </body>
-</html>
+<Base
+  title="Patrick Rowe — Machine learning for molecules, materials and proteins"
+  description="Patrick Rowe builds machine learning models for molecules, materials and proteins."
+>
+  <section class="shell hero">
+    <h1 class="hero__statement">Machine learning for molecules, materials and proteins.</h1>
+    <p class="hero__body">
+      I build models that stand in for measurements too slow or too expensive to make:
+      interatomic potentials for carbon, property prediction for small molecules, sequence
+      models for antibody engineering. Currently a machine learning engineer at SandboxAQ,
+      working on drug discovery. Previously AbCellera, Cambridge and UCL.
+    </p>
+
+    <Plate n={1} animate>
+      <AmorphousCarbon />
+      <Fragment slot="caption">
+        Amorphous graphene, <b>265 atoms</b>. A three-coordinate network relaxed from a
+        hexagonal sheet after 26 Stone&ndash;Wales bond rotations; five- and seven-membered
+        rings shaded. Disordered carbon of this kind is what <b>GAP-20</b> was built to
+        describe.
+      </Fragment>
+    </Plate>
+  </section>
+
+  <section class="shell band">
+    <div class="band__head">
+      <h2 class="label">Selected work</h2>
+      <a class="band__more" href="/work/">All work &nearr;</a>
+    </div>
+    {
+      work.map((entry) => (
+        <WallLabel
+          year={entry.data.year}
+          title={entry.data.title}
+          href={`/work/${entry.id}/`}
+          fields={wallLabelFields(entry.data)}
+          flag={entry.data.demo ? "Live demo" : undefined}
+        />
+      ))
+    }
+  </section>
+
+  <section class="shell band band--tight">
+    <div class="band__head">
+      <h2 class="label">Writing</h2>
+      <a class="band__more" href="/writing/">All notes &nearr;</a>
+    </div>
+    {
+      notes.map((note) => (
+        <Note
+          date={noteDate(note.data)}
+          title={note.data.title}
+          kicker={note.data.kicker}
+          href={`/writing/${note.id}/`}
+        />
+      ))
+    }
+  </section>
+</Base>
 
 <style>
-  body {
-    background: var(--paper);
-    color: var(--ink);
+  .hero {
+    padding-block: clamp(3.5rem, 9vw, 6.5rem) 0;
+  }
+  .hero__statement {
+    font-size: var(--t-statement);
+    font-weight: 500;
+    line-height: var(--lh-statement);
+    letter-spacing: var(--ls-statement);
+    max-width: var(--measure-statement);
+    text-wrap: balance;
+  }
+  .hero__body {
     font-family: var(--serif);
     font-size: var(--t-body);
     line-height: var(--lh-body);
+    max-width: var(--measure-hero);
+    margin-top: 1.9rem;
+    color: var(--ink-soft);
   }
-  main {
-    max-width: var(--shell);
-    margin-inline: auto;
-    padding: var(--rhythm) var(--gutter);
-  }
-  h1 {
-    font-family: var(--sans);
-    font-size: var(--t-h2);
+  .band--tight {
+    padding-top: 0;
   }
 </style>

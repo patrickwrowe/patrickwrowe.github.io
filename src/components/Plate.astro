@@ -1,0 +1,110 @@
+---
+// Figure and caption — spec 01 §6.2.
+//
+// The figure sits on --plate with a mono "Fig. n" marker and a serif caption,
+// separated by a hairline rule. Masked to fade at the edges so a field of material
+// reads as continuing past the frame rather than being boxed.
+//
+// Captions are real captions: state what is shown, how it was produced, and why
+// it is here.
+interface Props {
+  n: number;
+  /** The one orchestrated moment on page load (spec 01 §5.4). Hero plate only. */
+  animate?: boolean;
+}
+const { n, animate = false } = Astro.props;
+---
+
+<figure class="plate">
+  <div class:list={["plate__frame", animate && "plate__frame--scan"]}>
+    <slot />
+  </div>
+  <figcaption class="plate__caption">
+    <span class="label plate__fig">Fig. {n}</span>
+    <span class="plate__text"><slot name="caption" /></span>
+  </figcaption>
+</figure>
+
+<style>
+  .plate {
+    margin: 0;
+    margin-top: clamp(3rem, 7vw, 5rem);
+  }
+  .plate__frame {
+    background: var(--plate);
+    overflow: hidden;
+    clip-path: inset(0 0 0 0);
+  }
+  .plate__frame :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .plate__caption {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 1.25rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--hairline);
+    max-width: 74ch;
+  }
+  .plate__fig {
+    white-space: nowrap;
+  }
+  .plate__text {
+    font-family: var(--serif);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--graphite);
+  }
+  .plate__text :global(b) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  @media (min-width: 700px) {
+    .plate__frame {
+      margin-inline: calc(var(--gutter) * -0.5);
+    }
+  }
+  @media (max-width: 640px) {
+    .plate__frame :global(svg) {
+      height: 230px;
+      width: 100%;
+    }
+  }
+
+  /* MOTION — the entire budget for the page load. The specimen field is scanned in
+   * left to right, then the ring defects register. Nothing else animates. */
+  @keyframes scan-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes register {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .plate__frame--scan {
+    animation: scan-in 1.25s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .plate__frame--scan :global(.defects) {
+    animation: register 0.7s ease-out 0.95s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plate__frame--scan,
+    .plate__frame--scan :global(.defects) {
+      clip-path: none;
+      opacity: 1;
+    }
+  }
+</style>

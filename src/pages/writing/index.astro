@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+import Base from "@/layouts/Base.astro";
+import Note from "@/components/Note.astro";
+import { noteDate, isPublished } from "@/lib/content";
+
+const notes = (await getCollection("writing", isPublished)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<Base
+  title="Writing — Patrick Rowe"
+  description="Notes on machine-learned potentials, generative models for chemistry, and getting models used."
+  section="writing"
+>
+  <section class="shell band">
+    <div class="band__head">
+      <h1 class="label">Writing</h1>
+      <a class="band__more" href="/rss.xml">RSS &nearr;</a>
+    </div>
+    {
+      notes.map((note) => (
+        <Note
+          date={noteDate(note.data)}
+          title={note.data.title}
+          kicker={note.data.kicker}
+          href={`/writing/${note.id}/`}
+        />
+      ))
+    }
+  </section>
+</Base>

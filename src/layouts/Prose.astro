@@ -1,0 +1,156 @@
+---
+// Long-form layout — spec 01 §6.3. 62ch measure, KaTeX, Shiki, figure styling.
+import Base from "@/layouts/Base.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  section?: "work" | "writing" | "cv";
+  math?: boolean;
+  /** Mono metadata row above the title: year, date, venue. */
+  meta?: string;
+  fields?: { label: string; value: string }[];
+}
+
+const { title, description, section, math = false, meta, fields = [] } = Astro.props;
+---
+
+<Base title={title} description={description} section={section} math={math}>
+  <article class="shell prose-page">
+    <header class="prose-head">
+      {meta && <p class="label prose-head__meta">{meta}</p>}
+      <h1 class="prose-head__title">{title}</h1>
+      {
+        fields.length > 0 && (
+          <div class="prose-head__fields">
+            {fields.map((f) => (
+              <>
+                <span class="label">{f.label}</span>
+                <span class="prose-head__val">{f.value}</span>
+              </>
+            ))}
+          </div>
+        )
+      }
+    </header>
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .prose-page {
+    padding-block: clamp(3rem, 7vw, 5rem) var(--rhythm);
+  }
+  .prose-head {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--ink);
+  }
+  .prose-head__meta {
+    margin-bottom: 0.9rem;
+  }
+  .prose-head__title {
+    font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: -0.022em;
+    max-width: 24ch;
+    text-wrap: balance;
+  }
+  .prose-head__fields {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.3rem 1.5rem;
+    margin-top: 1.5rem;
+    max-width: var(--measure-prose);
+  }
+  .prose-head__val {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    line-height: 1.45;
+    color: var(--ink-quiet);
+  }
+  @media (max-width: 640px) {
+    .prose-head__fields {
+      grid-template-columns: 4.75rem 1fr;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Long-form body. Serif reads; mono is data; sans does the headings. */
+  .prose {
+    max-width: var(--measure-prose);
+    margin-top: 2.5rem;
+    font-family: var(--serif);
+    font-size: var(--t-body);
+    line-height: var(--lh-body);
+    color: var(--ink-soft);
+  }
+  .prose > * + * {
+    margin-top: 1.35em;
+  }
+  .prose h2 {
+    font-family: var(--sans);
+    font-size: var(--t-h2);
+    font-weight: 500;
+    letter-spacing: -0.014em;
+    line-height: 1.25;
+    color: var(--ink);
+    margin-top: 2.75em;
+  }
+  .prose h3 {
+    font-family: var(--sans);
+    font-size: var(--t-body);
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 2em;
+  }
+  .prose a {
+    border-bottom: 1px solid var(--hairline);
+    transition: border-color var(--transition);
+  }
+  .prose a:hover {
+    border-bottom-color: var(--lustre);
+  }
+  .prose strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.25rem;
+  }
+  .prose li + li {
+    margin-top: 0.4em;
+  }
+  .prose blockquote {
+    margin-left: 0;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--hairline);
+    color: var(--graphite);
+  }
+  .prose code {
+    font-family: var(--mono);
+    font-size: 0.875em;
+  }
+  .prose :not(pre) > code {
+    background: var(--plate);
+    padding: 0.1em 0.3em;
+    border-radius: 2px;
+  }
+  /* Shiki sits on --plate so code blocks match the figure containers (spec 02 §3.3). */
+  .prose pre {
+    background: var(--plate) !important;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .prose hr {
+    border: 0;
+    border-top: 1px solid var(--hairline);
+    margin-block: 2.5em;
+  }
+</style>

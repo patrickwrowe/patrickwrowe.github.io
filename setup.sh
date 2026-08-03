@@ -43,6 +43,18 @@ else
   npm install --no-audit --fund=false
 fi
 
+# --- Vendored KaTeX ---------------------------------------------------------
+# Copied into public/ rather than imported as a module: an import would be merged
+# into the shared stylesheet and ship on every route, but spec 02 §3.2 wants it only
+# on pages with `math: true`. Committed, following the same convention spec 03 §3.3
+# sets for the RDKit wasm. Only woff2 is copied — the woff/ttf fallbacks are ~900KB
+# and nothing that can run this site needs them.
+info "Refreshing vendored KaTeX"
+mkdir -p public/vendor/katex/fonts
+cp node_modules/katex/dist/katex.min.css public/vendor/katex/
+cp node_modules/katex/dist/fonts/*.woff2 public/vendor/katex/fonts/
+echo "public/vendor/katex ($(du -sh public/vendor/katex | cut -f1))"
+
 # --- uv ---------------------------------------------------------------------
 info "Checking uv"
 command -v uv >/dev/null 2>&1 || fail \

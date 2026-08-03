@@ -1,0 +1,62 @@
+---
+// Compact writing-index row: date, title, one-line kicker. Spec 01 §6.3.
+interface Props {
+  date: string;
+  title: string;
+  kicker: string;
+  href: string;
+}
+const { date, title, kicker, href } = Astro.props;
+---
+
+<a class="note" href={href}>
+  <span class="note__date">{date}</span>
+  <span>
+    <h3 class="note__title">{title}</h3>
+    <p class="note__kicker">{kicker}</p>
+  </span>
+</a>
+
+<style>
+  .note {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0 1.5rem;
+    padding-block: 1.15rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .note__date {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    color: var(--graphite);
+    padding-top: 0.2rem;
+  }
+  .note__title {
+    font-size: var(--t-body);
+    font-weight: 400;
+    letter-spacing: -0.008em;
+    transition: color var(--transition);
+  }
+  .note:hover .note__title {
+    color: var(--lustre);
+  }
+  .note__kicker {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    color: var(--graphite);
+    margin-top: 0.2rem;
+    max-width: 60ch;
+  }
+
+  @media (max-width: 640px) {
+    .note {
+      grid-template-columns: 1fr;
+    }
+    .note__date {
+      padding-top: 0;
+      margin-bottom: 0.35rem;
+    }
+  }
+</style>

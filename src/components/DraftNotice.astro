@@ -1,0 +1,39 @@
+---
+// Marks a page whose prose is placeholder. Every stub on the site carries this, so
+// nothing reads as finished when it is not. Delete the `stub: true` frontmatter flag
+// once the real copy lands and this disappears with it.
+---
+
+<aside class="draft" role="note">
+  <span class="label draft__tag">Draft</span>
+  <p class="draft__text"><slot /></p>
+</aside>
+
+<style>
+  .draft {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 1.25rem;
+    align-items: baseline;
+    margin-block: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--plate);
+    border-left: 2px solid var(--lustre);
+  }
+  .draft__tag {
+    color: var(--lustre);
+    white-space: nowrap;
+  }
+  .draft__text {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    line-height: 1.55;
+    color: var(--graphite);
+  }
+  @media (max-width: 640px) {
+    .draft {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+  }
+</style>

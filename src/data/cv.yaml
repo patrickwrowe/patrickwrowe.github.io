@@ -1,0 +1,69 @@
+# Single source of truth for the CV — spec 02 §5.
+#
+# DRAFT. Everything below comes from spec 02 §5 and the landing-page prototype, which
+# were themselves drawn from the CV. Entries marked `stub: true` are known-incomplete:
+# the prototype's hero says "Previously AbCellera, Cambridge and UCL" but gives no
+# roles, dates or institutions beyond the names, and those have been left blank rather
+# than guessed at. There is also an unexplained gap between Oct 2024 and Jan 2026.
+#
+# The PDF rendering (public/patrick-rowe-cv.pdf) does not exist yet. Spec 02 §5
+# recommends keeping a hand-made PDF and adding a CI check that fails if this file
+# changes and the PDF does not.
+
+draft: true
+
+name: Patrick Rowe
+postnominals: PhD
+statement: Machine learning for molecules, materials and proteins.
+
+current:
+  role: Machine Learning Engineer
+  org: SandboxAQ
+  from: 2026-01
+  focus: >
+    Small-molecule property prediction, ML engineering for drug discovery,
+    protein language modelling.
+
+experience:
+  - role: Research Scientist, Protein Engineering
+    org: AbCellera Biologics
+    location: Vancouver, Canada
+    from: 2022-05
+    to: 2024-10
+    points:
+      - AI and simulation-driven workflows for antibody selection and engineering,
+        deployed across more than thirty clinical targets.
+      - Data architecture and automated pipelines for lab-automation data.
+      - Direct engagement with pharmaceutical partners, translating requirements
+        into selection strategies and securing contract milestones.
+
+  - role: # TODO
+    org: University of Cambridge
+    location: Cambridge, UK
+    from: # TODO
+    to: # TODO
+    stub: true
+    points:
+      - TODO — named in the landing-page prototype, no detail given.
+
+  - role: # TODO
+    org: University College London
+    location: London, UK
+    from: # TODO
+    to: # TODO
+    stub: true
+    points:
+      - TODO — named in the landing-page prototype, no detail given.
+
+education:
+  - qualification: PhD
+    org: # TODO
+    field: # TODO
+    year: # TODO
+    stub: true
+
+links:
+  email: patrick.william.rowe@gmail.com
+  scholar: https://scholar.google.com/citations?user=nkR7SB8AAAAJ
+  github: https://github.com/patrickwrowe
+  linkedin: https://www.linkedin.com/in/patrick-w-rowe/

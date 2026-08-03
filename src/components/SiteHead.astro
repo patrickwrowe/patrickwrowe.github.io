@@ -1,0 +1,64 @@
+---
+// Header. Nav is Work · Writing · CV only — About is reached from the footer and
+// from the name (spec 01 §4). Not sticky: the gallery convention is that chrome
+// gets out of the way.
+interface Props {
+  section?: "work" | "writing" | "cv";
+}
+const { section } = Astro.props;
+---
+
+<header class="site-head">
+  <div class="shell site-head__inner">
+    <a class="site-head__name" href="/about/">Patrick Rowe<span>, PhD</span></a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="/work/" aria-current={section === "work" ? "page" : undefined}>Work</a>
+      <a href="/writing/" aria-current={section === "writing" ? "page" : undefined}>Writing</a>
+      <a href="/cv/" aria-current={section === "cv" ? "page" : undefined}>CV</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-head {
+    border-bottom: 1px solid var(--hairline);
+  }
+  .site-head__inner {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block: 1.4rem;
+  }
+  .site-head__name {
+    font-size: var(--t-small);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .site-head__name span {
+    color: var(--graphite);
+    font-weight: 400;
+  }
+  .site-nav {
+    display: flex;
+    gap: 1.75rem;
+  }
+  .site-nav a {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition),
+      border-color var(--transition);
+  }
+  .site-nav a:hover,
+  .site-nav a[aria-current] {
+    color: var(--ink);
+    border-bottom-color: var(--lustre);
+  }
+</style>
