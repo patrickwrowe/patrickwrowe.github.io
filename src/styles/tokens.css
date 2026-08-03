@@ -1,0 +1,52 @@
+/* Design tokens — transcribed verbatim from
+ * docs/001-initial-spec-docs/01-architecture-and-design-system.md §5.
+ *
+ * This is the ONLY place colours, type and scale are defined. A literal hex code,
+ * font-family or hard-coded px font size in a component is a bug (see CLAUDE.md).
+ */
+
+:root {
+  /* §5.1 Colour — derived from graphite. */
+  --paper: #F7F7F4; /* page */
+  --plate: #EFEFEA; /* figure containers, table zebra */
+  --ink: #15161A; /* primary text, strong rules */
+  --graphite: #63666E; /* secondary text, all metadata */
+  --hairline: #DEDDD7; /* rules, borders */
+  --lustre: #4B4A7C; /* the only accent — state and anomaly, never decoration */
+
+  /* §5.2 Type — sans labels, serif reads, mono is data. */
+  --sans: "Instrument Sans", system-ui, sans-serif;
+  --serif: "Source Serif 4", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --t-statement: clamp(2rem, 5.1vw, 3.35rem); /* hero only, one per page max */
+  --t-h2: 1.5rem; /* section headings inside prose */
+  --t-title: 1.375rem; /* wall-label titles */
+  --t-body: 1.0625rem; /* serif prose */
+  --t-small: 0.9375rem; /* wall-label values, footer */
+  --t-label: 0.6875rem; /* the label primitive */
+
+  --lh-statement: 1.06;
+  --lh-body: 1.65;
+  --ls-statement: -0.028em;
+  --ls-label: 0.09em;
+
+  /* Measure. */
+  --measure-prose: 62ch;
+  --measure-hero: 56ch;
+  --measure-statement: 19ch;
+
+  /* §5.3 Layout — spacing is a 4px base. */
+  --shell: 1180px;
+  --gutter: clamp(1.25rem, 5vw, 3.5rem);
+  --rhythm: clamp(4rem, 9vw, 6.5rem); /* section block padding */
+
+  /* §5.4 Motion — 180ms colour transition on hover is the whole hover budget. */
+  --transition: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: 0ms;
+  }
+}

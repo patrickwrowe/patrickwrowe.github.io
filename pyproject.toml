@@ -1,0 +1,25 @@
+[project]
+name = "patrickrowe-site-pipeline"
+version = "0.1.0"
+description = "Python content pipeline for the site. Python owns anything that transforms data; JS only renders."
+requires-python = ">=3.11"
+
+# Deliberately minimal. Demo-tier dependencies (torch, onnxruntime, onnx quantisation)
+# belong to Phases 4-5 in spec 01 §9 and are several GB — add them when export_onnx.py
+# is actually written, not before.
+dependencies = [
+    "bibtexparser>=2.0.0b4", # scripts/bib_to_json.py  (v2 API: parse_file, .entries, .fields)
+    "numpy>=2.0",            # scripts/gen_network.py, scripts/figures/*
+    "nbconvert>=7.16",       # scripts/notebook_to_post.py shells out to `jupyter nbconvert`
+    "matplotlib>=3.9",       # SVG figure generation (spec 02 §3.4)
+    "pyyaml>=6.0",           # src/data/cv.yaml
+]
+
+[dependency-groups]
+dev = ["ruff>=0.9", "pytest>=8.0"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

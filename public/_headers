@@ -1,0 +1,16 @@
+# Cloudflare Pages headers — spec 01 §7.
+#
+# COOP/COEP are needed for SharedArrayBuffer, which multi-threaded WASM runtimes want.
+# Scope them to /demos/* ONLY — applying them site-wide breaks third-party embeds
+# including Vimeo.
+
+/demos/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.onnx
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.wasm
+  Cache-Control: public, max-age=31536000, immutable

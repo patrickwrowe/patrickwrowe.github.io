@@ -1,0 +1,18 @@
+# Astro
+dist/
+.astro/
+node_modules/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+
+# Env / secrets
+.env
+!.env.example
+
+# OS
+.DS_Store
