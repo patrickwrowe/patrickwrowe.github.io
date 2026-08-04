@@ -37,10 +37,16 @@ const work = defineCollection({
       heroAlt: z.string().optional(),
       demo: z.string().optional(),
       draft: z.boolean().default(false),
+      // Loads the KaTeX stylesheet on this page only, same as `writing`. Without it
+      // maths in the body renders as unstyled markup.
+      math: z.boolean().default(false),
 
       // Not in the spec. Marks an entry whose prose is placeholder pending real
       // copy, so the page can say so plainly instead of reading as finished.
       stub: z.boolean().default(false),
+      // Rendered as a DraftNotice above the body. Same mechanism as `writing`, so
+      // there is one way to mark a page provisional across both collections.
+      stubNote: z.string().optional(),
     }),
 });
 

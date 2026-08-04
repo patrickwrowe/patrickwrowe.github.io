@@ -18,6 +18,7 @@ npm run preview   # serve the built output
 
 | Path | What |
 |---|---|
+| `docs/002-authoring-guide.md` | **How to add and edit pages.** Start here for content. |
 | `docs/001-initial-spec-docs/` | The specs. Read before building — see `CLAUDE.md`. |
 | `src/styles/tokens.css` | The only place colours, type and scale are defined. |
 | `src/content/work/` | One `.mdx` per project. Schema in `src/content.config.ts`. |
