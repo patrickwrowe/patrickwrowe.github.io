@@ -15,7 +15,8 @@ hero: ./figures/aqueous-potentials/fig2-validation.png
 heroAlt: Validation scores for six aqueous systems as a bar chart, alongside the radial
   distribution functions, vibrational density of states and force correlations underlying
   them for the solvated fluoride ion.
-heroCredit: Fig. 2 from Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021), CC BY-NC-ND 4.0.
+heroCredit: Fig. 2 from Schran, Thiemann, Rowe, Müller, Marsalek and Michaelides,
+  Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021). CC BY-NC-ND 4.0.
 links:
   - { label: Paper, url: "https://doi.org/10.1073/pnas.2110077118" }
   - { label: Preprint, url: "https://arxiv.org/abs/2106.00048" }
@@ -27,12 +28,11 @@ import Plate from "@/components/Plate.astro";
 import Tio2 from "./figures/aqueous-potentials/fig3-tio2-water.png";
 
 Machine-learned potentials are usually built to be general, and generality is what makes them
-take years. [GAP-20](/work/carbon-gap-20/) is one of the examples this paper cites of that
-approach — my own work, cited as the thing being argued against.
+take years. [GAP-20](/work/carbon-gap-20/) is cited in this paper as an example of that approach.
 
-The argument is that most scientific questions do not need a general model. They need one that
-is right at a single thermodynamic state point, and that model can be built in days with
-almost no human input.
+The argument here is that most scientific questions do not require a general model. They
+require one that is correct at a single thermodynamic state point, and such a model can be
+built in days with almost no human input.
 
 ## What we built
 
@@ -68,7 +68,8 @@ replace, which is what buys the application.
     adsorption free energy map computed from ab initio dynamics and from the committee
     potential — the first has too little statistics to converge, the second does not.
     <span class="credit">
-      Fig. 3 from Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021), CC BY-NC-ND 4.0.
+      Fig. 3 from Schran, Thiemann, Rowe, Müller, Marsalek and Michaelides,
+      Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021). CC BY-NC-ND 4.0.
     </span>
   </Fragment>
 </Plate>
@@ -79,16 +80,15 @@ perturbs water diffusion more than a nanometre into the liquid. The committee er
 sits between 40 and 80 meV Å⁻¹ across the whole water region and does not drift over the
 trajectory — which is the point of carrying a committee rather than a single network.
 
-## My part in it
+## Contribution
 
-Third author, but the contribution statement records that Fabian Thiemann and I contributed
-equally. I was one of three who designed the study, one of four who ran it, and one of six who
-analysed the data.
+Third author, with the contribution statement recording that Fabian Thiemann and I
+contributed equally. I was one of three who designed the study, one of four who performed the
+research, and one of six who analysed the data.
 
-Worth being precise about the boundary: the AML package that implements the active learning
-is Schran and Marsalek's, credited to them under new analytic tools. My contribution is in
-designing and running the model generation and its application across the six systems, not in
-authoring that codebase.
+For precision: the AML package implementing the active learning is Schran and Marsalek's,
+credited to them under new analytic tools. My contribution lies in designing and running the
+model generation and its application across the six systems, not in authoring that codebase.
 
 ## Where this sits
 
@@ -96,8 +96,7 @@ It builds directly on Schran, Brezina and Marsalek's committee neural network po
 the previous year, which established that committee disagreement tracks generalisation error
 well enough to drive active learning. This paper is the application layer.
 
-Read alongside [GAP-20](/work/carbon-gap-20/) it makes a chronology I find genuinely useful:
-build the general-purpose potential, learn what it costs in effort and in accuracy, then argue
-for the cheap disposable alternative — and cite your own earlier work as the foil. The two
-papers do not contradict each other. They answer different questions about what a potential is
-for.
+Read alongside [GAP-20](/work/carbon-gap-20/), the two form a coherent sequence: build the
+general-purpose potential, establish what it costs in effort and in accuracy, then make the
+case for a cheap state-point-specific alternative. The papers do not contradict each other.
+They answer different questions about what a potential is for.

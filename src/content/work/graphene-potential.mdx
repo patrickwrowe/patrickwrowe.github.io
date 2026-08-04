@@ -16,8 +16,7 @@ hero: ./figures/graphene-potential/fig3-phonon-dispersion.png
 heroAlt: Phonon dispersion of graphene from eight different models, each compared against the
   same X-ray diffraction reference. The machine-learned potential is the only panel where the
   two curves are indistinguishable.
-heroCredit: Fig. 3 from Phys. Rev. B 97, 054303 (2018). © 2018 American Physical Society.
-  Reproduced under the authors' retained rights — not openly licensed.
+heroCredit: Fig. 3 from Rowe, Csányi, Alfè and Michaelides, Phys. Rev. B 97, 054303 (2018).
 links:
   - { label: Paper, url: "https://link.aps.org/doi/10.1103/PhysRevB.97.054303" }
   - { label: Preprint, url: "https://arxiv.org/abs/1710.04187" }
@@ -32,8 +31,6 @@ functional theory gives the right answer and costs so much that a few hundred at
 few picoseconds is a serious calculation. Empirical bond-order potentials run a million times
 faster and disagree with each other — and often with experiment — about things as basic as
 whether the lattice expands or contracts when you heat it.
-
-This was my first machine-learning potential, and the work that became my PhD.
 
 ## What we built
 
@@ -61,13 +58,12 @@ a hundred over the worst.
     The GAP panel needed an inset rescaled to ±0.2 eV Å⁻¹ before its errors were visible at
     all.
     <span class="credit">
-      Fig. 1 from Phys. Rev. B 97, 054303 (2018). © 2018 American Physical Society.
-      Reproduced under the authors' retained rights — not openly licensed.
+      Fig. 1 from Rowe, Csányi, Alfè and Michaelides, Phys. Rev. B 97, 054303 (2018).
     </span>
   </Fragment>
 </Plate>
 
-Three results mattered more than the error statistics:
+Three results matter more than the aggregate error statistics:
 
 - **Phonons.** Sub-meV agreement with the dispersion derived from X-ray diffraction at almost
   every high-symmetry point. Mean absolute errors elsewhere: REBO 10 meV, AIREBO 20 meV,
@@ -80,11 +76,11 @@ Three results mattered more than the error statistics:
 - **Cost.** About four orders of magnitude cheaper per step than the AIMD it stands in for,
   and two to three orders more expensive than a bond-order potential.
 
-## The limitation, stated plainly
+## Limitations
 
-The model is accurate because it is narrow. It is trained on graphene and it cannot describe
-diamond, or any other phase of carbon. We said so in the conclusions, alongside the
-observation that a general machine-learned carbon potential looked feasible.
+The model is accurate because it is narrow. It is trained on graphene and cannot describe
+diamond or any other phase of carbon. The conclusions state this directly, alongside the
+observation that a general machine-learned carbon potential appeared feasible.
 
 ## Where this sits
 
@@ -94,6 +90,8 @@ useful one: applied to graphene, the amorphous model gives force errors of 0.270
 lattice parameter 1.2% too small. Two potentials, the same framework, opposite failures — one
 flexible but imprecise, one precise but narrow.
 
-Closing that gap became [GAP-20](/work/carbon-gap-20/) two years later, which absorbed this
-training set and reports exactly what generalisation cost: 4 meV on phonon frequencies against
-1 meV for this model, in exchange for the rest of carbon chemical space.
+Closing that gap became [GAP-20](/work/carbon-gap-20/) two years later. It absorbed this
+training set and reports what generalisation cost: 4 meV on phonon frequencies against 1 meV
+for this model, in exchange for the rest of carbon chemical space.
+
+The work formed part of my PhD at UCL.

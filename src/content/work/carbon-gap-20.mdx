@@ -15,8 +15,8 @@ hero: ./figures/carbon-gap-20/fig01-overview-sketchmap.png
 heroAlt: A sketch-map of the whole carbon training database with representative structures
   pinned to their regions, above three panels comparing predicted formation, defect and
   surface energies against DFT.
-heroCredit: Fig. 1 from J. Chem. Phys. 153, 034702 (2020). © 2020 AIP Publishing.
-  Reproduced under the authors' retained rights — not openly licensed.
+heroCredit: Fig. 1 from Rowe, Deringer, Gasparotto, Csányi and Michaelides,
+  J. Chem. Phys. 153, 034702 (2020).
 links:
   - { label: Paper, url: "https://pubs.aip.org/jcp/article/153/3/034702/1062660" }
   - { label: Preprint, url: "https://arxiv.org/abs/2006.13655" }
@@ -29,20 +29,20 @@ import Phonons from "./figures/carbon-gap-20/fig05-phonon-dispersion.png";
 
 Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes,
 fullerenes, amorphous films, hot liquid — the bonding differs enough between them that a
-potential fitted to one is usually wrong about the others. My
-[graphene potential](/work/graphene-potential/) from two years earlier was a clean example:
-excellent on the thing it was trained on, useless on diamond.
+potential fitted to one is usually wrong about the others. The
+[graphene potential](/work/graphene-potential/) I developed two years earlier illustrates the
+problem: accurate for graphene, and by construction unable to describe diamond.
 
-GAP-20 is the attempt to have both.
+GAP-20 addresses both requirements in a single model.
 
 ## What we built
 
 A Gaussian approximation potential trained on plane-wave DFT with the dispersion-inclusive
 optB88-vdW functional. The training set merges two existing databases — the amorphous-carbon
 set behind GAP-17 and the graphene set from my 2018 paper — and extends them with defects,
-surfaces, nanotubes and other nanostructures. Everything was recomputed at one consistent
-level of theory regardless of where it came from, which is what makes merging databases
-legitimate rather than convenient.
+surfaces, nanotubes and other nanostructures. All configurations were recomputed at one
+consistent level of theory regardless of origin, which is what makes merging two databases
+defensible.
 
 Two pieces of model engineering carry most of the weight:
 
@@ -66,8 +66,8 @@ parameters, REBO-II 4%, AIREBO 1%.
     optB88-vdW reference. The dashed line in panel B is the graphene-only model from 2018 —
     the visible cost of generalising.
     <span class="credit">
-      Fig. 5 from J. Chem. Phys. 153, 034702 (2020). © 2020 AIP Publishing. Reproduced under
-      the authors' retained rights — not openly licensed.
+      Fig. 5 from Rowe, Deringer, Gasparotto, Csányi and Michaelides,
+      J. Chem. Phys. 153, 034702 (2020).
     </span>
   </Fragment>
 </Plate>
@@ -76,11 +76,11 @@ Where it is weaker is worth saying. Defect formation energies land mostly within
 diamond defects are the weak spot at 25–35%. The relaxed diamond (111) surface energy is 15%
 out. Stone–Wales defects in graphene and graphite carry no error to the precision quoted.
 
-The transferability test is the result I find most convincing, because nothing in it was
-trained on. We ran a random structure search — 1000 random eight-atom configurations relaxed
-under GAP-20, then recomputed with DFT. The energies agree, and the search recovers AB- and
-AA-stacked graphite, cubic and hexagonal diamond, haeckelite, a crosslinked graphitic phase
-and an sp¹-rich structure we had not gone looking for.
+The transferability test is the strongest evidence in the paper, because none of the
+structures involved appear in the training set. We ran a random structure search — 1000 random
+eight-atom configurations relaxed under GAP-20, then recomputed with DFT. The energies agree,
+and the search recovers AB- and AA-stacked graphite, cubic and hexagonal diamond, haeckelite,
+a crosslinked graphitic phase and an sp¹-rich structure the search was not designed to find.
 
 Liquid carbon matches DFT across 5000–9500 K and 1.5–3.5 g cm⁻³, including the rise in sp¹
 fraction at low density.
@@ -97,10 +97,9 @@ points correct to 4 meV, against 1 meV for the dedicated graphene model. A facto
 traded for diamond, nanotubes, defects, surfaces and the amorphous phase.
 
 The potential and its training configurations are published under CC BY 4.0 through the
-Cambridge repository, packaged as a QUIP file that runs in LAMMPS. That was deliberate — the
-point of a general potential is that other groups use it.
+Cambridge repository, packaged as a QUIP file that runs in LAMMPS, so that other groups can
+use it directly.
 
-The following year I was a co-author on
-[a paper arguing against this whole approach](/work/aqueous-potentials/), which cites GAP-20
-as an example of the years-long, general-purpose model it proposes an alternative to. Both
-positions are right, for different questions.
+The following year I co-authored [a paper](/work/aqueous-potentials/) making the opposite
+argument, which cites GAP-20 as an example of the years-long, general-purpose model it
+proposes an alternative to. The two positions address different questions.
