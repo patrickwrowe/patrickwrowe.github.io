@@ -1,0 +1,105 @@
+---
+title: Cation-controlled wetting properties of vermiculite membranes
+kind: paper
+year: "2020"
+order: 23
+summary: Ab initio molecular dynamics explaining why lithium-exchanged vermiculite is far
+  more hydrophilic than its cation hydration energy predicts, and what that buys for oil–water
+  separation.
+method: Ab initio molecular dynamics of thin water films on cation-exchanged surfaces, CP2K at PBE-D3
+system: Vermiculite laminates — lithium and potassium exchanged
+published: Nat. Commun. 11, 1097 (2020)
+authors: Kaiwen Huang, Patrick Rowe, Cheng Chi, Vasu Sreepal, Tobias Bohn, Kai-Ge Zhou, Yang
+  Su, Eric Prestat, Pavlo Pinter, Angelos Michaelides, Rahul R. Nair and others
+doi: 10.1038/s41467-020-14854-4
+tags: [interfaces, water, materials, membranes]
+hero: ./figures/vermiculite-membranes/fig4-hydration-structure-aimd.png
+heroAlt: Probability density of water and cations above potassium- and lithium-exchanged
+  vermiculite surfaces, with the orientational distributions of water in the first and second
+  contact layers.
+heroCredit: Fig. 4 from Huang, Rowe, Chi et al., Nat. Commun. 11, 1097 (2020). CC BY 4.0.
+links:
+  - { label: Paper, url: "https://www.nature.com/articles/s41467-020-14854-4" }
+---
+
+import Plate from "@/components/Plate.astro";
+import ContactAngles from "./figures/vermiculite-membranes/fig2-contact-angles.png";
+
+This is an experimental paper from Manchester's National Graphene Institute with a
+simulation component. Angelos Michaelides and I did the modelling; the contact angles, the
+diffraction, the membrane fabrication and the separation performance are the Manchester
+group's.
+
+## The anomaly
+
+Swapping the interlayer cation in a vermiculite laminate moves its water contact angle from
+15° for lithium to 101° for tin — superhydrophilic to hydrophobic, in the same material.
+Across most of that series, hydrophilicity tracks the hydration free energy of the cation,
+which is the expected relationship.
+
+Lithium does not fit. It is far more hydrophilic than its hydration energy predicts, and it
+is the only laminate that swells further in liquid water and stays swollen — no change in
+interlayer spacing after a week in kerosene, where a graphene oxide reference collapses from
+13.5 to 8.5 Å in twelve hours.
+
+<Plate n={2}>
+  <img src={ContactAngles.src} alt="Water contact angle photographs for five cation-exchanged vermiculite laminates in dry and wet states, and X-ray diffraction of wet lithium vermiculite before and after a week in kerosene." />
+  <Fragment slot="caption">
+    Contact angles across the cation series, dry and wet, and the diffraction showing that
+    lithium vermiculite keeps its water after a week in kerosene. The experimental result the
+    simulations were run to explain.
+    <span class="credit">
+      Fig. 2 from Huang, Rowe, Chi et al., Nat. Commun. 11, 1097 (2020). CC BY 4.0.
+    </span>
+  </Fragment>
+</Plate>
+
+## What the simulations showed
+
+Ab initio molecular dynamics of thin water films on the two surfaces, in CP2K at PBE-D3 with
+a 350 Ry cutoff. The surface model substitutes 25% of basal-plane silicon with aluminium,
+giving the −2e per unit cell characteristic of natural vermiculite. Films of 40 heavy-water
+molecules, 300 K, 35 ps for potassium and 40 ps for lithium.
+
+The difference is in where the cations sit.
+
+Potassium occupies a single strongly preferred site above the surface hydroxyls. That order
+propagates into the water: the first contact layer is sharply peaked and orientationally
+distorted, with a clear preference for one O–H bond pointing at the surface.
+
+Lithium populates two competing sites — chelated inside the siloxane ring, or bound to an
+oxygen next to an aluminium dopant. The resulting cation arrangement is disordered, which
+gives more available adsorption sites, and the water responds: the orientational
+distributions of the first and second contact layers are almost indistinguishable. The water
+at a lithium vermiculite interface is close to bulk-like.
+
+Water binds more strongly to the lithium surface in the contact layer, **−0.89 ± 0.02** against
+**−0.69 ± 0.09 eV per water molecule**. The proposed mechanism is that potassium's few
+adsorption sites force a highly ordered, high-energy interfacial layer, while lithium's many
+sites let the interfacial water relax.
+
+The same comparison in the second layer gives −0.7 ± 0.5 and −0.6 ± 0.5 eV per molecule. The
+error bars there are larger than the difference, so the effect is not resolved beyond the
+first layer.
+
+## What it was used for
+
+Building on the lithium result, the group coated a 30 nm lithium vermiculite layer onto a
+polyamide microfiltration membrane. It holds roughly 7000 L m⁻² h⁻¹ at 1 bar after a week of
+continuous oil contact, where the bare membrane fouls badly and a graphene oxide coating
+survives about six hours before fouling worse than bare. Underwater oil adhesion falls below
+the 1 µN detection limit, against 35 µN for bare polyamide.
+
+## Where this sits
+
+The simulation methodology — CP2K, PBE-D3, deuterated water films on a charged mineral
+surface with a colour-noise thermostat — is standard for water at interfaces in the
+Michaelides group, and the same broad approach as the interfacial water work in
+[the aqueous potentials paper](/work/aqueous-potentials/) the following year, though at
+direct ab initio cost rather than through a learned potential.
+
+The explicit foil throughout is graphene oxide, where cation control of interlayer spacing was
+already established. Vermiculite gives an 85° swing in contact angle where graphene oxide
+gives about 15°, and its hydration does not collapse in oil.
+
+No code or input files were published with the paper.
