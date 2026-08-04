@@ -1,0 +1,66 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+// A conference poster: a scaled-down plate that links to the full-size file.
+//
+// "Click to enlarge" with zero JavaScript — the thumbnail is an anchor to the
+// original asset, which the browser opens at full resolution. No lightbox, no
+// island, and it still works with JS disabled, which /work/* requires.
+interface Props {
+  src: ImageMetadata;
+  alt: string;
+  /** Where the full-size file lives. Usually the same image, unscaled. */
+  href: string;
+  credit?: string;
+}
+const { src, alt, href, credit } = Astro.props;
+---
+
+<figure class="poster">
+  <a class="poster__link" href={href} target="_blank" rel="noopener">
+    <Image src={src} alt={alt} widths={[480, 800]} sizes="(max-width: 640px) 100vw, 800px" />
+    <span class="label poster__hint">Click to enlarge</span>
+  </a>
+  {credit && <figcaption class="poster__credit">{credit}</figcaption>}
+</figure>
+
+<style>
+  .poster {
+    margin: 2.5rem 0 0;
+  }
+  .poster__link {
+    display: block;
+    position: relative;
+    background: var(--plate);
+    padding: 1.25rem;
+    border: 1px solid var(--hairline);
+    transition: border-color var(--transition);
+  }
+  .poster__link:hover {
+    border-color: var(--lustre);
+  }
+  .poster__link :global(img) {
+    width: 100%;
+    height: auto;
+  }
+  .poster__hint {
+    display: block;
+    margin-top: 0.9rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--hairline);
+    color: var(--graphite);
+    transition: color var(--transition);
+  }
+  .poster__link:hover .poster__hint {
+    color: var(--lustre);
+  }
+  .poster__credit {
+    font-family: var(--serif);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--graphite);
+    margin-top: 0.9rem;
+    max-width: 74ch;
+  }
+</style>

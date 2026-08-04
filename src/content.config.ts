@@ -18,6 +18,22 @@ const work = defineCollection({
       featured: z.boolean().default(false),
       summary: z.string().max(200),
 
+      // Splits the /work/ index into the curated projects and the publication
+      // record. Papers are still work entries — the wall label's PUBLISHED field
+      // exists precisely for them (spec 01 §6.1) — they just list separately so the
+      // four project pages keep carrying the weight.
+      kind: z.enum(["project", "paper"]).default("project"),
+      authors: z.string().optional(), // full author list, as published
+      doi: z.string().optional(),
+
+      // Figures reproduced from a published paper need their source and licence
+      // stated. No credit, no reproduction.
+      heroCredit: z.string().optional(),
+      // Conference posters: a full-size image linked from a thumbnail. A plain link
+      // is click-to-enlarge without a byte of JavaScript.
+      poster: z.string().optional(),
+      posterAlt: z.string().optional(),
+
       // The wall-label fields. See spec 01 §6.1. Two to four, in this order.
       method: z.string(),
       system: z.string(),

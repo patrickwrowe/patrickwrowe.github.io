@@ -4,21 +4,23 @@ import Base from "@/layouts/Base.astro";
 import WallLabel from "@/components/WallLabel.astro";
 import { wallLabelFields, workSort, isPublished } from "@/lib/content";
 
-const work = (await getCollection("work", isPublished)).sort(workSort);
+const all = (await getCollection("work", isPublished)).sort(workSort);
+const projects = all.filter((entry) => entry.data.kind !== "paper");
+const papers = all.filter((entry) => entry.data.kind === "paper");
 ---
 
 <Base
   title="Work — Patrick Rowe"
-  description="Selected projects in machine learning for molecules, materials and proteins."
+  description="Selected projects and the publication record: machine learning for molecules, materials and proteins."
   section="work"
 >
   <section class="shell band">
     <div class="band__head">
-      <h1 class="label">Work</h1>
-      <span class="band__more">{work.length} entries</span>
+      <h1 class="label">Projects</h1>
+      <span class="band__more">{projects.length} entries</span>
     </div>
     {
-      work.map((entry) => (
+      projects.map((entry) => (
         <WallLabel
           year={entry.data.year}
           title={entry.data.title}
@@ -29,4 +31,29 @@ const work = (await getCollection("work", isPublished)).sort(workSort);
       ))
     }
   </section>
+
+  {
+    papers.length > 0 && (
+      <section class="shell band band--tight">
+        <div class="band__head">
+          <h2 class="label">Papers</h2>
+          <span class="band__more">{papers.length} entries</span>
+        </div>
+        {papers.map((entry) => (
+          <WallLabel
+            year={entry.data.year}
+            title={entry.data.title}
+            href={`/work/${entry.id}/`}
+            fields={wallLabelFields(entry.data)}
+          />
+        ))}
+      </section>
+    )
+  }
 </Base>
+
+<style>
+  .band--tight {
+    padding-top: 0;
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+title: Machine learning potentials for complex aqueous systems made simple
+kind: paper
+year: "2021"
+order: 22
+summary: Committee neural network potentials built by active learning from a single short
+  AIMD trajectory — six aqueous systems, no per-system tuning, days rather than years.
+method: Committee neural network potentials with query-by-committee active learning
+system: Six aqueous systems — ions in solution, water in nanotubes and confined between sheets, water on rutile TiO₂
+published: Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021)
+authors: Christoph Schran, Fabian L. Thiemann, Patrick Rowe, Erich A. Müller, Ondřej Marsalek, Angelos Michaelides
+doi: 10.1073/pnas.2110077118
+tags: [interatomic-potentials, water, interfaces, machine-learning]
+hero: ./figures/aqueous-potentials/fig2-validation.png
+heroAlt: Validation scores for six aqueous systems as a bar chart, alongside the radial
+  distribution functions, vibrational density of states and force correlations underlying
+  them for the solvated fluoride ion.
+heroCredit: Fig. 2 from Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021), CC BY-NC-ND 4.0.
+links:
+  - { label: Paper, url: "https://doi.org/10.1073/pnas.2110077118" }
+  - { label: Preprint, url: "https://arxiv.org/abs/2106.00048" }
+  - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
+  - { label: Data, url: "https://doi.org/10.5281/zenodo.5235246" }
+---
+
+import Plate from "@/components/Plate.astro";
+import Tio2 from "./figures/aqueous-potentials/fig3-tio2-water.png";
+
+Machine-learned potentials are usually built to be general, and generality is what makes them
+take years. [GAP-20](/work/carbon-gap-20/) is one of the examples this paper cites of that
+approach — my own work, cited as the thing being argued against.
+
+The argument is that most scientific questions do not need a general model. They need one that
+is right at a single thermodynamic state point, and that model can be built in days with
+almost no human input.
+
+## What we built
+
+A committee neural network potential: several Behler–Parrinello networks trained from
+independent random initialisations on overlapping subsets of the same data. The committee mean
+is the prediction. The spread between members is a calibrated error estimate, and that error
+estimate is what drives everything else.
+
+The active learning loop starts from twenty randomly chosen frames of one short ab initio
+trajectory. Train, then repeatedly add the twenty frames where the committee disagrees most
+about the atomic forces. No new DFT is needed inside the loop — the reference trajectory
+already has energies and forces for every frame. Convergence arrives at roughly 300 training
+structures.
+
+We applied it to six systems with no per-system hyperparameter tuning: fluoride and sulfate
+ions in solution, water in carbon and boron nitride nanotubes, water confined between MoS₂
+sheets, and water on rutile TiO₂(110). An automated protocol scores each model on radial
+distribution functions, vibrational density of states and force RMSE.
+
+## What it showed
+
+Across all six systems: RDF scores 98–100%, VDOS 96–98%, forces 86–95%. For the
+fluoride–water model the force RMSE is 56.8 meV Å⁻¹ on oxygen, 29.7 on hydrogen, 55.8 on
+fluorine.
+
+The resulting potentials are four to five orders of magnitude cheaper than the DFT they
+replace, which is what buys the application.
+
+<Plate n={2}>
+  <img src={Tio2.src} alt="Water on rutile titanium dioxide: simulation cell, mass density profile, diffusion constants, model error estimate, and free energy maps from AIMD and from the machine-learned potential." />
+  <Fragment slot="caption">
+    Water on rutile TiO₂(110) from a 5 ns, 1728-atom simulation. Panels E and F are the same
+    adsorption free energy map computed from ab initio dynamics and from the committee
+    potential — the first has too little statistics to converge, the second does not.
+    <span class="credit">
+      Fig. 3 from Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021), CC BY-NC-ND 4.0.
+    </span>
+  </Fragment>
+</Plate>
+
+On rutile TiO₂(110), 5 ns of 1728 atoms gives a density profile with two sharp contact layers,
+essentially zero diffusion in the strongly adsorbed first layer, and an interface that
+perturbs water diffusion more than a nanometre into the liquid. The committee error estimate
+sits between 40 and 80 meV Å⁻¹ across the whole water region and does not drift over the
+trajectory — which is the point of carrying a committee rather than a single network.
+
+## My part in it
+
+Third author, but the contribution statement records that Fabian Thiemann and I contributed
+equally. I was one of three who designed the study, one of four who ran it, and one of six who
+analysed the data.
+
+Worth being precise about the boundary: the AML package that implements the active learning
+is Schran and Marsalek's, credited to them under new analytic tools. My contribution is in
+designing and running the model generation and its application across the six systems, not in
+authoring that codebase.
+
+## Where this sits
+
+It builds directly on Schran, Brezina and Marsalek's committee neural network potentials from
+the previous year, which established that committee disagreement tracks generalisation error
+well enough to drive active learning. This paper is the application layer.
+
+Read alongside [GAP-20](/work/carbon-gap-20/) it makes a chronology I find genuinely useful:
+build the general-purpose potential, learn what it costs in effort and in accuracy, then argue
+for the cheap disposable alternative — and cite your own earlier work as the foil. The two
+papers do not contradict each other. They answer different questions about what a potential is
+for.
