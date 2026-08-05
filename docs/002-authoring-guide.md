@@ -47,18 +47,18 @@ looks fine in dev can end up loading on every page in the build.
 | The landing page's opening paragraph | `src/pages/index.astro` |
 | Contact / Scholar / GitHub / LinkedIn links | `src/data/cv.yaml` — used by the CV *and* the footer |
 
-**The filename is the URL.** `src/content/work/gap-20.mdx` becomes `/work/gap-20/`.
+**The filename is the URL.** `src/content/work/carbon-gap-20.mdx` becomes `/work/carbon-gap-20/`.
 Rename the file to change the URL; nothing else needs updating.
 
 ---
 
 ## 3. Adding a paper page
 
-This is the main case. Copy an existing file and edit it — `gap-20.mdx` is the closest
-model.
+This is the main case. Copy an existing file and edit it — `carbon-gap-20.mdx` is the
+closest model.
 
 ```bash
-cp src/content/work/gap-20.mdx src/content/work/graphene-potential.mdx
+cp src/content/work/carbon-gap-20.mdx src/content/work/new-paper.mdx
 ```
 
 ### The frontmatter
@@ -239,7 +239,7 @@ to prevent.
 
 ## 9. Rules that will bite you
 
-- **Internal links need trailing slashes.** `/work/gap-20/`, not `/work/gap-20`.
+- **Internal links need trailing slashes.** `/work/carbon-gap-20/`, not `/work/carbon-gap-20`.
 - **British English in prose** — "—ise", "—isation". Library names stay as spelled.
 - **Never write a colour, font or size directly.** Everything comes from
   `src/styles/tokens.css`. A `#4B4A7C` in a component is a bug even when it looks right.

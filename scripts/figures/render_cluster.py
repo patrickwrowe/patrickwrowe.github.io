@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import re
 from pathlib import Path
 
 import numpy as np
@@ -155,6 +156,19 @@ def render(positions_angstrom: np.ndarray, rotate_degrees: tuple[float, float, f
 
 SERIES_GAP_ANGSTROM = 3.0
 
+# Subscript digits, so a label reads C60 the way the prose around it does. Unicode
+# subscripts would be simpler but render unevenly in a monospaced face, and half the
+# glyphs are missing from most of them.
+_SUBSCRIPT_RE = re.compile(r"(\d+)")
+
+
+def _formula_markup(label: str) -> str:
+    """Wrap digit runs in a subscript tspan: C60 -> C<sub>60</sub>."""
+    return _SUBSCRIPT_RE.sub(
+        lambda m: f'<tspan font-size="1.05" dy="0.42">{m.group(1)}</tspan><tspan dy="-0.42"></tspan>',
+        label,
+    )
+
 
 def render_series(
     clusters: list[tuple[str, np.ndarray]], rotate_degrees: tuple[float, float, float]
@@ -193,7 +207,7 @@ def render_series(
     label_markup = "\n    ".join(
         f'<text x="{x:.3f}" y="{label_y:.3f}" text-anchor="middle" '
         f'font-size="1.6" fill="var(--graphite)" stroke="none" '
-        f'font-family="var(--mono)">{text}</text>'
+        f'font-family="var(--mono)">{_formula_markup(text)}</text>'
         for x, _half, text in labels
     )
 
@@ -265,6 +279,13 @@ def _self_check() -> None:
 
     # A degenerate flat-in-z cluster must not divide by zero.
     assert math.isclose(depth_opacity(1.0, 1.0, 1.0), OPACITY_NEAR)
+
+    # Digit runs become subscripts; letters are left alone. Every dy is undone by a
+    # matching one, or later labels on the same baseline would creep downwards.
+    assert _formula_markup("C60").startswith("C<tspan")
+    assert _formula_markup("BN") == "BN"
+    for markup in (_formula_markup("C60"), _formula_markup("C34O20H20")):
+        assert sum(float(d) for d in re.findall(r'dy="(-?[\d.]+)"', markup)) == 0.0
 
     print("self-check ok")
 

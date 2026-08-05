@@ -69,9 +69,16 @@ Do not break these without asking first.
   `src/content.config.ts`, fix the content. Loosening the schema needs a reason.
 - **Figures are SVG produced by a committed script** in `scripts/figures/`, not hand-drawn,
   never a screenshot of a plot. Strip white backgrounds so `--plate` shows through.
+- **Every molecular rendering of carbon goes through `scripts/figures/render_cluster.py`.**
+  It takes XYZ and emits a monochrome ball-and-stick SVG whose every stroke resolves to
+  `var(--ink)`, with depth encoded as opacity. Extend it rather than reaching for VMD,
+  Ovito or a fresh script — a screenshot of a viewer arrives with its own palette and
+  fights the page. Structures live beside it in `scripts/figures/data/` so figures
+  regenerate. Inline the output with `?raw` and `<Fragment set:html={...}>`, never
+  `<Image>`, or the custom properties never resolve.
 - **Prose is British English** (—ise, —isation). Identifiers and library APIs stay as the
   library spells them.
-- **Internal links carry trailing slashes**: `/work/gap-20/`.
+- **Internal links carry trailing slashes**: `/work/carbon-gap-20/`.
 
 ## Commands
 

@@ -3897,9 +3897,9 @@
     <line x1="64.199" y1="-0.138" x2="62.829" y2="-0.140" fill="none" stroke-width="0.110" opacity="0.950"/>
     <line x1="61.950" y1="-1.174" x2="62.829" y2="-0.140" fill="none" stroke-width="0.110" opacity="0.950"/>
     <circle cx="62.829" cy="-0.140" r="0.160" stroke="none" opacity="0.950"/>
-    <text x="3.601" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C60</text>
-    <text x="17.244" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C240</text>
-    <text x="37.769" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C540</text>
-    <text x="63.419" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C720</text>
+    <text x="3.601" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C<tspan font-size="1.05" dy="0.42">60</tspan><tspan dy="-0.42"></tspan></text>
+    <text x="17.244" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C<tspan font-size="1.05" dy="0.42">240</tspan><tspan dy="-0.42"></tspan></text>
+    <text x="37.769" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C<tspan font-size="1.05" dy="0.42">540</tspan><tspan dy="-0.42"></tspan></text>
+    <text x="63.419" y="13.946" text-anchor="middle" font-size="1.6" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C<tspan font-size="1.05" dy="0.42">720</tspan><tspan dy="-0.42"></tspan></text>
   </g>
 </svg>

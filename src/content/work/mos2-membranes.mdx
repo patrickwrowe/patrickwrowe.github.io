@@ -31,6 +31,7 @@ import { Image } from "astro:assets";
 import Permeation from "./figures/mos2-membranes/fig1-water-permeation.png";
 import Hysteresis from "./figures/mos2-membranes/fig2-ph-hysteresis.png";
 import XrdXps from "./figures/mos2-membranes/fig3-xrd-xps.png";
+import InPlaneDensity from "./figures/mos2-membranes/fig-inplane-water-density.png";
 
 A second collaboration with Rahul Nair's group at Manchester's National Graphene Institute,
 this time with Kostya Novoselov's group as well, and again the sequence was that the
@@ -148,6 +149,22 @@ of the metal sublattice — and yet the water structure between them is almost i
 sits preferentially directly above sulfur atoms rather than in the interstitial sites, which
 indicates hopping rather than continuous diffusion.
 
+<Plate n={5}>
+  <Image src={InPlaneDensity} alt="Two in-plane probability density maps of water oxygens across the MoS2 basal plane, at low and high lithium loading, with molybdenum and sulfur lattice positions marked." widths={[640, 1180, 1760]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Where the water actually sits. In-plane probability density of the water oxygens across
+    the MoS₂ basal plane at low (left) and high (right) lithium loading, accumulated over the
+    production trajectory, with the molybdenum (blue ×) and sulfur (white ○) lattice positions
+    overlaid. Density collects on lattice sites and stays flat in between rather than
+    spreading evenly across the plane — water occupies discrete positions and moves between
+    them, which is the structural signature behind the hopping picture.
+    <span class="credit">
+      Own work, from the CP2K trajectories behind Fig. 4. Not published at this resolution;
+      the on-image legend has been cropped away and its key moved into this caption.
+    </span>
+  </Fragment>
+</Plate>
+
 Lithium loading does change the interfacial structure. At low Li/Mo the ions sit close to the
 MoS₂ surface; at high loading they localise between the two water monolayers, and the water
 molecules reorient so their hydrogens point at the surfaces instead.
@@ -176,5 +193,6 @@ an experimental group with a clean anomaly, and simulations run to distinguish b
 candidate mechanisms rather than to reproduce the measurement.
 
 Data availability is by request to the corresponding authors; no repository or dataset DOI
-accompanies the paper. The figures reproduced here are from the CC BY accepted manuscript
-deposited at Manchester, not from the published version, which is behind a subscription.
+accompanies the paper. The published figures reproduced here are from the CC BY accepted
+manuscript deposited at Manchester, not from the version of record, which is behind a
+subscription. The in-plane density map is my own, from the trajectories themselves.
