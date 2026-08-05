@@ -1,0 +1,133 @@
+---
+title: Defect-dependent corrugation in graphene
+kind: paper
+year: "2021"
+order: 27
+summary: Large-scale molecular dynamics under GAP-20, asking how much a point defect changes
+  the shape of a graphene sheet. Divacancies make it five times more corrugated; Stone–Wales
+  defects three.
+method: Molecular dynamics under GAP-20 in LAMMPS, with local height-function fitting
+system: Free-standing graphene, ~7000 atoms, divacancy and Stone–Wales defects from 0.03% to 3%
+published: Nano Lett. 21, 8143–8150 (2021)
+authors: Fabian L. Thiemann, Patrick Rowe, Andrea Zen, Erich A. Müller, Angelos Michaelides
+doi: 10.1021/acs.nanolett.1c02585
+tags: [carbon, materials, machine-learning, interatomic-potentials]
+links:
+  - { label: Paper, url: "https://doi.org/10.1021/acs.nanolett.1c02585" }
+  - { label: Preprint, url: "https://arxiv.org/abs/2107.01128" }
+---
+
+Free-standing graphene is never flat. A two-dimensional membrane at finite temperature ripples
+and wrinkles, and that corrugation is not a nuisance to be averaged away — it controls the
+electronic structure, the mechanical response and the chemical reactivity of the sheet. Real
+graphene is also never perfect. So the question this paper asks is direct: how much does a
+point defect change the shape of the sheet around it, and does the answer depend on which
+defect it is?
+
+It is a question that had been hard to answer for a specific reason. Answering it requires
+thousands of atoms and hundreds of picoseconds, which rules out density functional theory, and
+it requires getting the energetics of a *reconstructing* defect right, which is exactly where
+classical bond-order potentials are least trustworthy. [GAP-20](/work/carbon-gap-20/) had
+removed that obstacle the year before, and this is one of the first papers to spend it.
+
+## What was done
+
+Molecular dynamics in LAMMPS on free-standing periodic sheets of roughly 7000 carbon atoms, at
+300 K and zero applied stress, driven by GAP-20. Two defects: the divacancy, where two adjacent
+atoms are removed and the lattice reconstructs into one eight-membered and two five-membered
+rings, and the Stone–Wales defect, where a single bond rotation turns four hexagons into two
+pentagons and two heptagons. Concentrations run from an isolated defect at about 0.03% up to
+3%, at which point defects sit roughly a nanometre apart and can feel one another.
+
+Two choices in the setup matter more than they might appear.
+
+Defects were placed randomly subject to a minimum 10 Å separation, with three independent
+placements per defect type and concentration, and every simulation was started from a *flat*
+sheet with the vacancy reconstruction left to happen on its own rather than being imposed by
+the initial configuration. That is the honest way to run the experiment, and it turns out to be
+the discriminating one.
+
+Corrugation is reported as an amplification factor — the standard deviation of the atomic
+height distribution divided by the same quantity for pristine graphene at the same size. The
+ratio is used deliberately, because absolute out-of-plane displacement in a flexible membrane
+grows with the size of the system, so an absolute height would say more about the simulation
+cell than about the defect.
+
+## What it showed
+
+Defects amplify corrugation substantially, and by an amount that depends on which defect it is.
+At 3% concentration a divacancy-laden sheet is roughly five times more corrugated than pristine
+graphene, and a Stone–Wales sheet about three times — a factor of two between the two defect
+types at equal concentration. The amplification rises steeply at low concentration and
+plateaus above about 1.5%, and it is already well clear of unity by 0.2%. For scale, the
+corrugation induced by 1% defects is comparable to that of pristine graphene held under 2%
+compressive strain.
+
+The mechanism comes out of fitting a local height function to the atoms around each defect and
+reading off its inclination and Gaussian curvature at the centre.
+
+Pristine graphene has an inclination of about 0.066 and, necessarily, zero Gaussian curvature:
+an environment made only of hexagons is developable, so rippling in clean graphene is pure
+local tilting with no intrinsic curvature anywhere.
+
+A Stone–Wales defect has an inclination of about 0.270 in isolation — four to five times the
+pristine value — and still zero Gaussian curvature. The tilt is intrinsic to the defect, not a
+collective effect, and raising the concentration changes it by less than 20%. Stone–Wales
+defects are strong, independent, flat-but-tilted seeds.
+
+A divacancy behaves completely differently. Its inclination runs from 0.086 to 0.33 and its
+Gaussian curvature from −0.001 to −0.012 Å⁻² across the concentration range: roughly fourfold
+and tenfold increases. Negative Gaussian curvature means a saddle — a hyperbolic paraboloid,
+or a crisp — and the strong concentration dependence means divacancies are coupling to one
+another rather than acting independently. Their perturbations superimpose and interfere.
+
+So the two defects amplify corrugation by genuinely different routes: one imposes a fixed tilt,
+the other imposes a curvature that grows as the defects begin to interact.
+
+## Why the potential mattered
+
+The paper ran the same simulations at 1% concentration with LCBOP and REBO II as a check. Both
+agree qualitatively on the amplification factor, so at first glance the machine-learned
+potential looks like an expensive way to reach the same conclusion.
+
+It is not, and the reason is worth stating. Both classical potentials overestimate the
+divacancy reconstruction barrier badly enough that, started from a flat sheet with unrelaxed
+vacancies, they never reconstruct and never corrugate. They only reproduce the result if the
+reconstructed defect is supplied to them in the initial configuration — that is, if you already
+know the answer. A potential that gets the right result only when told what it is cannot be
+used to discover anything, and this is a clean example of the difference between reproducing a
+known result and being able to find one.
+
+## Where this sits
+
+The simulations are driven by [GAP-20](/work/carbon-gap-20/), and the paper leans on the
+specific thing that model was built for: a training set spanning pristine graphene through to
+amorphous carbon covers the strongly distorted local environments around a reconstructing
+divacancy, which a graphene-only potential such as
+[the 2018 model](/work/graphene-potential/) would not. That earlier potential is cited too, for
+the compressive-strain comparison. The paper describes itself as the first systematic study of
+the interplay between defects and graphene morphology at close to quantum-mechanical accuracy,
+and GAP-20 is what makes that claim available.
+
+It is a direct methodological sibling of the group's hexagonal boron nitride rippling study from
+the previous year — same first two authors, same template of a machine-learned potential
+driving large-scale dynamics of a two-dimensional membrane, and deliberately the same system
+size so the two are comparable.
+
+The motivation is experimental: measurements showing graphene's elastic modulus *increasing*
+with vacancy concentration, and defect-tuned thermal expansion, both of which point at a
+morphological explanation that a purely mechanical picture does not supply.
+
+## Contribution
+
+Second author of five. The paper carries no author contribution statement, so I will not claim
+a specific division of labour. What is evidenced is that the work is built on GAP-20, on which
+I am first author, and that it cites the 2018 graphene potential for its strain comparison.
+
+## A note on the figures
+
+This page carries no reproduced figures. Nano Letters is subscription-access and ACS retains
+rights on the published version; the freely available arXiv and Imperial College copies are the
+submitted manuscript under a deposit licence that permits distribution by those repositories
+but does not grant reuse. Unlike the other papers here, there is no open-licensed version to
+take figures from, so the figures stay where they are and this page links out instead.
