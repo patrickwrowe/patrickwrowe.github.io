@@ -25,48 +25,79 @@ links:
 ---
 
 import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
+import Workflow from "./figures/aqueous-potentials/fig1-workflow.png";
 import Tio2 from "./figures/aqueous-potentials/fig3-tio2-water.png";
 
 Machine-learned potentials are usually built to be general, and generality is what makes them
-take years. [GAP-20](/work/carbon-gap-20/) is cited in this paper as an example of that approach.
+expensive to produce. [GAP-20](/work/carbon-gap-20/) is cited in this paper as an example of
+that approach: a training database assembled over years, covering a whole element's chemical
+space, with the hyperparameter scans and the sampling strategy to match.
 
-The argument here is that most scientific questions do not require a general model. They
-require one that is correct at a single thermodynamic state point, and such a model can be
-built in days with almost no human input.
+The argument here is that most scientific questions do not need a model like that. They need
+one that is correct at a single thermodynamic state point, for a single system, and such a
+model can be built in a few days with almost no human input. The interesting part is not that
+this is possible in principle but that it can be made routine — the same protocol, unchanged,
+applied to six chemically dissimilar systems.
 
 ## What we built
 
 A committee neural network potential: several Behler–Parrinello networks trained from
-independent random initialisations on overlapping subsets of the same data. The committee mean
-is the prediction. The spread between members is a calibrated error estimate, and that error
-estimate is what drives everything else.
+independent random initialisations on overlapping subsets of the same data. The committee
+mean is the prediction. The spread between members is a calibrated estimate of the model's
+own error, and that error estimate is what drives everything downstream.
 
 The active learning loop starts from twenty randomly chosen frames of one short ab initio
-trajectory. Train, then repeatedly add the twenty frames where the committee disagrees most
-about the atomic forces. No new DFT is needed inside the loop — the reference trajectory
-already has energies and forces for every frame. Convergence arrives at roughly 300 training
-structures.
+trajectory. Train the committee, then repeatedly add the twenty frames on which the members
+disagree most about the atomic forces. The loop needs no new electronic structure
+calculations at any point, because the reference trajectory already carries energies and
+forces for every frame — the expensive step happened once, before the loop began. Convergence
+arrives at roughly 300 training structures.
 
-We applied it to six systems with no per-system hyperparameter tuning: fluoride and sulfate
-ions in solution, water in carbon and boron nitride nanotubes, water confined between MoS₂
-sheets, and water on rutile TiO₂(110). An automated protocol scores each model on radial
-distribution functions, vibrational density of states and force RMSE.
+<Plate n={2}>
+  <Image src={Workflow} alt="The model generation workflow, from a short reference trajectory through the active learning cycle to production simulation, above renderings of the six aqueous test systems." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    The protocol, and the six systems it was applied to unchanged. A short ab initio
+    trajectory goes in at the top; the committee is grown by query-by-committee selection in
+    the middle; long simulation comes out at the bottom. The systems below span solvated ions,
+    two flavours of nanoconfinement and an oxide interface — chosen to have as little in
+    common as possible.
+    <span class="credit">
+      Fig. 1 from Schran, Thiemann, Rowe, Müller, Marsalek and Michaelides,
+      Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021). CC BY-NC-ND 4.0.
+    </span>
+  </Fragment>
+</Plate>
+
+The six systems are fluoride and sulfate ions in solution, water inside carbon and boron
+nitride nanotubes, water confined between MoS₂ sheets, and water on rutile TiO₂(110). No
+per-system hyperparameter tuning was performed. An automated protocol scores each model
+against its own reference trajectory on radial distribution functions, vibrational density of
+states and force RMSE, so the assessment is as uniform as the training.
 
 ## What it showed
 
-Across all six systems: RDF scores 98–100%, VDOS 96–98%, forces 86–95%. For the
-fluoride–water model the force RMSE is 56.8 meV Å⁻¹ on oxygen, 29.7 on hydrogen, 55.8 on
-fluorine.
+Across all six systems, RDF scores of 98–100%, VDOS 96–98%, and force agreement of 86–95%.
+For the fluoride–water model the force RMSE is 56.8 meV Å⁻¹ on oxygen, 29.7 on hydrogen and
+55.8 on fluorine. The resulting potentials are four to five orders of magnitude cheaper than
+the DFT they replace, and it is that margin, not the accuracy on its own, that buys the
+applications.
 
-The resulting potentials are four to five orders of magnitude cheaper than the DFT they
-replace, which is what buys the application.
+Water on rutile TiO₂(110) is where the paper spends it: 5 ns of dynamics on 1728 atoms, which
+is roughly three orders of magnitude more sampling than the equivalent ab initio calculation
+could deliver. The density profile resolves two sharp contact layers, diffusion in the
+strongly adsorbed first layer is essentially zero, and the interface perturbs water diffusion
+more than a nanometre into the liquid.
 
-<Plate n={2}>
-  <img src={Tio2.src} alt="Water on rutile titanium dioxide: simulation cell, mass density profile, diffusion constants, model error estimate, and free energy maps from AIMD and from the machine-learned potential." />
+<Plate n={3}>
+  <Image src={Tio2} alt="Water on rutile titanium dioxide: simulation cell with adsorption sites, mass density profile, parallel and perpendicular diffusion constants, committee force error against distance from the surface, and adsorption free energy maps from AIMD and from the machine-learned potential." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
   <Fragment slot="caption">
-    Water on rutile TiO₂(110) from a 5 ns, 1728-atom simulation. Panels E and F are the same
-    adsorption free energy map computed from ab initio dynamics and from the committee
-    potential — the first has too little statistics to converge, the second does not.
+    Water on rutile TiO₂(110). Panels E and F are the same adsorption free energy map computed
+    from ab initio dynamics and from the committee potential: the first has too little
+    statistics to resolve the minima, the second is converged. Panel D is the argument for
+    carrying a committee at all — the model's own error estimate, resolved against distance
+    from the surface, stays between 40 and 80 meV Å⁻¹ across the whole water region and does
+    not drift over the trajectory.
     <span class="credit">
       Fig. 3 from Schran, Thiemann, Rowe, Müller, Marsalek and Michaelides,
       Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021). CC BY-NC-ND 4.0.
@@ -74,29 +105,36 @@ replace, which is what buys the application.
   </Fragment>
 </Plate>
 
-On rutile TiO₂(110), 5 ns of 1728 atoms gives a density profile with two sharp contact layers,
-essentially zero diffusion in the strongly adsorbed first layer, and an interface that
-perturbs water diffusion more than a nanometre into the liquid. The committee error estimate
-sits between 40 and 80 meV Å⁻¹ across the whole water region and does not drift over the
-trajectory — which is the point of carrying a committee rather than a single network.
+That last point deserves emphasis, because it is the difference between a fast model and a
+usable one. A single neural network potential run for 5 ns gives no indication of whether it
+has wandered somewhere its training set does not cover; the trajectory looks the same either
+way. A committee reports its own uncertainty continuously and at no meaningful extra cost,
+which turns "the simulation ran" into "the simulation stayed inside the model's domain of
+validity for its whole length".
 
 ## Contribution
 
 Third author, with the contribution statement recording that Fabian Thiemann and I
 contributed equally. I was one of three who designed the study, one of four who performed the
-research, and one of six who analysed the data.
+research and one of six who analysed the data.
 
-For precision: the AML package implementing the active learning is Schran and Marsalek's,
-credited to them under new analytic tools. My contribution lies in designing and running the
-model generation and its application across the six systems, not in authoring that codebase.
+To be precise about credit: the AML package implementing the active learning is Schran and
+Marsalek's, and is credited to them under new analytic tools. My contribution is in the design
+and execution of the model generation and its application across the six systems, not in
+authoring that codebase.
 
 ## Where this sits
 
 It builds directly on Schran, Brezina and Marsalek's committee neural network potentials from
 the previous year, which established that committee disagreement tracks generalisation error
-well enough to drive active learning. This paper is the application layer.
+closely enough to drive active learning. This paper is the application layer on top of that
+result.
 
-Read alongside [GAP-20](/work/carbon-gap-20/), the two form a coherent sequence: build the
-general-purpose potential, establish what it costs in effort and in accuracy, then make the
-case for a cheap state-point-specific alternative. The papers do not contradict each other.
-They answer different questions about what a potential is for.
+Read alongside [GAP-20](/work/carbon-gap-20/), the two form a coherent sequence rather than a
+contradiction: build the general-purpose potential, establish what it costs in effort and in
+accuracy, then make the case for a cheap state-point-specific alternative where generality is
+not what the question requires.
+
+The nanotube systems here were demonstrations of the protocol. A year later they became the
+object of study in [their own right](/work/nanotube-water-flow/), scaled from a single
+(12,12) tube to sixteen tubes up to 5.5 nm across.

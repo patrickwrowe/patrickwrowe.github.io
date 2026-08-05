@@ -24,74 +24,147 @@ links:
 ---
 
 import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
 import ForceErrors from "./figures/graphene-potential/fig1-force-errors.png";
+import ThermalExpansion from "./figures/graphene-potential/fig2-thermal-expansion.png";
+import RamanG from "./figures/graphene-potential/fig6-raman-g-band.png";
 
-Simulating graphene at finite temperature meant choosing between two bad options. Density
-functional theory gives the right answer and costs so much that a few hundred atoms for a
-few picoseconds is a serious calculation. Empirical bond-order potentials run a million times
-faster and disagree with each other — and often with experiment — about things as basic as
-whether the lattice expands or contracts when you heat it.
+Simulating graphene at finite temperature meant choosing between two unsatisfactory options.
+Density functional theory gives the right answer, but costs enough that a few hundred atoms
+for a few picoseconds is a serious calculation on a national facility. Empirical bond-order
+potentials run six orders of magnitude faster, and disagree with one another — and often with
+experiment — about properties as basic as whether the lattice expands or contracts when it is
+heated. Almost every interesting question about graphene at temperature falls in the gap
+between the two.
+
+This paper closes that gap for a single material. It was the first piece of work I did during
+my PhD at UCL, and its central claim is narrow and testable: a machine-learned potential can
+be made accurate enough to substitute for DFT in graphene simulations, and cheap enough that
+the substitution is worth making.
 
 ## What we built
 
-A Gaussian approximation potential for graphene. The energy is decomposed into two-body,
-three-body and SOAP many-body terms rather than fitted as a single object, which improved
-both stability and how much data the fit needed.
+A Gaussian approximation potential, in which the total energy is decomposed into two-body,
+three-body and SOAP many-body contributions rather than fitted as a single object. That
+decomposition matters more than it might appear. Handing the smooth, short-range part of the
+interaction to the low-order terms leaves the many-body descriptor to describe only what the
+low-order terms cannot, which improved both the stability of the resulting dynamics and the
+volume of reference data the fit required.
 
-The training set is 1083 configurations of 200-atom sheets between 300 and 4000 K, computed
-in VASP with the dispersion-inclusive optB88-vdW functional and converged to 10⁻⁸ eV to keep
-force noise out of the fit. It was grown iteratively: seed the database from classical
-molecular dynamics, fit a potential, run dynamics with that potential, add what it visits,
-refit.
+The training set is 1083 configurations of 200-atom sheets sampled between 300 and 4000 K,
+computed in VASP with the dispersion-inclusive optB88-vdW functional and converged to
+10⁻⁸ eV so that numerical noise in the reference forces stayed well below the accuracy we
+were fitting to. We grew it iteratively rather than sampling it in one pass: seed the database
+from classical molecular dynamics, fit a potential, run dynamics under that potential, add the
+configurations it visits, refit. Each cycle populates the regions of configuration space the
+model actually explores, which is not the same set the empirical potential used to seed it
+would have chosen.
 
 ## What it showed
 
-Against DFT forces, the model reaches an RMSE of **0.028 eV Å⁻¹** in-plane. The best
-empirical competitor, AIREBO, manages 0.548; Tersoff manages 3.122, with individual errors
-above 11 eV Å⁻¹. That is roughly a factor of twenty over the best alternative and a factor of
-a hundred over the worst.
+Against DFT forces on an independent set of configurations, the model reaches an RMSE of
+**0.028 eV Å⁻¹** in-plane and **0.019 eV Å⁻¹** out-of-plane. The best empirical competitor,
+AIREBO, manages 0.548 eV Å⁻¹; LCBOP 0.595, REBO 0.722, ReaxFF 1.226, and Tersoff 3.122 with
+individual errors above 11 eV Å⁻¹. That is a factor of twenty over the best alternative and
+a factor of a hundred over the worst.
 
 <Plate n={2}>
-  <img src={ForceErrors.src} alt="Force parity plots for four models against DFT reference forces. The machine-learned potential forms a clean diagonal; Tersoff scatters widely." />
+  <Image src={ForceErrors} alt="Force parity plots and error distributions for four models against DFT reference forces. The machine-learned potential forms a clean diagonal; Tersoff scatters widely." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
   <Fragment slot="caption">
-    Forces against a DFT reference, for the machine-learned potential and three alternatives.
-    The GAP panel needed an inset rescaled to ±0.2 eV Å⁻¹ before its errors were visible at
-    all.
+    Predicted against reference forces (left) and the corresponding error distributions
+    (right), for the machine-learned potential and three alternatives. Black points are
+    out-of-plane forces, red in-plane. The GAP panel needed an inset rescaled to ±0.2 eV Å⁻¹
+    before its errors were visible at all; Tersoff, at the bottom, misses by more than the
+    forces themselves.
     <span class="credit">
       Fig. 1 from Rowe, Csányi, Alfè and Michaelides, Phys. Rev. B 97, 054303 (2018).
     </span>
   </Fragment>
 </Plate>
 
-Three results matter more than the aggregate error statistics:
+Aggregate force error is the easiest number to quote and the least interesting, because a
+potential is only useful if the errors that remain are uncorrelated with the observables you
+care about. Three physical tests carry more weight.
 
-- **Phonons.** Sub-meV agreement with the dispersion derived from X-ray diffraction at almost
-  every high-symmetry point. Mean absolute errors elsewhere: REBO 10 meV, AIREBO 20 meV,
-  Tersoff 40 meV and up to 110 meV on the E₂g bands. Every empirical potential tested fails on
-  the high-energy LO branch.
-- **Thermal expansion.** Graphene contracts as it is heated to about 1750 K and then expands,
-  a total variation of 0.1% across 60–2500 K. We reproduced that, sign and magnitude, against
-  ab initio molecular dynamics. REBO gets the sign wrong throughout. ReaxFF contracts sharply
-  and then tears the sheet apart above 1500 K, far below melting.
-- **Cost.** About four orders of magnitude cheaper per step than the AIMD it stands in for,
-  and two to three orders more expensive than a bond-order potential.
+**Phonons.** The 0 K dispersion agrees with the spectrum derived from inelastic X-ray
+diffraction to sub-meV accuracy at almost every high-symmetry point. Mean absolute errors for
+the alternatives run from 10 meV for REBO through 20 meV for AIREBO to 40 meV for Tersoff,
+which reaches 110 meV on the E₂g bands at Γ. Every empirical potential we tested fails on the
+dispersion of the high-energy longitudinal optical branch; the machine-learned model does not.
+That branch governs Raman response and much of the thermal transport, so getting it wrong is
+not a cosmetic failure.
+
+**Thermal expansion.** Graphene contracts in-plane as it is heated to roughly 1750 K and
+expands above it, with a total variation of only 0.1% across the range 60–2500 K. Reproducing
+a non-monotonic effect that small is a demanding test, because the sign change depends on a
+competition between out-of-plane flexural modes and ordinary anharmonic expansion. We
+recovered both the sign and the magnitude against ab initio molecular dynamics. REBO predicts
+positive expansion throughout, getting the sign wrong across the whole range. LCBOP predicts
+strongly negative expansion with a spurious minimum near 1000 K. ReaxFF contracts sharply and
+then fragments the sheet above 1500 K, far below any physical melting point.
+
+<Plate n={3}>
+  <Image src={ThermalExpansion} alt="Three stacked panels: absolute lattice parameter against temperature from 60 to 2500 K for eight models, the same normalised to each model's own 60 K value, and the derived thermal expansion coefficients." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    In-plane lattice parameter from 60 to 2500 K. Panel B normalises each model to its own
+    60 K value, which is the fair comparison: it removes the constant offset in the lattice
+    parameter and asks only whether a model gets the temperature dependence right. The
+    machine-learned potential tracks the ab initio reference; the empirical potentials
+    disagree with it and with each other on the sign.
+    <span class="credit">
+      Fig. 2 from Rowe, Csányi, Alfè and Michaelides, Phys. Rev. B 97, 054303 (2018).
+    </span>
+  </Fragment>
+</Plate>
+
+**Raman softening.** The E₂g mode at Γ — the G band — softens as graphene is heated, and
+variable-temperature Raman spectroscopy measures that softening directly. Comparing against
+it required correcting the experimental data for the strain the graphene picks up from its
+silicon nitride substrate, which is the sort of step that separates a genuine comparison with
+experiment from a comparison with an idealised model of it. Once corrected, the
+machine-learned potential tracks the measurements across 150–1400 K, as do REBO and AIREBO.
+Tersoff greatly overestimates the softening. LCBOP disagrees qualitatively, predicting that
+the band *hardens* over much of the range, despite having produced a respectable 0 K
+dispersion curve — a useful reminder that agreement at zero temperature does not imply
+agreement at finite temperature.
+
+<Plate n={4}>
+  <Image src={RamanG} alt="Shift in the graphene E-2g Gamma-point frequency between 150 and 1400 K, comparing five models against strain-corrected variable-temperature Raman measurements." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Softening of the Γ-point E₂g mode against temperature, compared with strain-corrected
+    variable-temperature Raman spectroscopy. The comparison is with experiment rather than
+    with the model's own training reference, which makes it the more demanding of the two
+    phonon tests.
+    <span class="credit">
+      Fig. 6 from Rowe, Csányi, Alfè and Michaelides, Phys. Rev. B 97, 054303 (2018).
+    </span>
+  </Fragment>
+</Plate>
+
+**Cost.** Normalised per core, per molecular dynamics step, on 200 atoms: Tersoff 1, the
+machine-learned potential 340, DFTB 950, and ab initio molecular dynamics 2 × 10⁷. So the
+model is roughly four orders of magnitude cheaper than the theory it stands in for, and two
+to three orders more expensive than a bond-order potential. That is the trade the paper
+proposes, stated plainly rather than buried.
 
 ## Limitations
 
-The model is accurate because it is narrow. It is trained on graphene and cannot describe
-diamond or any other phase of carbon. The conclusions state this directly, alongside the
-observation that a general machine-learned carbon potential appeared feasible.
+The model is accurate because it is narrow. It is trained on graphene, and by construction
+it cannot describe diamond or any other phase of carbon; asked to, it will fail confidently.
+The reverse also holds, and we tested it — the general-purpose amorphous-carbon potential of
+Deringer and Csányi, applied to graphene, gives force errors of 0.270 eV Å⁻¹, an order of
+magnitude worse than the dedicated model, and a lattice parameter 1.2% too small.
+
+Two potentials, the same framework, opposite failure modes: one flexible but imprecise, one
+precise but narrow. The conclusions say so directly, and add that a general machine-learned
+carbon potential looked feasible.
 
 ## Where this sits
 
-It builds on the GAP framework of Bartók, Csányi and co-workers, and on the amorphous-carbon
-potential of Deringer and Csányi — which we also used as a benchmark. That comparison is the
-useful one: applied to graphene, the amorphous model gives force errors of 0.270 eV Å⁻¹ and a
-lattice parameter 1.2% too small. Two potentials, the same framework, opposite failures — one
-flexible but imprecise, one precise but narrow.
+The work builds on the GAP framework of Bartók, Csányi and co-workers, and takes the
+amorphous-carbon potential of Deringer and Csányi as both a benchmark and a foil.
 
-Closing that gap became [GAP-20](/work/carbon-gap-20/) two years later. It absorbed this
-training set and reports what generalisation cost: 4 meV on phonon frequencies against 1 meV
-for this model, in exchange for the rest of carbon chemical space.
-
-The work formed part of my PhD at UCL.
+Closing the gap between the two became [GAP-20](/work/carbon-gap-20/) two years later. It
+absorbed this training set wholesale and quantified what generalisation cost: 4 meV on
+phonon frequencies at high-symmetry points, against 1 meV for this model, in exchange for the
+rest of carbon chemical space.

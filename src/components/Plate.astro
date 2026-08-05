@@ -39,6 +39,19 @@ const { n, animate = false } = Astro.props;
     width: 100%;
     height: auto;
   }
+  /* Journal figures ship on opaque white. Multiplying against --plate drops the
+   * white out so the frame reads as one surface, without editing the artwork —
+   * which matters for the figures we hold under a no-derivatives licence. */
+  .plate__frame :global(img) {
+    width: auto;
+    max-width: 100%;
+    /* Portrait composites would otherwise run to two screens once the plate breaks
+     * out of the measure. Height-capped and centred; the intrinsic ratio is never
+     * touched, so a tall figure narrows rather than squashing. */
+    max-height: 85vh;
+    margin-inline: auto;
+    mix-blend-mode: multiply;
+  }
   .plate__caption {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -65,6 +78,15 @@ const { n, animate = false } = Astro.props;
   @media (min-width: 700px) {
     .plate__frame {
       margin-inline: calc(var(--gutter) * -0.5);
+    }
+  }
+  /* Journal figures are multi-panel composites; at the 62ch prose measure the
+   * panels stop being readable. Past the measure the plate breaks out rightwards
+   * to the full shell, while the caption stays in the text column. */
+  @media (min-width: 1000px) {
+    .plate__frame {
+      margin-inline: 0;
+      width: calc(min(var(--shell), 100vw) - var(--gutter) * 2);
     }
   }
   @media (max-width: 640px) {

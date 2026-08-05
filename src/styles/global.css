@@ -30,6 +30,9 @@ img,
 svg {
   display: block;
   max-width: 100%;
+  /* Astro's <Image> emits intrinsic width/height. Without this, max-width
+   * squashes the image instead of scaling it. */
+  height: auto;
 }
 
 h1,

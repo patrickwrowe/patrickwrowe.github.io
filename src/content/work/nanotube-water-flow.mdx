@@ -1,0 +1,176 @@
+---
+title: "Water flow in single-wall nanotubes: oxygen makes it slip, hydrogen makes it stick"
+kind: paper
+year: "2022"
+order: 24
+summary: Why water flows fast through carbon nanotubes and slowly through boron nitride ones.
+  Geometry sets the curvature dependence, chemistry sets the material dependence.
+method: Committee neural network potentials at revPBE-D3 accuracy, over 40 ns of dynamics
+system: Sixteen armchair carbon and boron nitride nanotubes, 1.6–5.5 nm diameter, plus flat graphene and hBN
+published: ACS Nano 16, 10775–10782 (2022)
+authors: Fabian L. Thiemann, Christoph Schran, Patrick Rowe, Erich A. Müller, Angelos Michaelides
+doi: 10.1021/acsnano.2c02784
+tags: [interatomic-potentials, water, interfaces, machine-learning]
+hero: ./figures/nanotube-water-flow/fig1-friction-vs-radius.png
+heroAlt: Rendered nanotubes widening left to right into a flat graphene sheet, above a
+  log-log plot of water friction coefficient against tube radius for carbon and boron
+  nitride, with prior experimental and simulation results in grey.
+heroCredit: Fig. 1 from Thiemann, Schran, Rowe, Müller and Michaelides, ACS Nano 16,
+  10775–10782 (2022). CC BY 4.0.
+links:
+  - { label: Paper, url: "https://doi.org/10.1021/acsnano.2c02784" }
+  - { label: Preprint, url: "https://arxiv.org/abs/2202.04955" }
+  - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
+---
+
+import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
+import Corrugation from "./figures/nanotube-water-flow/fig2-fes-corrugation.png";
+import Mechanism from "./figures/nanotube-water-flow/fig3-diffusion-mechanism.png";
+
+Water moves through carbon nanotubes far faster than continuum hydrodynamics allows, and the
+effect gets stronger as the tubes get narrower. Through boron nitride nanotubes, which are
+geometrically almost identical and differ only in what the wall is made of, it does not. This
+had been measured repeatedly since the mid-2000s and had resisted explanation for well over a
+decade — long enough that it was a standing embarrassment for a field otherwise confident it
+understood interfacial water.
+
+The obstacle was not conceptual so much as computational. Explaining the difference requires
+electronic-structure accuracy, because it turns on how water interacts with two chemically
+similar surfaces; and it requires nanoseconds of dynamics across many tube radii, because
+friction is a fluctuation quantity and curvature is the variable of interest. Those two
+requirements had been mutually exclusive.
+
+## What we did
+
+Two committee neural network potentials, one for carbon–water and one for boron
+nitride–water, built with the active-learning workflow from
+[the previous year's methods paper](/work/aqueous-potentials/) and trained against
+revPBE-D3 energies and forces. That functional was chosen deliberately: it reproduces both
+the structure and the dynamics of liquid water, and it matches diffusion Monte Carlo and
+coupled-cluster interaction energies for water on graphene and inside carbon nanotubes. A
+model that gets the water right and the interface wrong would answer nothing here.
+
+The training sets were grown in three generations — the confined systems first, then bulk
+water and flat sheets, then configurations with quantum nuclei from path-integral dynamics —
+reaching 1096 structures for carbon–water and 885 for boron nitride–water. Small training
+sets, because the systems are narrow; that is the argument the methods paper made.
+
+With those we simulated sixteen armchair nanotubes of each material, radii from 0.82 to
+2.77 nm, plus flat graphene and hBN sheets: 966 to 8328 atoms per system, at least 1 ns each,
+and more than 40 ns in total. All atoms were kept flexible, walls included, so that phonon
+coupling between the liquid and the solid is present rather than assumed away. Friction
+coefficients come from a Green–Kubo relation on the equilibrium force autocorrelation, so no
+flow is imposed and nothing is driven out of equilibrium to extract them.
+
+## What it showed
+
+Water experiences a friction coefficient four to five times larger on boron nitride than on
+the equivalent carbon system, at every curvature studied. On flat sheets the values are
+roughly 4.5 × 10⁴ N s m⁻³ for monolayer graphene and 17 × 10⁴ N s m⁻³ for hBN. Both materials
+show a strong radius dependence — narrower tubes are slipperier — and both converge to their
+flat-surface values above about 2.5 nm radius. The smallest boron nitride nanotube is about as
+slippery as flat graphene, which is a useful way to see that the two effects are comparable
+in size and independent.
+
+The mechanism separates cleanly once the free energy surface of the contact layer is resolved
+for oxygen and hydrogen atoms *separately*. That separation is the paper's real move, and
+everything follows from it.
+
+<Plate n={2}>
+  <Image src={Corrugation} alt="Oxygen and hydrogen free energy surface corrugation against tube radius for carbon and boron nitride nanotubes, the linear correlation between friction and the sum of squared corrugations, and eight three-dimensional renderings of the free energy surfaces." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    The explanation in one figure. Oxygen corrugation (a) rises with radius and is nearly
+    identical for both materials — a geometric effect. Hydrogen corrugation (b) hardly depends
+    on radius but is about four times larger on boron nitride — a chemical one. Panel (c) is
+    the strongest single piece of evidence in the paper: the friction coefficient is linear in
+    the sum of the two squared corrugations, across all sixteen tubes and both materials, which
+    means both atom types have to be counted. Panels (d) and (e) render the surfaces
+    themselves.
+    <span class="credit">
+      Fig. 2 from Thiemann, Schran, Rowe, Müller and Michaelides, ACS Nano 16, 10775–10782
+      (2022). CC BY 4.0.
+    </span>
+  </Fragment>
+</Plate>
+
+The oxygen free energy surface flattens as the tube narrows, from about 3.8 meV of corrugation
+at the smallest radii — identical in both materials — to 6.9 meV for carbon and 9.1 meV for
+boron nitride at the largest. Curvature smooths the landscape an oxygen atom sees, and it does
+so for the same geometric reason in both materials. That accounts for the radius dependence.
+
+The hydrogen free energy surface is essentially radius-independent, and strongly
+material-dependent: around 2.1 meV on carbon against 8.2–8.7 meV on boron nitride. In the
+narrowest boron nitride tube, the hydrogen corrugation is nearly twice the oxygen one. That
+accounts for the material dependence, and it is chemistry rather than geometry.
+
+Following individual molecules makes the difference concrete. On graphene, a water molecule
+slides with its orientation more or less irrelevant, and the hydrogen probability density in
+the contact layer is close to homogeneous — within about ±2% along a cut. On hBN the hydrogens
+dock onto nitrogen atoms and the molecule waits there before hopping to the next nitrogen
+site, and the density is modulated from 0.86 to 1.18. The hydrogen–nitrogen interaction is far
+too weak to be called a hydrogen bond, but it raises the barrier enough to change how the
+liquid moves.
+
+<Plate n={3}>
+  <Image src={Mechanism} alt="Colour-coded five-picosecond trajectories of a single water molecule diffusing across graphene and hBN, two-dimensional hydrogen probability density maps for both surfaces, and profiles through those maps." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    The mechanism made visible. Panel (a) traces one water molecule for 5 ps over graphene
+    (top) and hBN (bottom), colour-coded by time, with the nitrogen atoms it docks onto marked
+    in the matching colour. Panels (b) and (c) show the hydrogen probability density and cuts
+    through it: near-uniform on graphene, sharply localised on nitrogen for hBN. Unconstrained
+    sliding against docking-and-hopping.
+    <span class="credit">
+      Fig. 3 from Thiemann, Schran, Rowe, Müller and Michaelides, ACS Nano 16, 10775–10782
+      (2022). CC BY 4.0.
+    </span>
+  </Fragment>
+</Plate>
+
+## What it does not resolve
+
+The friction predicted for carbon nanotubes is about an order of magnitude larger than
+nanofluidic measurements report. The paper does not explain this away. The measurements were
+made on multi-wall and isolated tubes, where interlayer coupling and wall rigidity differ from
+the single-wall systems simulated here, and there is a live proposal that electronic
+excitations in the wall contribute a quantum friction that no Born–Oppenheimer simulation can
+capture. Either could account for the gap. The honest position is that single-wall
+measurements are needed, and the paper says so.
+
+For boron nitride the discrepancy runs the other way: experiments report no measurable slip
+at all, while these simulations find substantial slip on pristine walls. The likeliest
+reconciliation is surface charge from hydroxide chemisorbed on boron in alkaline water,
+plausibly promoted by defects. No water dissociation occurred in these simulations, so the
+question is left open rather than answered.
+
+Extensive convergence tests — water density, system size, trajectory length, hydrogen mass,
+choice of functional, nuclear quantum effects and wall flexibility — shift the absolute
+numbers but leave the trends intact. Both the curvature dependence and the factor of four
+between materials survive all of them.
+
+## Contribution
+
+Third author of five. The paper carries no author contribution statement, so I will not claim
+a specific division of labour. What is documented is that the work runs entirely on the
+committee neural network potential machinery from
+[the 2021 methods paper](/work/aqueous-potentials/), on which Fabian Thiemann and I are
+recorded as having contributed equally, and which this paper cites as the framework it
+follows.
+
+## Where this sits
+
+This is the scientific payoff of that methods paper. Water in carbon and boron nitride
+nanotubes were two of the six demonstration systems there; here they stop being a
+demonstration and become the object of study, scaled from a single (12,12) tube to sixteen
+tubes up to 5.5 nm across.
+
+It also extends earlier ab initio work from the same group — Tocci, Joly and Michaelides
+(2014) first found a factor of three to five difference in friction between graphene and hBN,
+but from short trajectories on flat sheets only, with no access to curvature. Those values
+are plotted alongside the new ones in the first figure. And it answers a specific suggestion
+by Poggioli and Limmer (2021) that the material dependence might come down to
+hydrogen–nitrogen interactions: separating the oxygen and hydrogen free energy surfaces is
+what turns that suggestion into a quantitative claim.
+
+Neither the trained potentials nor the trajectories were deposited. The active-learning
+package that underlies the workflow is public.
