@@ -1,0 +1,125 @@
+---
+title: A rational approach to selecting CD3-binding antibodies for T-cell engager development
+kind: paper
+year: "2023"
+order: 31
+summary: A T-cell engager has two arms. The field optimises the tumour-binding one and treats the
+  CD3 arm as interchangeable. Nineteen functional clusters showing it is not.
+method: Functional clustering of high-throughput cytotoxicity and cytokine data across a CD3-binder panel
+system: T-cell engagers against PSMA and MAGE-A4, 380+ bispecifics built and profiled
+published: J. Immunother. Cancer 11 (Suppl 1), A1523 — SITC 2023
+authors: On the poster — Valentine de Puyraimond, Patrick Rowe and Juntao (Matt) Mai (equal
+  contribution), with 44 others; Bryan C. Barnhart senior author and presenter. The published
+  abstract lists 40 names in a different order.
+doi: 10.1136/jitc-2023-SITC2023.1367
+tags: [antibodies, proteins, machine-learning]
+links:
+  - { label: Paper, url: "https://doi.org/10.1136/jitc-2023-SITC2023.1367" }
+---
+
+A T-cell engager is a bispecific antibody with a job on each end. One arm grips an antigen on
+the tumour cell. The other grips CD3 on a T cell, and hauling the two together is what makes
+the T cell kill something it would otherwise ignore.
+
+Almost all the discovery effort in the field goes into the tumour arm, because that is the
+part that changes between programmes. The CD3 arm is widely treated as a fixed component —
+pick one with reasonable affinity, reuse it everywhere.
+
+That assumption is wrong in a way that matters clinically, and this work is a systematic
+demonstration of how wrong, plus a procedure for doing it properly.
+
+## Why the CD3 arm is not interchangeable
+
+The therapeutic problem with T-cell engagers is not usually potency. It is the gap between
+killing tumour cells and triggering cytokine release syndrome — the same T-cell activation
+drives both, and a molecule that kills well but releases too much IFNγ, IL-2 and TNFα is not
+a drug. The width of that window is a property of the whole molecule, not of the tumour arm
+alone.
+
+Two findings from the panel make the point directly.
+
+The same CD3 binder produces materially different functional profiles depending on which
+tumour arm it is paired with. So a CD3 binder has no context-free profile to be selected on.
+
+And CD3 binding kinetics alone do not predict potency. Off-rate does correlate significantly
+with both tumour-cell killing and IFNγ release — the one clean biophysical handle in the
+dataset — but the correlation is not tight enough to select on. Molecules with closely
+matched kinetics land in quite different functional places.
+
+Between them these rule out the two cheap selection strategies: reuse a favourite binder, or
+rank the panel by affinity.
+
+## What was done instead
+
+Characterise the CD3 binders by what they *do* rather than by what they bind, and cluster on
+that.
+
+Every binder in the portfolio was profiled in high-throughput T-cell-dependent cellular
+cytotoxicity and cytokine release assays — unactivated human T cells at a 10:1
+effector-to-target ratio over 48 hours, with IFNγ, IL-2 and TNFα quantified alongside
+killing — with binding kinetics measured separately by surface plasmon resonance.
+Hierarchical clustering of those functional readouts resolves the portfolio into **19
+distinct functional clusters**.
+
+The clusters are then the selection unit. Rather than choosing binders, you choose *across
+clusters*, which spans the functional space deliberately instead of sampling it by luck.
+
+Two programmes ran the procedure end to end. For PSMA: 400 tumour-binding parentals, paired
+against 92 CD3 binders drawn from 9 functional clusters, giving over 180 bispecifics, from
+which 9 leads were taken forward. For MAGE-A4: 300 tumour parentals against 19 CD3 binders
+drawn from all 19 clusters, giving over 200 bispecifics and 12 leads.
+
+In both cases the resulting panels span the clinical benchmarks rather than clustering
+around one profile — the PSMA leads bracket TNB-585 and AMG-160. That is the actual
+deliverable: not a single optimised molecule, but a panel with known coverage of the
+efficacy–toxicity trade-off, which is what lets a programme make an informed choice later
+rather than an early bet.
+
+## Contribution
+
+Two records of this work exist and they credit it differently, so both belong here.
+
+On the poster I am second of forty-seven authors, and one of three — with Valentine de
+Puyraimond and Juntao Mai — carrying the dagger for equal contribution. In the abstract as
+published in *Journal for ImmunoTherapy of Cancer* the list is shorter and ordered
+differently: forty names, Mai first, me eighth, and no equal-contribution marking at all.
+
+Neither document explains the difference. The poster is the claim made at presentation; the
+journal entry is the citable record. They disagree, and quoting only the more flattering of
+the two would misrepresent the work.
+
+Beyond that mark, neither document states who did what, so I will not describe a division of
+labour.
+
+## Where this sits
+
+This is the selection machinery underneath the programme pages rather than a result about one
+target. It feeds directly into
+[the peptide-MHC T-cell engager work](/work/tce-pmhc/) — the MAGE-A4 numbers above are that
+programme's front end — and it sits inside the broader
+[antibody selection and engineering workflows](/work/antibody-selection/) built at AbCellera.
+
+It builds on the company's earlier CD3-binder discovery and its multispecific engineering
+platform, and a companion poster from the same period, *Novel CD3-binding antibodies to drive
+potent tumor-cell killing and optimal cytokine release*, covers the discovery end of the same
+question. I have not given that one its own page here: it is the same body of work presented
+to a different audience, and two pages would say one thing twice. Its published record I have
+not been able to identify — the abstract number on the poster does not resolve to it in
+Crossref, so it is either from a different meeting year or was never assigned a DOI.
+
+This is also the clearest case on this site of the same skill applied to a different science.
+The structure–function question — measure a large panel, find the axes that actually organise
+it, then select along them — is the one from
+[the carbon potential benchmarking](/work/carbon-clusters/), with antibodies in place of
+interatomic potentials.
+
+## A note on the figures
+
+This page carries no reproduced figures, and the reason is a distinction worth stating
+because it is easy to get wrong.
+
+The published record — the SITC 2023 abstract in *Journal for ImmunoTherapy of Cancer* — is
+CC BY-NC 4.0, which would permit non-commercial reuse. But a JITC supplement abstract is a
+few hundred words of text. It does not contain the figures. Those live on the poster, which
+is marked © AbCellera and was never published under any licence. An open licence on the
+abstract is not an open licence on the poster, and the two are separate documents.

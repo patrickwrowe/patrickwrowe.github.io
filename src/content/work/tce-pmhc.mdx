@@ -1,0 +1,133 @@
+---
+title: T-cell engagers against a peptide-MHC tumour target
+kind: paper
+year: "2023–24"
+order: 32
+summary: Only about 15% of human proteins reach the cell surface, which is where T-cell engagers
+  have been stuck. This one reads a peptide presented from inside the cell.
+method: Antibody discovery against pMHC, 200+ bispecifics profiled, cryo-EM and positional scanning
+system: MAGE-A4 peptide on MHC class I; T-cell engagers against MAGE-A4-positive tumour lines
+published: SITC 2023 and AACR 2024 — JITC 11(Suppl 1) A1550, Cancer Res. 84(6_Suppl) 2373
+authors: Davide Tortora, Peter Bergqvist, Tim Jacobs and 26 others including Patrick Rowe,
+  with Bryan C. Barnhart as senior author (SITC 2023 list; the AACR 2024 list has 30 names)
+doi: 10.1136/jitc-2023-SITC2023.1395
+tags: [antibodies, proteins, interfaces]
+links:
+  - { label: Paper, url: "https://doi.org/10.1136/jitc-2023-SITC2023.1395" }
+  - { label: Docs, url: "https://doi.org/10.1158/1538-7445.am2024-2373" }
+---
+
+T-cell engagers can only attack what they can see, and what they can see is the cell surface.
+Fewer than 15% of cellular proteins go there. The other 85% — including most of the proteins
+that actually distinguish a cancer cell from a healthy one — are intracellular, and by the
+usual logic unreachable.
+
+They are not quite unreachable. Every cell continuously chops up its internal proteins and
+displays the fragments on MHC class I, which is how the immune system audits what is going on
+inside. So an intracellular tumour antigen does reach the surface, as a short peptide sitting
+in a groove. Building a T-cell engager that targets one of those would open the other 85% of
+the proteome.
+
+The difficulty is specificity, and it is severe. An MHC molecule presenting the wrong peptide
+looks almost exactly like one presenting the right peptide — the same large protein, the same
+fold, differing in a handful of side chains pointing out of a groove. A binder that latches
+onto the MHC rather than its cargo will find that cargo on every cell in the body.
+
+## Why antibodies rather than engineered T-cell receptors
+
+This is the strategic choice underneath the work, and it is a choice about where the
+engineering effort goes.
+
+T-cell receptors are the natural readers of peptide-MHC, but their natural affinities are far
+too weak for a therapeutic, so soluble TCR-based molecules have to be extensively affinity
+matured. That maturation is where the trouble starts: pushing affinity up tends to push
+binding towards the invariant MHC framework, and molecules emerge that bind well and no
+longer care much which peptide is being presented.
+
+Antibodies come at it from the other end. They bind pMHC in the nanomolar-to-picomolar range
+to begin with, so far less engineering is needed, so there is far less opportunity to drift
+into peptide-independent binding. The bet is that starting with enough affinity is a better
+route to specificity than engineering affinity in afterwards.
+
+## What was built
+
+The target is MAGE-A4, a cancer-testis antigen — expressed in tumours and, among normal
+adult tissues, essentially only in testis, which is immune-privileged. Intracellular, so
+reachable only as pMHC.
+
+Discovery produced 45 MAGE-A4-pMHC antibodies, from which 6 were taken forward across 4
+clonal families, spanning affinities from 7 nM to 15 µM. Even at the panel stage they were
+counter-screened against 19 unrelated pMHCs.
+
+Those 6 were then paired against 19 CD3-binding antibodies drawn from
+[the functionally clustered CD3 panel](/work/cd3-binder-selection/), producing over 200
+bispecifics in a 1×1 format. Twelve were selected for detailed assessment, spanning roughly
+four orders of magnitude in potency, and one — the lead — carried forward.
+
+## What the lead does
+
+The specificity screen is the result that matters, because it is the one the whole approach
+turns on. Across a panel of more than 180 non-MAGE peptides, the lead bispecific bound none
+of them. Its binding is restricted to MAGE-A4 and MAGE-A8 pMHC.
+
+That is a strong result and it is worth reading precisely: restricted to two related
+antigens, not to one. MAGE-A8 cross-reactivity is real and is the kind of thing that has to
+be carried forward into preclinical work rather than rounded away.
+
+Functionally, the lead kills around 75% of MAGE-A4-positive cells at the top of the dose
+range, in two independent lines, with dose-dependent IL-2, IFNγ and TNFα release. Against
+MAGE-A4-negative lines, and against a MAGE-A4 knockout, there is no activity and minimal
+cytokine response. The knockout is the control that carries the argument: it holds the cell
+line constant and removes only the antigen, so the killing is demonstrably antigen-driven
+rather than a property of those particular cells.
+
+## Why it is specific
+
+Cryo-EM structures of the antibody bound to its target answer the mechanistic question
+directly, and the answer is the one you would want.
+
+The binding is **peptide-centric**: the antibody contacts predominantly the central residues
+of the peptide rather than the surrounding MHC framework. Different antibodies in the panel
+approach at quite different orientations while still reading the peptide, which suggests
+peptide-centric binding is a repeatable outcome of this discovery route rather than one lucky
+molecule.
+
+The critical contact is arginine at position 6, whose side chain projects fully out into
+solvent — the single most readable feature the peptide offers. A positional scan across all
+ten peptide positions confirms Arg 6 as the dominant determinant, and separates the lead's
+recognition profile from a clinical benchmark molecule across the full set of positions.
+
+So the structural evidence and the functional evidence agree: this molecule discriminates on
+the peptide, which is precisely the failure mode that has limited affinity-matured TCR
+approaches.
+
+## Contribution
+
+A late-list author on both records: 24th of 29 on the SITC 2023 abstract, 20th of 30 on the
+AACR 2024 one, and 25th of 31 on the poster itself. Neither carries a statement of individual
+contributions, so I will not claim a specific role in this work.
+
+This is a large and mostly experimental programme — antibody discovery, cell killing assays,
+cytokine panels and cryo-EM. The one concrete link to my own line of work is that the 19 CD3
+binders paired in here come from
+[the functionally clustered panel](/work/cd3-binder-selection/), which is the piece I am
+credited on prominently.
+
+## Where this sits
+
+Two presentations of one programme at successive stages: SITC 2023 covers discovery and the
+selection of twelve candidates; AACR 2024 covers the deep characterisation of the lead, and
+cites the CD3-selection work as its front end. I have given them one page rather than two,
+because they are one body of work and splitting them would duplicate the science while
+halving the story.
+
+## A note on the figures
+
+This page carries no reproduced figures, for a reason that is easy to get wrong in exactly
+the direction that would cause a problem.
+
+The SITC 2023 abstract is CC BY-NC 4.0 and the AACR 2024 abstract carries no licence at all.
+But in both cases the published record is a few hundred words of text — the figures shown
+here would have to come from the posters, which are marked © AbCellera and were never
+published under any licence. An open licence on an abstract says nothing about the poster
+presented alongside it.

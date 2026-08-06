@@ -1,0 +1,118 @@
+---
+title: Short-range excitonic interactions in light-harvesting complexes and organic semiconductors
+kind: paper
+year: "2017"
+order: 29
+summary: The standard way of computing excitonic coupling throws away everything but electrostatics.
+  For chromophores in contact, that discarded term is most of the answer.
+method: TDDFT with a Mulliken diabatisation, against transition density cubes and the dipole approximation
+system: Three light-harvesting complexes and two phthalocyanine solids, crystalline and disordered
+published: J. Chem. Theory Comput. 13, 3754–3763 (2017)
+authors: Rocco P. Fornari, Patrick Rowe, Daniele Padula, Alessandro Troisi
+doi: 10.1021/acs.jctc.7b00328
+tags: [quantum-chemistry, excitons, materials]
+links:
+  - { label: Paper, url: "https://doi.org/10.1021/acs.jctc.7b00328" }
+  - { label: Preprint, url: "http://wrap.warwick.ac.uk/98549" }
+---
+
+When an excited state moves from one molecule to another, the rate depends on the excitonic
+coupling between them, and essentially every model of energy transfer — in photosynthesis, in
+organic solar cells, in light-emitting films — takes that coupling from a Coulombic
+calculation. Often from the crudest version of one: treat each chromophore's transition
+density as a point dipole and compute the interaction between two dipoles.
+
+That approximation has a clear physical justification, which is that it becomes exact as the
+molecules move apart. The question this paper asks is what it costs when they do not move
+apart — when chromophores are stacked in contact, as they are in a pigment–protein complex and
+in every molecular semiconductor.
+
+The answer is that it costs most of the coupling.
+
+## What was done
+
+Excitonic couplings computed two ways for the same chromophore pairs, so that the difference
+between them isolates exactly the term the standard approach discards.
+
+The Coulombic coupling came from transition density cubes — the full electrostatic
+interaction between the two transition densities, without a multipole expansion. The *total*
+coupling came from a diabatisation scheme based on Mulliken population analysis, which
+retains everything: electrostatics plus the short-range terms that only exist where the two
+molecular wavefunctions actually overlap. Subtract one from the other and what remains is the
+short-range contribution — exchange, orbital overlap and penetration.
+
+Everything ran at TDDFT with the LC-ωPBE range-separated functional and a 6-31G** basis in
+NWChem, on homodimers only, with phytyl tails cut back to methyl groups so that the
+calculation is about the chromophore rather than its solubilising chemistry.
+
+Five systems, chosen to span the two fields that use these couplings and rarely talk to each
+other. Three light-harvesting complexes: the Fenna–Matthews–Olson complex, the LH2 antenna
+ring, and peridinin–chlorophyll protein, each taken from its crystal structure. Two
+phthalocyanine solids: a crystalline octabutoxy phthalocyanine and an amorphous zinc
+phthalocyanine, both sampled over 250 snapshots from molecular dynamics rather than evaluated
+on a single idealised geometry, because in a real film the coupling is a distribution and not
+a number.
+
+## What it showed
+
+The size of the neglected term scales with contact, and the two families of system sit at
+opposite ends of that scale.
+
+In the light-harvesting complexes the effect is real but contained. The most strongly
+interacting bacteriochlorophyll dimers in FMO carry a short-range contribution of about 28%,
+which in absolute terms is 4 meV. In the LH2 B850 ring, where the pigments are packed
+considerably closer, neighbouring bacteriochlorophylls reach 66% — around 3 meV out of 5. In
+peridinin–chlorophyll protein the peridinin dimers come in at 22% and 10%.
+
+In the molecular semiconductors it is not contained at all. Face-to-face dimers in
+crystalline octabutoxy phthalocyanine show short-range couplings of 200 meV, some 70% of the
+total. Disordered zinc phthalocyanine reaches 195 meV within a stacked column, 66% of a total
+that runs as high as 290 meV. These are not corrections. A calculation that drops them is not
+approximating the coupling in a phthalocyanine stack; it is computing a different quantity.
+
+The saving grace, and the reason the standard approach has survived, is that the effect
+switches off sharply. Beyond about 7 Å of separation the short-range contribution falls into
+the noise, with deviations typically under 1 meV. Chromophores that are merely nearby are
+fine. Chromophores that touch are not.
+
+A second result concerns the approximations themselves rather than the physics. Atomic
+transition charges, the standard cheap stand-in for the full transition density, turn out to
+carry systematic — not random — errors when used for the Coulombic coupling. And the
+dipole–dipole approximation is worse than its reputation: at 6 Å it recovers only about 67%
+even of the dipole contribution, and it does not converge onto the right answer as cleanly
+with distance as the textbook argument implies. The approximation that is supposed to be
+asymptotically safe is the one that misbehaves across the range.
+
+## Contribution
+
+Second author of four, in Alessandro Troisi's group at Warwick. The paper carries no author
+contribution statement and the acknowledgements name only ERC funding, so I will not claim a
+specific division of labour.
+
+## Where this sits
+
+It extends a framework set out by Harcourt, Scholes and Ghiggino, who first separated
+excitonic coupling into its Coulombic and short-range parts, from individual cases to a
+systematic survey across both biology and materials.
+
+Its most direct descendant is
+[the multi-chromophore transport study](/work/multichromophore-dynamics/) published a few
+months later, which shares an author and puts atomic transition charges to work computing
+couplings for fifty thousand structures. The two sit in tension, and it is worth being
+straight about it: this paper is the one that documented the systematic errors in that method.
+The tension is resolvable — the errors are concentrated in close-contact pairs, and an
+ensemble study of a complex with FMO's spacing is mostly outside that regime — but the
+resolution is an argument, not an assumption, and the argument belongs on the record.
+
+This is also the earliest work on this site, and the only quantum chemistry. Everything
+afterwards is a machine-learned potential or something built on one. The connecting thread is
+narrower than it looks: both are about when a cheap approximation to an expensive electronic
+structure calculation can be trusted, and what breaks when it cannot.
+
+## A note on the figures
+
+This page carries no reproduced figures. *Journal of Chemical Theory and Computation* is an
+ACS journal and the article is all rights reserved. The freely readable copy is the accepted
+manuscript deposited in the Warwick Research Archive Portal, whose terms permit personal and
+non-commercial reading — a deposit permission, not a reuse grant, and not a basis for
+republishing the figures here.

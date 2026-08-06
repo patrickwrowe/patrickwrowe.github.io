@@ -1,0 +1,132 @@
+---
+title: Structure–dynamics relation in physically plausible multi-chromophore systems
+kind: paper
+year: "2017"
+order: 30
+summary: Fifty thousand physically plausible alternatives to the FMO complex, built to ask whether
+  its structure is really tuned for energy transport. It lands in the top one per cent.
+method: Constrained geometric perturbation, atomic transition charge couplings, Lindblad transport
+system: The Fenna–Matthews–Olson complex and 50,000 generated alternatives to it
+published: J. Phys. Chem. Lett. 8, 2328–2333 (2017)
+authors: George C. Knee, Patrick Rowe, Luke D. Smith, Alessandro Troisi, Animesh Datta
+doi: 10.1021/acs.jpclett.7b00829
+tags: [quantum-chemistry, excitons, materials]
+links:
+  - { label: Paper, url: "https://doi.org/10.1021/acs.jpclett.7b00829" }
+  - { label: Preprint, url: "https://arxiv.org/abs/1704.01795" }
+  - { label: Data, url: "https://doi.org/10.6084/m9.figshare.c.3784874.v1" }
+---
+
+The Fenna–Matthews–Olson complex is the fruit fly of quantum biology. It is a small
+bacterial protein holding eight bacteriochlorophylls in a fixed arrangement, it shuttles
+excitation energy from an antenna to a reaction centre with very little loss, and for a
+decade it carried a large claim: that its structure is *tuned* for that job, perhaps even
+tuned to exploit quantum coherence.
+
+The claim is hard to test, because the obvious experiment is not available. You cannot run
+evolution again and see what else it might have produced, and you cannot compare FMO against
+the alternatives because the alternatives do not exist.
+
+This paper makes them exist. Fifty thousand of them.
+
+## What was done
+
+The generative step is the whole argument, so it is worth being precise about it.
+
+Starting from the crystal structure, the eight chromophores were moved and reoriented by
+stochastic real-space transformations, under constraints: the volume enclosed is held fixed,
+and no two atoms are allowed to approach closer than chemistry permits. The result is an
+ensemble of *ersatz* complexes that are not FMO but could plausibly have been — arrangements
+a protein could actually hold, rather than points in an abstract parameter space.
+
+For each of the fifty thousand, the excitonic Hamiltonian was rebuilt from scratch: couplings
+computed by the atomic transition charge method on DFT-optimised chromophore geometries at
+LC-ωPBE/6-31G**. Transport was then propagated under a Lindblad master equation with
+dephasing at 2.1 ps⁻¹ and a sink at 6.3 ps⁻¹, and efficiency read off as the population
+delivered to the sink, integrated over 10 ps.
+
+Two additional ensembles were generated as controls, and they earn their place. One varied
+only chromophore *orientation*, holding positions fixed. The other abandoned geometry
+altogether and perturbed the Hamiltonian matrix elements directly with uncorrelated noise —
+which is, in effect, what the earlier literature had been doing.
+
+## What it showed
+
+Across the ensemble, transport efficiency at 10 ps runs from near zero to essentially
+complete, a spread of some twenty percentage points between the worst and best ranked
+structures. This is not a landscape where everything works.
+
+The real FMO structure sits at the 99.1st percentile.
+
+That number is the paper's headline, and it does support the tuning claim — but the more
+useful results are the two structural quantities that explain *why*, because those generalise
+beyond one protein.
+
+The first is compactness. High-performing structures are around 3.3 times more compact by
+moment of inertia than poor ones, and efficiency correlates negatively with moment of inertia
+throughout. This is close to obvious in hindsight: excitation has less far to go. It is still
+worth having measured.
+
+The second is not obvious. Of the eight chromophores, the one whose transition dipole
+orientation matters is specifically the one lying closest to the line between source and
+drain, and its influence *grows* over the transport window — the rank correlation climbs from
+about 0.2 to 0.35 across the first 10 ps. The complex is not uniformly optimised. There is a
+key chromophore on the path, and its alignment does disproportionate work.
+
+## Why the controls matter more than the headline
+
+The orientation-only ensemble gives a higher baseline efficiency but a weaker
+structure–efficiency correlation. Reasonable: if you never let positions move, compactness
+cannot vary, so it cannot explain anything.
+
+The abstract ensemble is the informative failure. Perturbing Hamiltonian matrix elements
+directly with uncorrelated noise produces a much narrower spread in efficiency — a standard
+deviation around 0.06 against 0.2 for the geometric ensemble — and it does not reproduce the
+structural correlations at all.
+
+The reason is that the matrix elements of a real molecular Hamiltonian are not independent
+quantities. Move one chromophore and several couplings change together, in a correlated way
+determined by geometry. Noise applied element-by-element destroys precisely the correlations
+that carry the structural signal. So a whole class of earlier studies, which perturbed
+Hamiltonians rather than structures, was working in a regime where the effect being looked
+for could not have appeared. That is a stronger and more transferable result than FMO's
+percentile.
+
+## Contribution
+
+Second author of five, spanning Warwick's Chemistry and Physics departments and UCL. The
+paper carries no author contribution statement, so I will not claim a specific division of
+labour. What is evidenced is that the work joins quantum chemistry to open quantum systems
+theory, and that my affiliations on it are the chemistry side.
+
+## Where this sits
+
+It is the direct partner of
+[the short-range excitonic coupling work](/work/excitonic-interactions/) from the same year
+and the same group, and the two should be read together — including where they rub against
+each other. That paper documented systematic errors in the atomic transition charge method;
+this one uses atomic transition charges fifty thousand times. The defence is that the errors
+concentrate in chromophore pairs that are in contact, below about 7 Å, and FMO's pigments are
+mostly further apart than that, so an ensemble study is largely outside the failure regime.
+That defence is sound, but it is an argument rather than a given, and anyone building on this
+should check it holds for their system.
+
+Methodologically it sits between two earlier traditions and takes something from each: the
+abstract "sprinkle" models, which capture generic principles but describe nothing real, and
+the perturbative studies, which modify real structures but can wander into arrangements no
+protein would hold. Constrained geometric perturbation is the compromise, and the controls
+above are what demonstrate the compromise was necessary.
+
+All fifty thousand structures and their Hamiltonians are deposited on figshare.
+
+## A note on the figures
+
+This page carries no reproduced figures. *The Journal of Physical Chemistry Letters* is an ACS
+journal and Crossref records no licence for the article. The arXiv preprint carries the
+standard arXiv notice, which is a distribution licence granted to arXiv rather than a reuse
+grant to anyone else.
+
+The figshare deposit is the tempting alternative — fifty thousand structures is enough to
+redraw the efficiency landscape from scratch, in this site's own palette, the way
+[the carbon cluster figures](/work/carbon-clusters/) were redrawn. But the deposit carries no
+stated licence either, so that is not currently available.
