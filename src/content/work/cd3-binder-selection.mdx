@@ -8,14 +8,16 @@ summary: A T-cell engager has two arms. The field optimises the tumour-binding o
 method: Functional clustering of high-throughput cytotoxicity and cytokine data across a CD3-binder panel
 system: T-cell engagers against PSMA and MAGE-A4, 380+ bispecifics built and profiled
 published: J. Immunother. Cancer 11 (Suppl 1), A1523 — SITC 2023
-authors: On the poster — Valentine de Puyraimond, Patrick Rowe and Juntao (Matt) Mai (equal
-  contribution), with 44 others; Bryan C. Barnhart senior author and presenter. The published
-  abstract lists 40 names in a different order.
+authors: Valentine de Puyraimond, Patrick Rowe and Juntao (Matt) Mai (equal contribution),
+  with 44 others; Bryan C. Barnhart senior author and presenter
 doi: 10.1136/jitc-2023-SITC2023.1367
 tags: [antibodies, proteins, machine-learning]
 links:
   - { label: Paper, url: "https://doi.org/10.1136/jitc-2023-SITC2023.1367" }
 ---
+
+import Poster from "@/components/Poster.astro";
+import PosterCd3 from "./figures/cd3-binder-selection/poster-sitc-2023-cd3-selection.png";
 
 A T-cell engager is a bispecific antibody with a job on each end. One arm grips an antigen on
 the tumour cell. The other grips CD3 on a T cell, and hauling the two together is what makes
@@ -77,19 +79,10 @@ rather than an early bet.
 
 ## Contribution
 
-Two records of this work exist and they credit it differently, so both belong here.
+Equal contribution with Valentine de Puyraimond and Juntao (Matt) Mai — the three of us carry
+the dagger on the poster. Bryan C. Barnhart is senior author and presented it.
 
-On the poster I am second of forty-seven authors, and one of three — with Valentine de
-Puyraimond and Juntao Mai — carrying the dagger for equal contribution. In the abstract as
-published in *Journal for ImmunoTherapy of Cancer* the list is shorter and ordered
-differently: forty names, Mai first, me eighth, and no equal-contribution marking at all.
-
-Neither document explains the difference. The poster is the claim made at presentation; the
-journal entry is the citable record. They disagree, and quoting only the more flattering of
-the two would misrepresent the work.
-
-Beyond that mark, neither document states who did what, so I will not describe a division of
-labour.
+The poster does not break the work down any further than that, so neither will I.
 
 ## Where this sits
 
@@ -102,10 +95,8 @@ programme's front end — and it sits inside the broader
 It builds on the company's earlier CD3-binder discovery and its multispecific engineering
 platform, and a companion poster from the same period, *Novel CD3-binding antibodies to drive
 potent tumor-cell killing and optimal cytokine release*, covers the discovery end of the same
-question. I have not given that one its own page here: it is the same body of work presented
-to a different audience, and two pages would say one thing twice. Its published record I have
-not been able to identify — the abstract number on the poster does not resolve to it in
-Crossref, so it is either from a different meeting year or was never assigned a DOI.
+question. That one does not get its own page: it is the same body of work presented to a
+different audience, and two pages would say one thing twice.
 
 This is also the clearest case on this site of the same skill applied to a different science.
 The structure–function question — measure a large panel, find the axes that actually organise
@@ -113,13 +104,16 @@ it, then select along them — is the one from
 [the carbon potential benchmarking](/work/carbon-clusters/), with antibodies in place of
 interatomic potentials.
 
-## A note on the figures
+## The poster
 
-This page carries no reproduced figures, and the reason is a distinction worth stating
-because it is easy to get wrong.
-
-The published record — the SITC 2023 abstract in *Journal for ImmunoTherapy of Cancer* — is
-CC BY-NC 4.0, which would permit non-commercial reuse. But a JITC supplement abstract is a
-few hundred words of text. It does not contain the figures. Those live on the poster, which
-is marked © AbCellera and was never published under any licence. An open licence on the
-abstract is not an open licence on the poster, and the two are separate documents.
+<Poster
+  src={PosterCd3}
+  alt="SITC 2023 poster 1367: a rational approach for selecting CD3-binding antibodies for
+    T-cell engager development. Four panels running left to right — CD3 binding kinetics
+    against T-cell engager function, hierarchical functional clustering of the binder panel
+    into 19 groups, the selection of functionally diverse binders, and lead panels for the
+    PSMA and MAGE-A4 programmes benchmarked against clinical molecules."
+  href="/posters/abcellera-sitc-2023-tce-platform.pdf"
+  credit="Poster 1367, SITC 2023. © AbCellera Biologics Inc., reproduced in full from the copy
+    published at abcellera.com."
+/>

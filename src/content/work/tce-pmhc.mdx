@@ -8,14 +8,18 @@ summary: Only about 15% of human proteins reach the cell surface, which is where
 method: Antibody discovery against pMHC, 200+ bispecifics profiled, cryo-EM and positional scanning
 system: MAGE-A4 peptide on MHC class I; T-cell engagers against MAGE-A4-positive tumour lines
 published: SITC 2023 and AACR 2024 — JITC 11(Suppl 1) A1550, Cancer Res. 84(6_Suppl) 2373
-authors: Davide Tortora, Peter Bergqvist, Tim Jacobs and 26 others including Patrick Rowe,
-  with Bryan C. Barnhart as senior author (SITC 2023 list; the AACR 2024 list has 30 names)
+authors: Davide Tortora, Peter Bergqvist, Tim Jacobs and 28 others including Patrick Rowe,
+  with Bryan C. Barnhart as senior author (SITC 2023 poster; the AACR 2024 one lists 35)
 doi: 10.1136/jitc-2023-SITC2023.1395
 tags: [antibodies, proteins, interfaces]
 links:
   - { label: Paper, url: "https://doi.org/10.1136/jitc-2023-SITC2023.1395" }
   - { label: Docs, url: "https://doi.org/10.1158/1538-7445.am2024-2373" }
 ---
+
+import Poster from "@/components/Poster.astro";
+import PosterSitc from "./figures/tce-pmhc/poster-sitc-2023-mage-pmhc.png";
+import PosterAacr from "./figures/tce-pmhc/poster-aacr-2024-mage-a4.png";
 
 T-cell engagers can only attack what they can see, and what they can see is the cell surface.
 Fewer than 15% of cellular proteins go there. The other 85% — including most of the proteins
@@ -103,12 +107,12 @@ approaches.
 
 ## Contribution
 
-A late-list author on both records: 24th of 29 on the SITC 2023 abstract, 20th of 30 on the
-AACR 2024 one, and 25th of 31 on the poster itself. Neither carries a statement of individual
-contributions, so I will not claim a specific role in this work.
+A late-list author throughout: 25th of 31 on the SITC 2023 poster and 23rd of 35 on the AACR
+2024 one. Neither carries a statement of individual contributions, so I will not claim a
+specific role here.
 
 This is a large and mostly experimental programme — antibody discovery, cell killing assays,
-cytokine panels and cryo-EM. The one concrete link to my own line of work is that the 19 CD3
+cytokine panels and cryo-EM. The one concrete link to my own line of work is that the CD3
 binders paired in here come from
 [the functionally clustered panel](/work/cd3-binder-selection/), which is the piece I am
 credited on prominently.
@@ -121,13 +125,27 @@ cites the CD3-selection work as its front end. I have given them one page rather
 because they are one body of work and splitting them would duplicate the science while
 halving the story.
 
-## A note on the figures
+## The posters
 
-This page carries no reproduced figures, for a reason that is easy to get wrong in exactly
-the direction that would cause a problem.
+<Poster
+  src={PosterSitc}
+  alt="SITC 2023 poster 1395: targeting intracellular tumour antigens to fight cancer.
+    Panels covering the discovery of MAGE-A4 pMHC antibodies, counter-screening against
+    unrelated peptide-MHCs, the pairing of six binders with 19 CD3 arms into over 200
+    bispecifics, and the functional profiles of the twelve selected leads."
+  href="/posters/abcellera-sitc-2023-mage-pmhc.pdf"
+  credit="Poster 1395, SITC 2023 — discovery and the selection of twelve candidates.
+    © AbCellera Biologics Inc., reproduced in full from the copy published at abcellera.com."
+/>
 
-The SITC 2023 abstract is CC BY-NC 4.0 and the AACR 2024 abstract carries no licence at all.
-But in both cases the published record is a few hundred words of text — the figures shown
-here would have to come from the posters, which are marked © AbCellera and were never
-published under any licence. An open licence on an abstract says nothing about the poster
-presented alongside it.
+<Poster
+  src={PosterAacr}
+  alt="AACR 2024 poster 2373: functional and specific T-cell engagers for a peptide-MHC
+    tumour target. Panels covering killing and cytokine release against MAGE-A4-positive,
+    -negative and knockout lines, binding across a library of more than 180 non-MAGE peptides,
+    cryo-EM structures of the antibody on peptide-MHC, and a positional scan across the ten
+    peptide positions."
+  href="/posters/abcellera-aacr-2024-mage-a4.pdf"
+  credit="Poster 2373, AACR 2024 — the deep characterisation of the lead. © AbCellera
+    Biologics Inc., reproduced in full from the copy published at abcellera.com."
+/>

@@ -17,7 +17,7 @@ WIDTHS = {"desktop": 1280, "mobile": 390}
 ROUTES = {
     "landing": "/",
     "work": "/work/",
-    "work-entry": "/work/gap-20/",
+    "work-entry": "/work/carbon-gap-20/",
     "writing": "/writing/",
     "post": "/writing/smiles-is-a-strange-language/",
     "cv": "/cv/",
