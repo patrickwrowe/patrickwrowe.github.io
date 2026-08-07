@@ -104,6 +104,8 @@ def _panel(
     x_title: str,
     panel_title: str,
     show_y_title: bool,
+    y_title: str = "% of atoms",
+    legend: bool = False,
 ) -> str:
     """One axes box with its series. y is always 0-100 per cent."""
     x_min, x_max = min(x_values), max(x_values)
@@ -142,12 +144,34 @@ def _panel(
         )
         parts.append(_text(x, baseline + TICK_LENGTH + LABEL_SIZE + 0.4, label, LABEL_SIZE))
 
-    for percentages, filled, label in series:
+    end_labels: list[tuple[float, float, str]] = []
+    for index, (percentages, filled, label) in enumerate(series):
         points = [(sx(x), sy(p)) for x, p in zip(x_values, percentages)]
         parts.append(_series(points, filled))
-        # Label the series at its right-hand end, so no legend box is needed.
-        end_x, end_y = points[-1]
-        parts.append(_text(end_x + 2.6, end_y + 1.0, label, LABEL_SIZE, "start"))
+        if legend:
+            # A keyed legend in the empty top-right. Series that both end near
+            # zero cannot be labelled at the line end: the labels land on the
+            # axis and on each other.
+            sample_x = origin_x + PANEL_WIDTH * 0.62
+            row_y = MARGIN_TOP + 4.0 + index * LABEL_SIZE * 1.7
+            parts.append(_series([(sample_x, row_y), (sample_x + 7.0, row_y)], filled))
+            parts.append(_text(sample_x + 9.5, row_y + 1.0, label, LABEL_SIZE, "start"))
+        else:
+            # Otherwise label at the right-hand end, which needs no legend at all.
+            end_x, end_y = points[-1]
+            end_labels.append((end_x + 2.6, end_y + 1.0, label))
+
+    # Where two series converge, their end labels would print on top of one
+    # another. Separate them vertically, keeping their original order.
+    minimum_gap = LABEL_SIZE * 1.4
+    end_labels.sort(key=lambda item: item[1])
+    for i in range(1, len(end_labels)):
+        x, y, label = end_labels[i]
+        floor = end_labels[i - 1][1] + minimum_gap
+        if y < floor:
+            end_labels[i] = (x, floor, label)
+    for x, y, label in end_labels:
+        parts.append(_text(x, y, label, LABEL_SIZE, "start"))
 
     parts.append(
         _text(origin_x + PANEL_WIDTH / 2, baseline + TICK_LENGTH + LABEL_SIZE * 2 + 3.2, x_title, AXIS_TITLE_SIZE)
@@ -155,7 +179,7 @@ def _panel(
     parts.append(_text(origin_x, MARGIN_TOP - 3.4, panel_title, PANEL_TITLE_SIZE, "start"))
     if show_y_title:
         parts.append(
-            _text(origin_x - 10.5, MARGIN_TOP + PANEL_HEIGHT / 2, "% of atoms", AXIS_TITLE_SIZE, "middle", rotate=-90)
+            _text(origin_x - 10.5, MARGIN_TOP + PANEL_HEIGHT / 2, y_title, AXIS_TITLE_SIZE, "middle", rotate=-90)
         )
     return "\n    ".join(parts)
 
@@ -202,15 +226,73 @@ def build(data_dir: Path) -> str:
     )
 
 
+RING_SIZES = [3, 4, 5, 6, 7, 8, 9, 10]
+
+
+def read_rings(path: Path) -> dict[int, float]:
+    """Return {ring size: percentage of all rings counted}.
+
+    The analysis writes absolute counts, averaged over the three replicas, and the
+    totals differ by a factor of four across the density series. Percentages are
+    what makes the shapes comparable.
+    """
+    counts = {int(float(a)): float(b) for a, b in (l.split() for l in path.read_text().splitlines() if l.strip())}
+    total = sum(counts.values())
+    return {size: 100.0 * counts.get(size, 0.0) / total for size in RING_SIZES}
+
+
+def build_rings(data_dir: Path) -> str:
+    """One panel: ring-size distribution either side of the density transition."""
+    low = read_rings(data_dir / "density-1.0gcc-rings.txt")
+    high = read_rings(data_dir / "density-3.5gcc-rings.txt")
+
+    panel = _panel(
+        origin_x=MARGIN_LEFT,
+        x_values=[float(s) for s in RING_SIZES],
+        x_ticks=[(float(s), str(s)) for s in RING_SIZES],
+        series=[
+            ([low[s] for s in RING_SIZES], True, "1.0 g cm⁻³"),
+            ([high[s] for s in RING_SIZES], False, "3.5 g cm⁻³"),
+        ],
+        x_title="ring size",
+        panel_title="rings after annealing at 3500 K",
+        show_y_title=True,
+        y_title="% of rings",
+        legend=True,
+    )
+    width = MARGIN_LEFT + PANEL_WIDTH + 8.0
+    height = MARGIN_TOP + PANEL_HEIGHT + MARGIN_BOTTOM
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" role="img">\n'
+        f"  <g>\n    {panel}\n  </g>\n"
+        f"</svg>\n"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--rings-output",
+        type=Path,
+        default=None,
+        help="Also write the ring-size distribution figure here.",
+    )
     args = parser.parse_args()
 
     svg = build(args.data_dir)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(svg)
+
+    if args.rings_output:
+        args.rings_output.parent.mkdir(parents=True, exist_ok=True)
+        args.rings_output.write_text(build_rings(args.data_dir))
+        for label, name in (("1.0", "density-1.0gcc-rings.txt"), ("3.5", "density-3.5gcc-rings.txt")):
+            rings = read_rings(args.data_dir / name)
+            share = " ".join(f"{s}:{rings[s]:.0f}%" for s in RING_SIZES if rings[s] >= 1)
+            print(f"  rings at {label} g/cc   {share}")
+        print(f"-> {args.rings_output}")
 
     # Print the numbers the caption quotes, so a claim on the page can be checked
     # against the data without opening the notebook.
@@ -242,6 +324,17 @@ def _self_check() -> None:
     # An open marker knocks out the line behind it; a filled one does not.
     assert 'fill="var(--plate)"' in _series([(0.0, 0.0), (1.0, 1.0)], filled=False)
     assert 'fill="var(--ink)"' in _series([(0.0, 0.0), (1.0, 1.0)], filled=True)
+
+    # Ring counts are absolute and the totals differ several-fold between
+    # densities, so they must be normalised before the two can be compared.
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "r.txt"
+        path.write_text("5.0 100.0\n6.0 300.0\n")
+        rings = read_rings(path)
+        assert abs(rings[5] - 25.0) < 1e-9, rings
+        assert abs(rings[6] - 75.0) < 1e-9, rings
+        assert rings[3] == 0.0, rings  # sizes absent from the file read as zero
+        assert abs(sum(rings.values()) - 100.0) < 1e-9, rings
 
     print("self-check ok")
 

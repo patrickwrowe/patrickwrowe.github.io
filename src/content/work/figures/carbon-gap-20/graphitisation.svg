@@ -33,7 +33,6 @@
     <circle cx="73.67" cy="10.22" r="1.5" fill="var(--ink)" stroke="none"/>
     <circle cx="88.33" cy="45.48" r="1.5" fill="var(--ink)" stroke="none"/>
     <circle cx="103.00" cy="62.14" r="1.5" fill="var(--ink)" stroke="none"/>
-    <text x="105.60" y="63.14" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp²</text>
     <polyline points="15.00,64.83 29.67,64.63 44.33,64.69 59.00,64.59 73.67,63.93 88.33,28.55 103.00,11.93" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
     <circle cx="15.00" cy="64.83" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <circle cx="29.67" cy="64.63" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
@@ -43,6 +42,7 @@
     <circle cx="88.33" cy="28.55" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <circle cx="103.00" cy="11.93" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <text x="105.60" y="12.93" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp³</text>
+    <text x="105.60" y="63.14" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp²</text>
     <text x="59.00" y="75.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">density / g cm⁻³</text>
     <text x="15.00" y="5.60" text-anchor="start" font-size="3.4" fill="var(--graphite)" stroke="none" font-family="var(--mono)">(a) anneal at 3500 K</text>
     <text x="4.50" y="37.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.50 37.00)">% of atoms</text>
@@ -76,7 +76,6 @@
     <circle cx="181.80" cy="10.08" r="1.5" fill="var(--ink)" stroke="none"/>
     <circle cx="199.40" cy="10.15" r="1.5" fill="var(--ink)" stroke="none"/>
     <circle cx="217.00" cy="16.82" r="1.5" fill="var(--ink)" stroke="none"/>
-    <text x="219.60" y="17.82" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp², 1.5</text>
     <polyline points="129.00,27.18 146.60,27.95 164.20,31.89 181.80,28.55 199.40,29.13 217.00,29.24" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
     <circle cx="129.00" cy="27.18" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <circle cx="146.60" cy="27.95" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
@@ -84,6 +83,7 @@
     <circle cx="181.80" cy="28.55" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <circle cx="199.40" cy="29.13" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
     <circle cx="217.00" cy="29.24" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <text x="219.60" y="17.82" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp², 1.5</text>
     <text x="219.60" y="30.24" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp³, 3.0</text>
     <text x="173.00" y="75.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">anneal temperature / K</text>
     <text x="129.00" y="5.60" text-anchor="start" font-size="3.4" fill="var(--graphite)" stroke="none" font-family="var(--mono)">(b) fixed density</text>

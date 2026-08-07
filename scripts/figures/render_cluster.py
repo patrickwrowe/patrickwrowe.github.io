@@ -166,6 +166,23 @@ def find_bonds(positions_angstrom: np.ndarray, species: list[str] | None = None)
     return list(zip(rows.tolist(), cols.tolist()))
 
 
+def slab_mask(rotated: np.ndarray, thickness_angstrom: float) -> np.ndarray:
+    """Atoms within a slab of the given thickness, centred on the view axis.
+
+    A periodic cell of a few thousand atoms projects to a solid black square: the
+    front face hides everything and there is no structure to read. Cutting a slab
+    perpendicular to the view gives the cross-section an electron micrograph of
+    the same material would show.
+
+    It is also what makes the bond search affordable. That search is O(n^2) on a
+    dense (n, n, 3) array, which for 5,832 atoms is some 800 MB; a slab an order
+    of magnitude smaller brings it back to nothing.
+    """
+    depth = rotated[:, 2]
+    centre = float(np.median(depth))
+    return np.abs(depth - centre) <= thickness_angstrom / 2.0
+
+
 def depth_opacity(depth: float, near: float, far: float) -> float:
     if math.isclose(near, far):
         return OPACITY_NEAR
@@ -252,9 +269,15 @@ def render(
     structure: Structure,
     rotate_degrees: tuple[float, float, float],
     radius_scale: float = 1.0,
+    slab_angstrom: float | None = None,
 ) -> str:
     centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
     rotated = centred @ rotation_matrix(rotate_degrees).T
+    species = structure.species
+    if slab_angstrom is not None:
+        keep = slab_mask(rotated, slab_angstrom)
+        rotated = rotated[keep]
+        species = [s for s, k in zip(species, keep) if k]
 
     margin = ATOM_RADIUS * radius_scale * 2.0
     min_x, max_x = rotated[:, 0].min() - margin, rotated[:, 0].max() + margin
@@ -265,7 +288,7 @@ def render(
         f'viewBox="{min_x:.3f} {-max_y:.3f} {max_x - min_x:.3f} {max_y - min_y:.3f}" '
         f'role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
-        f"    {_draw(rotated, structure.species, radius_scale=radius_scale)}\n"
+        f"    {_draw(rotated, species, radius_scale=radius_scale)}\n"
         f"  </g>\n"
         f"</svg>\n"
     )
@@ -312,6 +335,7 @@ def render_series(
     rotate_degrees: tuple[float, float, float],
     radius_scale: float = 1.0,
     columns: int | None = None,
+    slab_angstrom: float | None = None,
 ) -> str:
     """Lay several clusters out on a grid at one shared scale.
 
@@ -332,12 +356,19 @@ def render_series(
     n_columns = columns or len(clusters)
 
     rotated_all: list[np.ndarray] = []
+    species_all: list[list[str]] = []
     half_widths: list[float] = []
     half_heights: list[float] = []
     for _label, structure in clusters:
         centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
         rotated = centred @ rot.T
+        species = structure.species
+        if slab_angstrom is not None:
+            keep = slab_mask(rotated, slab_angstrom)
+            rotated = rotated[keep]
+            species = [s for s, k in zip(species, keep) if k]
         rotated_all.append(rotated)
+        species_all.append(species)
         half_widths.append(float(np.abs(rotated[:, 0]).max()) + margin)
         half_heights.append(float(np.abs(rotated[:, 1]).max()) + margin)
 
@@ -379,7 +410,7 @@ def render_series(
         placed.append(
             _draw(
                 rotated_all[index],
-                structure.species,
+                species_all[index],
                 offset_x=offset_x,
                 offset_y=offset_y,
                 radius_scale=radius_scale,
@@ -439,6 +470,13 @@ def main() -> None:
         default=None,
         help="Wrap a series onto this many columns. Default is a single row.",
     )
+    parser.add_argument(
+        "--slab",
+        type=float,
+        default=None,
+        help="Draw only a slab this many Angstrom thick, centred on the view axis. "
+        "Required for periodic cells: the whole cell projects to a black square.",
+    )
     args = parser.parse_args()
 
     rotate = tuple(float(v) for v in args.rotate.split(","))
@@ -451,14 +489,16 @@ def main() -> None:
 
     if len(args.inputs) == 1 and not args.labels:
         structure = read_xyz(args.inputs[0], args.frame)
-        svg = render(structure, rotate, args.radius_scale)  # type: ignore[arg-type]
+        svg = render(structure, rotate, args.radius_scale, args.slab)  # type: ignore[arg-type]
         print(f"{args.inputs[0].name}: {len(structure)} atoms, {describe(structure)}")
     else:
         labels = args.labels.split(",") if args.labels else [p.stem for p in args.inputs]
         if len(labels) != len(args.inputs):
             parser.error(f"{len(labels)} labels for {len(args.inputs)} inputs")
         clusters = [(label, read_xyz(path, args.frame)) for label, path in zip(labels, args.inputs)]
-        svg = render_series(clusters, rotate, args.radius_scale, args.columns)  # type: ignore[arg-type]
+        svg = render_series(  # type: ignore[arg-type]
+            clusters, rotate, args.radius_scale, args.columns, args.slab
+        )
         for label, structure in clusters:
             print(f"  {label}: {len(structure)} atoms, {describe(structure)}")
 

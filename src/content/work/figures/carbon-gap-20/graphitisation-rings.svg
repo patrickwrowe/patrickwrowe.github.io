@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 111.00 87.00" role="img">
+  <g>
+    <path d="M 15.00 9.00 V 65.00 H 103.00" fill="none" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="13.40" y1="65.00" x2="15.00" y2="65.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="66.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
+    <line x1="13.40" y1="51.00" x2="15.00" y2="51.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="52.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">25</text>
+    <line x1="13.40" y1="37.00" x2="15.00" y2="37.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="38.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">50</text>
+    <line x1="13.40" y1="23.00" x2="15.00" y2="23.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="24.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">75</text>
+    <line x1="13.40" y1="9.00" x2="15.00" y2="9.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="10.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">100</text>
+    <line x1="15.00" y1="65.00" x2="15.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="15.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3</text>
+    <line x1="27.57" y1="65.00" x2="27.57" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="27.57" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4</text>
+    <line x1="40.14" y1="65.00" x2="40.14" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="40.14" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">5</text>
+    <line x1="52.71" y1="65.00" x2="52.71" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="52.71" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">6</text>
+    <line x1="65.29" y1="65.00" x2="65.29" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="65.29" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">7</text>
+    <line x1="77.86" y1="65.00" x2="77.86" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="77.86" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">8</text>
+    <line x1="90.43" y1="65.00" x2="90.43" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="90.43" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">9</text>
+    <line x1="103.00" y1="65.00" x2="103.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="103.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">10</text>
+    <polyline points="15.00,64.99 27.57,64.96 40.14,57.91 52.71,25.84 65.29,56.40 77.86,64.09 90.43,64.82 103.00,64.99" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="15.00" cy="64.99" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="27.57" cy="64.96" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="40.14" cy="57.91" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="52.71" cy="25.84" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="65.29" cy="56.40" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="77.86" cy="64.09" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="90.43" cy="64.82" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="103.00" cy="64.99" r="1.5" fill="var(--ink)" stroke="none"/>
+    <polyline points="69.56,13.00 76.56,13.00" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="69.56" cy="13.00" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="76.56" cy="13.00" r="1.5" fill="var(--ink)" stroke="none"/>
+    <text x="79.06" y="14.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.0 g cm⁻³</text>
+    <polyline points="15.00,64.94 27.57,64.47 40.14,54.45 52.71,40.38 65.29,50.71 77.86,60.48 90.43,63.76 103.00,64.81" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
+    <circle cx="15.00" cy="64.94" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="27.57" cy="64.47" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="40.14" cy="54.45" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="52.71" cy="40.38" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="65.29" cy="50.71" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="77.86" cy="60.48" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="90.43" cy="63.76" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="103.00" cy="64.81" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <polyline points="69.56,18.10 76.56,18.10" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
+    <circle cx="69.56" cy="18.10" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="76.56" cy="18.10" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <text x="79.06" y="19.10" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3.5 g cm⁻³</text>
+    <text x="59.00" y="75.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">ring size</text>
+    <text x="15.00" y="5.60" text-anchor="start" font-size="3.4" fill="var(--graphite)" stroke="none" font-family="var(--mono)">rings after annealing at 3500 K</text>
+    <text x="4.50" y="37.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.50 37.00)">% of rings</text>
+  </g>
+</svg>
