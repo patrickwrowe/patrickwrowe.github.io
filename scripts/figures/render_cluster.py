@@ -10,10 +10,13 @@ are generated here rather than lifted from the paper — which also keeps them i
 the site's own palette (spec 01 section 6.2, and the `scripts/figures/`
 convention in CLAUDE.md).
 
-Depth is encoded as opacity against a single colour rather than as a grey ramp,
-so every stroke and fill resolves to `var(--ink)` and the figure inherits the
-design tokens instead of hard-coding a palette. Far atoms fade towards whatever
-`--plate` happens to be.
+Depth is encoded as opacity rather than as a grey ramp, and every stroke and fill
+resolves to a design token (`--ink` or `--graphite`) rather than a hard-coded
+palette. Far atoms fade towards whatever `--plate` happens to be.
+
+Elements are told apart by size, by filled versus open, and by one coarse step
+down the ink ramp. There is no hue anywhere: the palette's only accent is
+reserved for state and anomaly.
 
 Usage:
     uv run scripts/figures/render_cluster.py <input.xyz> <output.svg> [--rotate X,Y,Z]
@@ -44,11 +47,32 @@ BOND_TOLERANCE = 1.2
 ATOM_RADIUS = 0.16
 BOND_WIDTH = 0.11
 
-# The page has one ink colour, so species is carried by size and by fill rather
-# than by hue. Oxygen draws as an open ring and everything else as a filled disc:
-# an unambiguous read in monochrome, where three sizes alone are not.
-DRAW_RADIUS_FACTOR = {"C": 1.0, "H": 0.62, "O": 1.25}
+# Species is carried by three cues at once: size, fill, and a step down the
+# ink-to-graphite ramp. No hue is involved. The palette's one accent, --lustre, is
+# reserved for state and anomaly (CLAUDE.md), and element identity is neither.
+#
+# Size alone was not enough: carbon and hydrogen came out as two black discs a
+# little apart in radius, which is unreadable in a crowded frame. So hydrogen also
+# steps to --graphite and shrinks towards its true covalent ratio, and oxygen
+# stays at ink but draws open. Dark disc, dark ring, small pale disc.
+#
+# The ramp is three coarse, well-separated steps rather than a gradient, because
+# depth is drawn as opacity and a fine lightness ramp would be read as distance.
+GROUP_COLOUR = "var(--ink)"
+DRAW_COLOUR = {"C": "var(--ink)", "H": "var(--graphite)", "O": "var(--ink)"}
+DRAW_RADIUS_FACTOR = {"C": 1.0, "H": 0.48, "O": 1.25}
 HOLLOW_SPECIES = frozenset({"O"})
+
+
+def _colour_attr(species: str, attribute: str) -> str:
+    """`fill=`/`stroke=` for one species, omitted when it matches the group default.
+
+    Keeping the attribute off carbon means a carbon-only figure emits exactly the
+    markup it did before any of this existed, so the published cage figures are
+    untouched by adding elements.
+    """
+    colour = DRAW_COLOUR[species]
+    return "" if colour == GROUP_COLOUR else f' {attribute}="{colour}"'
 
 # Opacity at the back and front of the cluster. Never reaches 1.0 at the front:
 # a solid black silhouette loses the ball-and-stick reading at small sizes.
@@ -170,27 +194,42 @@ def _draw(
 
     for i, j in find_bonds(rotated, species):
         opacity = depth_opacity(max(zs[i], zs[j]), near, far)
-        drawables.append(
-            (
-                max(zs[i], zs[j]),
-                f'<line x1="{xs[i]:.3f}" y1="{-ys[i]:.3f}" '
-                f'x2="{xs[j]:.3f}" y2="{-ys[j]:.3f}" '
-                f'fill="none" stroke-width="{BOND_WIDTH * radius_scale:.3f}" '
-                f'opacity="{opacity:.3f}"/>',
+        width = BOND_WIDTH * radius_scale
+        if DRAW_COLOUR[species[i]] == DRAW_COLOUR[species[j]]:
+            segments = [(xs[i], ys[i], xs[j], ys[j], species[i])]
+        else:
+            # Split at the midpoint, each half taking its own atom's colour. A
+            # heteronuclear bond drawn entirely in ink runs into a pale hydrogen
+            # and swallows it; this is the usual ball-and-stick answer.
+            mid_x, mid_y = (xs[i] + xs[j]) / 2, (ys[i] + ys[j]) / 2
+            segments = [
+                (xs[i], ys[i], mid_x, mid_y, species[i]),
+                (mid_x, mid_y, xs[j], ys[j], species[j]),
+            ]
+        for x1, y1, x2, y2, element in segments:
+            drawables.append(
+                (
+                    max(zs[i], zs[j]),
+                    f'<line x1="{x1:.3f}" y1="{-y1:.3f}" '
+                    f'x2="{x2:.3f}" y2="{-y2:.3f}" '
+                    f'fill="none"{_colour_attr(element, "stroke")} '
+                    f'stroke-width="{width:.3f}" '
+                    f'opacity="{opacity:.3f}"/>',
+                )
             )
-        )
 
     for i in range(len(rotated)):
         opacity = depth_opacity(zs[i], near, far)
         radius = ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[i]] * radius_scale
         if species[i] in HOLLOW_SPECIES:
-            # An open ring, so oxygen is legible without a second colour. The
-            # ring is inset by half its stroke width to keep the drawn extent
-            # equal to `radius`, which is what the viewBox margin assumes.
+            # An open ring. The ring is inset by half its stroke width to keep the
+            # drawn extent equal to `radius`, which is what the viewBox margin
+            # assumes.
             ring_width = BOND_WIDTH * radius_scale
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
-                f'r="{radius - ring_width / 2:.3f}" fill="none" '
+                f'r="{radius - ring_width / 2:.3f}" fill="none"'
+                f'{_colour_attr(species[i], "stroke")} '
                 f'stroke-width="{ring_width:.3f}" opacity="{opacity:.3f}"/>'
             )
         else:
@@ -199,7 +238,9 @@ def _draw(
             # 1 Angstrom here, and every atom renders as a ring.
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
-                f'r="{radius:.3f}" stroke="none" opacity="{opacity:.3f}"/>'
+                f'r="{radius:.3f}" stroke="none"'
+                f'{_colour_attr(species[i], "fill")} '
+                f'opacity="{opacity:.3f}"/>'
             )
         drawables.append((zs[i] + 1e-6, shape))  # ties favour the atom, not the bond
 
@@ -453,12 +494,29 @@ def _self_check() -> None:
     # summed radii are small enough that the flat carbon cutoff would have.
     assert len(find_bonds(np.array([[0.0, 0, 0], [1.5, 0, 0]]), ["H", "H"])) == 0
 
-    # Oxygen draws as a ring and carbon as a disc, so the two are distinguishable
-    # without colour. A regression here is silent in the SVG but visible on the page.
+    # Every element must be distinguishable from every other. A regression here is
+    # silent in the SVG and only visible once the figure is on the page.
     water = np.array([[0.0, 0, 0], [0.96, 0, 0], [-0.24, 0.93, 0]])
     markup = _draw(water, ["O", "H", "H"])
-    assert markup.count('fill="none"') == 3, markup  # one O ring plus two O-H bonds
-    assert markup.count('stroke="none"') == 2, markup  # the two H discs
+    assert markup.count("<circle") == 3, markup
+    # Oxygen is an open ring at ink; hydrogen is a filled disc at graphite.
+    assert markup.count('stroke="none" opacity') == 0, markup  # no ink-filled disc here
+    assert markup.count('stroke="none" fill="var(--graphite)"') == 2, markup
+    assert markup.count('fill="var(--graphite)"') == 2, markup
+    # Both O-H bonds are split, so four segments, the hydrogen half of each in graphite.
+    assert markup.count("<line") == 4, markup
+    assert markup.count('stroke="var(--graphite)"') == 2, markup
+
+    # Carbon on its own must emit no colour attributes at all, which is what keeps
+    # the carbon-only figures byte-identical to the ones already published.
+    carbon_only = _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"])
+    assert "var(--" not in carbon_only, carbon_only
+    assert carbon_only.count("<line") == 1, carbon_only  # same-colour bonds stay whole
+
+    # A C-H bond is split in two; a C-C bond is not.
+    pair = np.array([[0.0, 0, 0], [1.1, 0, 0]])
+    assert _draw(pair, ["C", "H"]).count("<line") == 2
+    assert _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"]).count("<line") == 1
 
     # Wrapping onto a grid. Four identical single atoms on two columns must give
     # two rows: a taller, narrower figure than the same four in one row.
