@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 239.00 87.00" role="img">
+  <g>
+    <path d="M 15.00 9.00 V 65.00 H 103.00" fill="none" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="13.40" y1="65.00" x2="15.00" y2="65.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="66.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
+    <line x1="13.40" y1="51.00" x2="15.00" y2="51.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="52.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">25</text>
+    <line x1="13.40" y1="37.00" x2="15.00" y2="37.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="38.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">50</text>
+    <line x1="13.40" y1="23.00" x2="15.00" y2="23.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="24.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">75</text>
+    <line x1="13.40" y1="9.00" x2="15.00" y2="9.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="12.20" y="10.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">100</text>
+    <line x1="15.00" y1="65.00" x2="15.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="15.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0.5</text>
+    <line x1="29.67" y1="65.00" x2="29.67" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="29.67" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1</text>
+    <line x1="44.33" y1="65.00" x2="44.33" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="44.33" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.5</text>
+    <line x1="59.00" y1="65.00" x2="59.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="59.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2</text>
+    <line x1="73.67" y1="65.00" x2="73.67" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="73.67" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2.5</text>
+    <line x1="88.33" y1="65.00" x2="88.33" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="88.33" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3</text>
+    <line x1="103.00" y1="65.00" x2="103.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="103.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3.5</text>
+    <polyline points="15.00,11.35 29.67,10.56 44.33,10.08 59.00,9.81 73.67,10.22 88.33,45.48 103.00,62.14" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="15.00" cy="11.35" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="29.67" cy="10.56" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="44.33" cy="10.08" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="59.00" cy="9.81" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="73.67" cy="10.22" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="88.33" cy="45.48" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="103.00" cy="62.14" r="1.5" fill="var(--ink)" stroke="none"/>
+    <text x="105.60" y="63.14" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp²</text>
+    <polyline points="15.00,64.83 29.67,64.63 44.33,64.69 59.00,64.59 73.67,63.93 88.33,28.55 103.00,11.93" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
+    <circle cx="15.00" cy="64.83" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="29.67" cy="64.63" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="44.33" cy="64.69" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="59.00" cy="64.59" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="73.67" cy="63.93" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="88.33" cy="28.55" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="103.00" cy="11.93" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <text x="105.60" y="12.93" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp³</text>
+    <text x="59.00" y="75.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">density / g cm⁻³</text>
+    <text x="15.00" y="5.60" text-anchor="start" font-size="3.4" fill="var(--graphite)" stroke="none" font-family="var(--mono)">(a) anneal at 3500 K</text>
+    <text x="4.50" y="37.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.50 37.00)">% of atoms</text>
+    <path d="M 129.00 9.00 V 65.00 H 217.00" fill="none" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="127.40" y1="65.00" x2="129.00" y2="65.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="126.20" y="66.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
+    <line x1="127.40" y1="51.00" x2="129.00" y2="51.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="126.20" y="52.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">25</text>
+    <line x1="127.40" y1="37.00" x2="129.00" y2="37.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="126.20" y="38.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">50</text>
+    <line x1="127.40" y1="23.00" x2="129.00" y2="23.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="126.20" y="24.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">75</text>
+    <line x1="127.40" y1="9.00" x2="129.00" y2="9.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="126.20" y="10.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">100</text>
+    <line x1="129.00" y1="65.00" x2="129.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="129.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2k</text>
+    <line x1="146.60" y1="65.00" x2="146.60" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="146.60" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2.5k</text>
+    <line x1="164.20" y1="65.00" x2="164.20" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="164.20" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3k</text>
+    <line x1="181.80" y1="65.00" x2="181.80" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="181.80" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3.5k</text>
+    <line x1="199.40" y1="65.00" x2="199.40" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="199.40" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4k</text>
+    <line x1="217.00" y1="65.00" x2="217.00" y2="66.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="217.00" y="70.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4.5k</text>
+    <polyline points="129.00,14.79 146.60,12.23 164.20,10.63 181.80,10.08 199.40,10.15 217.00,16.82" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="129.00" cy="14.79" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="146.60" cy="12.23" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="164.20" cy="10.63" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="181.80" cy="10.08" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="199.40" cy="10.15" r="1.5" fill="var(--ink)" stroke="none"/>
+    <circle cx="217.00" cy="16.82" r="1.5" fill="var(--ink)" stroke="none"/>
+    <text x="219.60" y="17.82" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp², 1.5</text>
+    <polyline points="129.00,27.18 146.60,27.95 164.20,31.89 181.80,28.55 199.40,29.13 217.00,29.24" fill="none" stroke="var(--ink)" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="2.5 1.8"/>
+    <circle cx="129.00" cy="27.18" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="146.60" cy="27.95" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="164.20" cy="31.89" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="181.80" cy="28.55" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="199.40" cy="29.13" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <circle cx="217.00" cy="29.24" r="1.05" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.9"/>
+    <text x="219.60" y="30.24" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">sp³, 3.0</text>
+    <text x="173.00" y="75.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">anneal temperature / K</text>
+    <text x="129.00" y="5.60" text-anchor="start" font-size="3.4" fill="var(--graphite)" stroke="none" font-family="var(--mono)">(b) fixed density</text>
+  </g>
+</svg>

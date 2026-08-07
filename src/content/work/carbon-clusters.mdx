@@ -20,6 +20,7 @@ links:
 import Plate from "@/components/Plate.astro";
 import { Image } from "astro:assets";
 import Amorphous from "./figures/carbon-clusters/amorphous-carbon-1.0gcc.png";
+import ThermalStability from "./figures/carbon-clusters/cluster-thermal-stability.png";
 // Generated, not drawn — see scripts/figures/render_cluster.py. Inlined with ?raw
 // rather than <Image> so the SVG resolves --ink and --graphite from the tokens.
 import clusterSeries from "./figures/carbon-clusters/cluster-size-series.svg?raw";
@@ -154,6 +155,45 @@ textbook picture of large fullerenes as necessarily icosahedral looks less settl
     </span>
   </Fragment>
 </Plate>
+
+## What happens when you heat them
+
+Everything above is minimum-energy structure: the question of what a cluster *is*, answered at
+zero kelvin. The question I went on to ask on my own account, and never published, is what
+temperature does to it. Soot forms at flame temperatures, so whether these cages survive heating
+decides whether they are a plausible intermediate or only a mathematical minimum.
+
+<Plate n={3}>
+  <Image src={ThermalStability} alt="A grid of ball-and-stick cluster renderings, eight sizes from C40 to C1000 across the columns and six temperatures from 500 to 5000 K down the rows. Small clusters at the left break into loose chains partway down the grid; the largest clusters at the right stay as intact cages for two rows longer before doing the same." widths={[640, 1180, 2400]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Eight cluster sizes annealed at six temperatures. The boundary between intact cage and loose
+    chains runs diagonally. C₄₀ has broken up by 2000 K; C₆₀ and C₈₀ follow by 3000 K; C₁₂₀ and
+    everything larger is still a closed cage at 3000 K. By 4000 K nothing survives intact,
+    though the largest clusters still hold recognisable cage fragments where the small ones are
+    entirely chains. Size buys thermal stability, over exactly the range of temperatures at
+    which soot forms.
+    <span class="credit">Own work, previously unpublished. Not from the paper.</span>
+  </Fragment>
+</Plate>
+
+Read down any column and the cluster survives to some temperature and then does not. Read across
+any row and that temperature climbs with size. The two together give a critical size that is
+itself a function of temperature: at 3000 K it sits between C₈₀ and C₁₂₀, so a cage below about
+a hundred atoms is not a durable object at that temperature and one above it is. Push to 4000 K
+and nothing is durable, which puts a ceiling on the whole picture.
+
+The sizes are not arbitrary. C₃₇₃ and C₆₈₆ are about 1.5 to 1.8 and 2.0 to 2.1 nm across, chosen
+to match particle diameters an experimental collaborator had measured by AFM.
+
+There is a second result in the same runs that I like more than the stability boundary. Cool a
+C₁₀₀₀ cluster slowly to 500 K and it comes out dense, sp³-rich and unlayered, a diamond-like
+sphere. Anneal the same cluster at 3000 K and it comes out sp²-rich with pronounced onion-shell
+layering. Same atom count, same potential, two different materials, and the layered one has
+galleries a lithium ion could move through while the dense one does not. That is the
+[graphitisation result](/work/carbon-gap-20/) again at the scale of a single particle, and it is
+the point at which this stops being structure prediction and starts being about anodes.
+
+None of it was written up.
 
 ## Contribution
 

@@ -24,13 +24,19 @@ from __future__ import annotations
 import argparse
 import math
 import re
+from collections import Counter
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 
-# Carbon-carbon bonds. 1.8 A sits above the 1.55 A single bond and below the
-# 2.4 A second-neighbour distance in every phase these searches produce.
-BOND_CUTOFF_ANGSTROM = 1.8
+# Covalent radii in Angstrom (Cordero et al., Dalton Trans. 2008). A pair is
+# bonded within BOND_TOLERANCE times the sum of its two radii, which puts C-C at
+# 1.82 A: above the 1.55 A single bond, below the 2.4 A second neighbour in every
+# phase these searches produce. That is the 1.8 A this script used when it was
+# carbon-only, so the published cage figures are unchanged by the generalisation.
+COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
+BOND_TOLERANCE = 1.2
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
 # nested front-to-back, so anything approaching space-filling collapses into a
@@ -38,28 +44,69 @@ BOND_CUTOFF_ANGSTROM = 1.8
 ATOM_RADIUS = 0.16
 BOND_WIDTH = 0.11
 
+# The page has one ink colour, so species is carried by size and by fill rather
+# than by hue. Oxygen draws as an open ring and everything else as a filled disc:
+# an unambiguous read in monochrome, where three sizes alone are not.
+DRAW_RADIUS_FACTOR = {"C": 1.0, "H": 0.62, "O": 1.25}
+HOLLOW_SPECIES = frozenset({"O"})
+
 # Opacity at the back and front of the cluster. Never reaches 1.0 at the front:
 # a solid black silhouette loses the ball-and-stick reading at small sizes.
 OPACITY_FAR = 0.07
 OPACITY_NEAR = 0.95
 
 
-def read_xyz(path: Path) -> np.ndarray:
-    """Return (n, 3) coordinates in Angstrom.
+class Structure(NamedTuple):
+    """One atomic configuration. Positions are (n, 3) in Angstrom."""
+
+    species: list[str]
+    positions_angstrom: np.ndarray
+
+    def __len__(self) -> int:
+        return len(self.species)
+
+
+def read_xyz(path: Path, frame: int = -1) -> Structure:
+    """Read one frame of an XYZ or extended-XYZ file.
 
     The search output carries trailing bookkeeping columns (index, neighbour
-    list) after the coordinates, so only fields 1-3 are read.
+    list) after the coordinates, so only fields 0-3 are read. Trajectories are
+    concatenated frames; `frame` indexes them and defaults to the last, which is
+    the relaxed or equilibrated structure in everything this renders.
     """
     lines = path.read_text().splitlines()
-    n_atoms = int(lines[0].split()[0])
-    coords = []
-    for line in lines[2 : 2 + n_atoms]:
+
+    frames: list[tuple[int, int]] = []  # (first atom line, atom count)
+    cursor = 0
+    while cursor < len(lines):
+        header = lines[cursor].split()
+        if not header:  # trailing blank lines
+            break
+        n_atoms = int(header[0])
+        frames.append((cursor + 2, n_atoms))
+        cursor += 2 + n_atoms
+    if not frames:
+        raise ValueError(f"{path}: no frames found")
+
+    start, n_atoms = frames[frame]
+    species: list[str] = []
+    coords: list[list[float]] = []
+    for line in lines[start : start + n_atoms]:
         fields = line.split()
+        species.append(fields[0])
         coords.append([float(fields[1]), float(fields[2]), float(fields[3])])
+
     positions_angstrom = np.asarray(coords, dtype=float)
     if positions_angstrom.shape != (n_atoms, 3):
         raise ValueError(f"{path}: expected {n_atoms} atoms, parsed {positions_angstrom.shape[0]}")
-    return positions_angstrom
+
+    unknown = set(species) - COVALENT_RADIUS_ANGSTROM.keys()
+    if unknown:
+        raise ValueError(
+            f"{path}: no covalent radius for {sorted(unknown)}. "
+            f"Add it to COVALENT_RADIUS_ANGSTROM and pick a DRAW_RADIUS_FACTOR."
+        )
+    return Structure(species, positions_angstrom)
 
 
 def rotation_matrix(degrees_xyz: tuple[float, float, float]) -> np.ndarray:
@@ -74,16 +121,24 @@ def rotation_matrix(degrees_xyz: tuple[float, float, float]) -> np.ndarray:
     return mat_z @ mat_y @ mat_x
 
 
-def find_bonds(positions_angstrom: np.ndarray) -> list[tuple[int, int]]:
-    """All atom pairs within the bond cutoff.
+def find_bonds(positions_angstrom: np.ndarray, species: list[str] | None = None) -> list[tuple[int, int]]:
+    """All atom pairs closer than BOND_TOLERANCE times their summed covalent radii.
 
     O(n^2) on the distance matrix. The largest cluster here is 720 atoms, so
     this is well under a second and a neighbour list would be premature.
+
+    `species` defaults to all-carbon, which keeps the cutoff at the flat 1.82 A
+    the carbon-only figures were drawn with.
     """
+    if species is None:
+        species = ["C"] * len(positions_angstrom)
+    radii = np.array([COVALENT_RADIUS_ANGSTROM[s] for s in species])
+    cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
+
     deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
     distances = np.linalg.norm(deltas, axis=-1)
     upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
-    rows, cols = np.where(upper & (distances < BOND_CUTOFF_ANGSTROM))
+    rows, cols = np.where(upper & (distances < cutoffs))
     return list(zip(rows.tolist(), cols.tolist()))
 
 
@@ -94,52 +149,73 @@ def depth_opacity(depth: float, near: float, far: float) -> float:
     return OPACITY_FAR + t * (OPACITY_NEAR - OPACITY_FAR)
 
 
-def _draw(rotated: np.ndarray, offset_x: float = 0.0) -> str:
+def _draw(
+    rotated: np.ndarray,
+    species: list[str],
+    offset_x: float = 0.0,
+    offset_y: float = 0.0,
+    radius_scale: float = 1.0,
+) -> str:
     """Depth-sorted SVG elements for one already-rotated, already-centred cluster.
 
     Bonds are found on the rotated coordinates; rotation is rigid, so distances
     are unchanged and this is equivalent to finding them beforehand.
     """
-    xs, ys, zs = rotated[:, 0] + offset_x, rotated[:, 1], rotated[:, 2]
+    xs, ys, zs = rotated[:, 0] + offset_x, rotated[:, 1] - offset_y, rotated[:, 2]
     near, far = zs.max(), zs.min()
 
     # Draw everything back to front in one pass. A bond takes the depth of its
     # nearer atom so it never floats in front of the atom it joins.
     drawables: list[tuple[float, str]] = []
 
-    for i, j in find_bonds(rotated):
+    for i, j in find_bonds(rotated, species):
         opacity = depth_opacity(max(zs[i], zs[j]), near, far)
         drawables.append(
             (
                 max(zs[i], zs[j]),
                 f'<line x1="{xs[i]:.3f}" y1="{-ys[i]:.3f}" '
                 f'x2="{xs[j]:.3f}" y2="{-ys[j]:.3f}" '
-                f'fill="none" stroke-width="{BOND_WIDTH:.3f}" opacity="{opacity:.3f}"/>',
+                f'fill="none" stroke-width="{BOND_WIDTH * radius_scale:.3f}" '
+                f'opacity="{opacity:.3f}"/>',
             )
         )
 
     for i in range(len(rotated)):
         opacity = depth_opacity(zs[i], near, far)
-        drawables.append(
-            (
-                zs[i] + 1e-6,  # ties resolve in favour of the atom, not the bond
-                # stroke="none" is load-bearing: circles otherwise inherit the
-                # group stroke at the SVG default width of 1 user unit, which is
-                # 1 Angstrom here, and every atom renders as a ring.
+        radius = ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[i]] * radius_scale
+        if species[i] in HOLLOW_SPECIES:
+            # An open ring, so oxygen is legible without a second colour. The
+            # ring is inset by half its stroke width to keep the drawn extent
+            # equal to `radius`, which is what the viewBox margin assumes.
+            ring_width = BOND_WIDTH * radius_scale
+            shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
-                f'r="{ATOM_RADIUS:.3f}" stroke="none" opacity="{opacity:.3f}"/>',
+                f'r="{radius - ring_width / 2:.3f}" fill="none" '
+                f'stroke-width="{ring_width:.3f}" opacity="{opacity:.3f}"/>'
             )
-        )
+        else:
+            # stroke="none" is load-bearing: circles otherwise inherit the group
+            # stroke at the SVG default width of 1 user unit, which is
+            # 1 Angstrom here, and every atom renders as a ring.
+            shape = (
+                f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
+                f'r="{radius:.3f}" stroke="none" opacity="{opacity:.3f}"/>'
+            )
+        drawables.append((zs[i] + 1e-6, shape))  # ties favour the atom, not the bond
 
     drawables.sort(key=lambda item: item[0])
     return "\n    ".join(element for _, element in drawables)
 
 
-def render(positions_angstrom: np.ndarray, rotate_degrees: tuple[float, float, float]) -> str:
-    centred = positions_angstrom - positions_angstrom.mean(axis=0)
+def render(
+    structure: Structure,
+    rotate_degrees: tuple[float, float, float],
+    radius_scale: float = 1.0,
+) -> str:
+    centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
     rotated = centred @ rotation_matrix(rotate_degrees).T
 
-    margin = ATOM_RADIUS * 2.0
+    margin = ATOM_RADIUS * radius_scale * 2.0
     min_x, max_x = rotated[:, 0].min() - margin, rotated[:, 0].max() + margin
     min_y, max_y = rotated[:, 1].min() - margin, rotated[:, 1].max() + margin
 
@@ -148,7 +224,7 @@ def render(positions_angstrom: np.ndarray, rotate_degrees: tuple[float, float, f
         f'viewBox="{min_x:.3f} {-max_y:.3f} {max_x - min_x:.3f} {max_y - min_y:.3f}" '
         f'role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
-        f"    {_draw(rotated)}\n"
+        f"    {_draw(rotated, structure.species, radius_scale=radius_scale)}\n"
         f"  </g>\n"
         f"</svg>\n"
     )
@@ -156,65 +232,131 @@ def render(positions_angstrom: np.ndarray, rotate_degrees: tuple[float, float, f
 
 SERIES_GAP_ANGSTROM = 3.0
 
+# Label size as a fraction of the figure's total width, not a fixed number of
+# Angstrom. A 30 A box of gas and a 76 A row of cages are drawn at the same
+# width on the page, so a fixed Angstrom size renders one of them three times
+# larger than the other. The constant is set to reproduce the 1.6 A that the
+# cage series was drawn with.
+LABEL_SIZE_FRACTION = 0.021
+LABEL_BAND_RATIO = 1.625  # band height per unit of label size
+
 # Subscript digits, so a label reads C60 the way the prose around it does. Unicode
 # subscripts would be simpler but render unevenly in a monospaced face, and half the
 # glyphs are missing from most of them.
-_SUBSCRIPT_RE = re.compile(r"(\d+)")
+#
+# Only digits directly after a letter are subscripted. Without the lookbehind a
+# time-series label like "10 ps" is read as a formula and drops its number to the
+# baseline, which is wrong and not obviously wrong until it is on the page.
+_SUBSCRIPT_RE = re.compile(r"(?<=[A-Za-z])(\d+)")
 
 
-def _formula_markup(label: str) -> str:
+# Subscript size and drop, as fractions of the label size they sit inside.
+SUBSCRIPT_SIZE_RATIO = 0.65625
+SUBSCRIPT_DROP_RATIO = 0.2625
+
+
+def _formula_markup(label: str, label_size: float = 1.6) -> str:
     """Wrap digit runs in a subscript tspan: C60 -> C<sub>60</sub>."""
+    size = label_size * SUBSCRIPT_SIZE_RATIO
+    drop = label_size * SUBSCRIPT_DROP_RATIO
     return _SUBSCRIPT_RE.sub(
-        lambda m: f'<tspan font-size="1.05" dy="0.42">{m.group(1)}</tspan><tspan dy="-0.42"></tspan>',
+        lambda m: f'<tspan font-size="{size:.3f}" dy="{drop:.3f}">{m.group(1)}</tspan>'
+        f'<tspan dy="{-drop:.3f}"></tspan>',
         label,
     )
 
 
 def render_series(
-    clusters: list[tuple[str, np.ndarray]], rotate_degrees: tuple[float, float, float]
+    clusters: list[tuple[str, Structure]],
+    rotate_degrees: tuple[float, float, float],
+    radius_scale: float = 1.0,
+    columns: int | None = None,
 ) -> str:
-    """Lay several clusters out in a row at one shared scale.
+    """Lay several clusters out on a grid at one shared scale.
 
     The viewBox is in Angstrom throughout, so the clusters are drawn true to
     relative size — which is the point of the figure. Scaling each to fit its
     own cell would throw away the only quantity being compared.
+
+    `columns` defaults to one row. Wrapping matters on a phone: four panels
+    across a 390 px column are 90 px each, which is below the size at which a
+    molecule reads as anything.
+
+    Column widths and row heights are taken from the widest and tallest member
+    of each, so a single row reduces exactly to per-cluster spacing and the
+    one-row figures are unaffected by the grid code.
     """
     rot = rotation_matrix(rotate_degrees)
-    placed: list[str] = []
-    cursor_x = 0.0
-    max_half_height = 0.0
-    labels: list[tuple[float, float, str]] = []
+    margin = ATOM_RADIUS * radius_scale
+    n_columns = columns or len(clusters)
 
-    for label, positions_angstrom in clusters:
-        centred = positions_angstrom - positions_angstrom.mean(axis=0)
+    rotated_all: list[np.ndarray] = []
+    half_widths: list[float] = []
+    half_heights: list[float] = []
+    for _label, structure in clusters:
+        centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
         rotated = centred @ rot.T
-        half_width = float(np.abs(rotated[:, 0]).max()) + ATOM_RADIUS
-        half_height = float(np.abs(rotated[:, 1]).max()) + ATOM_RADIUS
-        max_half_height = max(max_half_height, half_height)
+        rotated_all.append(rotated)
+        half_widths.append(float(np.abs(rotated[:, 0]).max()) + margin)
+        half_heights.append(float(np.abs(rotated[:, 1]).max()) + margin)
 
-        offset_x = cursor_x + half_width
-        body = _draw(rotated, offset_x=offset_x)
-        placed.append(body)
-        labels.append((offset_x, half_height, label))
-        cursor_x = offset_x + half_width + SERIES_GAP_ANGSTROM
+    n_rows = -(-len(clusters) // n_columns)
+    column_half_width = [
+        max(half_widths[i] for i in range(len(clusters)) if i % n_columns == c)
+        for c in range(min(n_columns, len(clusters)))
+    ]
+    row_half_height = [
+        max(half_heights[i] for i in range(len(clusters)) if i // n_columns == r)
+        for r in range(n_rows)
+    ]
 
-    total_width = cursor_x - SERIES_GAP_ANGSTROM
-    label_band = 2.6
-    min_y = -max_half_height
-    height = 2 * max_half_height + label_band
+    column_centre_x: list[float] = []
+    cursor = 0.0
+    for half_width in column_half_width:
+        column_centre_x.append(cursor + half_width)
+        cursor += 2 * half_width + SERIES_GAP_ANGSTROM
+    total_width = cursor - SERIES_GAP_ANGSTROM
 
-    label_y = max_half_height + label_band * 0.75
+    label_size = total_width * LABEL_SIZE_FRACTION
+    label_band = label_size * LABEL_BAND_RATIO
+
+    # The first row is centred on y = 0, which is where a single-row figure has
+    # always drawn, so wrapping stays a pure addition.
+    row_centre_y: list[float] = []
+    cursor = -row_half_height[0]
+    for half_height in row_half_height:
+        row_centre_y.append(cursor + half_height)
+        cursor += 2 * half_height + label_band
+    total_height = cursor + row_half_height[0]
+
+    placed: list[str] = []
+    labels: list[tuple[float, float, str]] = []
+    for index, (label, structure) in enumerate(clusters):
+        row, column = divmod(index, n_columns)
+        offset_x = column_centre_x[column]
+        offset_y = row_centre_y[row]
+        placed.append(
+            _draw(
+                rotated_all[index],
+                structure.species,
+                offset_x=offset_x,
+                offset_y=offset_y,
+                radius_scale=radius_scale,
+            )
+        )
+        labels.append((offset_x, offset_y + row_half_height[row] + label_band * 0.75, label))
+
     label_markup = "\n    ".join(
-        f'<text x="{x:.3f}" y="{label_y:.3f}" text-anchor="middle" '
-        f'font-size="1.6" fill="var(--graphite)" stroke="none" '
-        f'font-family="var(--mono)">{_formula_markup(text)}</text>'
-        for x, _half, text in labels
+        f'<text x="{x:.3f}" y="{y:.3f}" text-anchor="middle" '
+        f'font-size="{label_size:.3f}" fill="var(--graphite)" stroke="none" '
+        f'font-family="var(--mono)">{_formula_markup(text, label_size)}</text>'
+        for x, y, text in labels
     )
 
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
-        f'viewBox="{-ATOM_RADIUS:.3f} {min_y:.3f} '
-        f'{total_width + 2 * ATOM_RADIUS:.3f} {height:.3f}" role="img">\n'
+        f'viewBox="{-ATOM_RADIUS:.3f} {-row_half_height[0]:.3f} '
+        f'{total_width + 2 * ATOM_RADIUS:.3f} {total_height:.3f}" role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
         f'    {"".join(placed)}\n'
         f"    {label_markup}\n"
@@ -237,24 +379,47 @@ def main() -> None:
         default=None,
         help="Comma-separated labels, one per input. Series mode only.",
     )
+    parser.add_argument(
+        "--radius-scale",
+        type=float,
+        default=1.0,
+        help="Scale atom and bond thickness. The default is tuned for the hollow "
+        "720-atom cages; a hundred-atom molecule wants roughly 2.",
+    )
+    parser.add_argument(
+        "--frame",
+        type=int,
+        default=-1,
+        help="Frame index for multi-frame XYZ trajectories. Default is the last.",
+    )
+    parser.add_argument(
+        "--columns",
+        type=int,
+        default=None,
+        help="Wrap a series onto this many columns. Default is a single row.",
+    )
     args = parser.parse_args()
 
     rotate = tuple(float(v) for v in args.rotate.split(","))
     if len(rotate) != 3:
         parser.error("--rotate needs exactly three comma-separated degrees")
 
+    def describe(structure: Structure) -> str:
+        counts = Counter(structure.species)
+        return " ".join(f"{s}{counts[s]}" for s in sorted(counts))
+
     if len(args.inputs) == 1 and not args.labels:
-        positions_angstrom = read_xyz(args.inputs[0])
-        svg = render(positions_angstrom, rotate)  # type: ignore[arg-type]
-        print(f"{args.inputs[0].name}: {len(positions_angstrom)} atoms")
+        structure = read_xyz(args.inputs[0], args.frame)
+        svg = render(structure, rotate, args.radius_scale)  # type: ignore[arg-type]
+        print(f"{args.inputs[0].name}: {len(structure)} atoms, {describe(structure)}")
     else:
         labels = args.labels.split(",") if args.labels else [p.stem for p in args.inputs]
         if len(labels) != len(args.inputs):
             parser.error(f"{len(labels)} labels for {len(args.inputs)} inputs")
-        clusters = [(label, read_xyz(path)) for label, path in zip(labels, args.inputs)]
-        svg = render_series(clusters, rotate)  # type: ignore[arg-type]
-        for label, positions in clusters:
-            print(f"  {label}: {len(positions)} atoms")
+        clusters = [(label, read_xyz(path, args.frame)) for label, path in zip(labels, args.inputs)]
+        svg = render_series(clusters, rotate, args.radius_scale, args.columns)  # type: ignore[arg-type]
+        for label, structure in clusters:
+            print(f"  {label}: {len(structure)} atoms, {describe(structure)}")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(svg)
@@ -268,9 +433,49 @@ def _self_check() -> None:
     square = np.array([[0.0, 0.0, 0.0], [1.4, 0.0, 0.0], [1.4, 1.4, 0.0], [0.0, 1.4, 0.0]])
     assert len(find_bonds(square)) == 4, find_bonds(square)
 
-    # Cutoff boundary: 1.7 A bonded, 1.9 A not.
+    # Cutoff boundary: 1.7 A bonded, 1.9 A not. This is the carbon-only cutoff
+    # the cage figures were drawn with, and the covalent-radius rule must not
+    # have moved it.
     assert len(find_bonds(np.array([[0.0, 0, 0], [1.7, 0, 0]]))) == 1
     assert len(find_bonds(np.array([[0.0, 0, 0], [1.9, 0, 0]]))) == 0
+
+    # Per-species cutoffs. A 1.1 A C-H bond is real; the same separation between
+    # two carbons would be far too short, but the flat 1.8 A rule accepted it and
+    # a flat rule tight enough for C-H would have broken every C-C bond.
+    pair = np.array([[0.0, 0, 0], [1.1, 0, 0]])
+    assert len(find_bonds(pair, ["C", "H"])) == 1
+    # ... and 1.6 A is a C-O bond but not an O-H one.
+    pair = np.array([[0.0, 0, 0], [1.6, 0, 0]])
+    assert len(find_bonds(pair, ["C", "O"])) == 1
+    assert len(find_bonds(pair, ["O", "H"])) == 0
+
+    # Two hydrogens at a typical non-bonded contact must not be joined: the
+    # summed radii are small enough that the flat carbon cutoff would have.
+    assert len(find_bonds(np.array([[0.0, 0, 0], [1.5, 0, 0]]), ["H", "H"])) == 0
+
+    # Oxygen draws as a ring and carbon as a disc, so the two are distinguishable
+    # without colour. A regression here is silent in the SVG but visible on the page.
+    water = np.array([[0.0, 0, 0], [0.96, 0, 0], [-0.24, 0.93, 0]])
+    markup = _draw(water, ["O", "H", "H"])
+    assert markup.count('fill="none"') == 3, markup  # one O ring plus two O-H bonds
+    assert markup.count('stroke="none"') == 2, markup  # the two H discs
+
+    # Wrapping onto a grid. Four identical single atoms on two columns must give
+    # two rows: a taller, narrower figure than the same four in one row.
+    one = Structure(["C"], np.zeros((1, 3)))
+    four = [(f"C{i}", one) for i in range(4)]
+    row = render_series(four, (0, 0, 0))
+    grid = render_series(four, (0, 0, 0), columns=2)
+
+    def viewbox(svg: str) -> list[float]:
+        return [float(v) for v in re.search(r'viewBox="([^"]+)"', svg).group(1).split()]
+
+    row_box, grid_box = viewbox(row), viewbox(grid)
+    assert grid_box[2] < row_box[2], (grid_box, row_box)  # narrower
+    assert grid_box[3] > row_box[3], (grid_box, row_box)  # taller
+    # Every cluster is still drawn, and every label with it.
+    assert grid.count("<circle") == 4, grid.count("<circle")
+    assert grid.count("<text") == 4, grid.count("<text")
 
     # Depth maps to the stated opacity range, near-end brightest.
     assert math.isclose(depth_opacity(5.0, 5.0, -5.0), OPACITY_NEAR)

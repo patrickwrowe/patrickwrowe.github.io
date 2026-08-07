@@ -1,0 +1,245 @@
+---
+title: A machine learning potential for carbon with hydrogen and oxygen
+year: "2021–22"
+kind: project
+featured: true
+order: 2
+summary: CHO-GAP, which extended the carbon potential to the two elements carbon is
+  always found with. It worked. The paper was never finished, and this is the write-up
+  it should have had.
+method: Gaussian approximation potential over CP2K PBE-D3 reference data, built by ten rounds of active learning
+system: Carbon with hydrogen and oxygen, from amorphous networks to small organics, liquid water and lignin
+result: Unpublished. The model does reactive chemistry it was never trained on; the manuscript stopped at a regression nobody root-caused
+tags: [interatomic-potentials, carbon, materials, machine-learning]
+---
+
+import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
+import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
+import DesignSpace from "./figures/cho-gap/training-design-space.png";
+import QuenchValidation from "./figures/cho-gap/quench-validation.png";
+import RssParity from "./figures/cho-gap/rss-parity.png";
+
+[GAP-20](/work/carbon-gap-20/) describes carbon in every form it takes, and every one of
+those forms is pure. Real carbon is not. Char, soot, activated carbon, battery anodes and the
+biomass all of them are made from arrive with oxygen and hydrogen attached, and a potential
+that cannot see a hydroxyl group cannot follow any of the chemistry that puts them there.
+
+The draft I wrote in 2021 makes the point better than I would now:
+
+> Despite the comparable excitement surrounding the potential uses and applications of the
+> various pure carbon allotropes (graphene, graphite, carbon nanotubes and amorphous carbon),
+> it is a fact which is often glossed over that these materials will not be free from
+> oxidation and hydrogenation, even under the most ideal of conditions.
+
+So the project was to add the two missing elements. The model is called CHO-GAP-22, and it
+was never published.
+
+## What was built
+
+A Gaussian approximation potential over 3,167 configurations and 240,243 atoms: 183,656
+carbon, 38,407 hydrogen, 18,180 oxygen. The reference level is CP2K at PBE with Grimme D3
+dispersion, a DZVP-MOLOPT basis with GTH pseudopotentials and a 460 Ry cutoff.
+
+Just under a third of the training set, 959 configurations, is carbon-only data carried over
+from GAP-20 rather than computed fresh. That is deliberate and it is the reason the model has
+a defensible pure-carbon limit: adding elements to a potential is an easy way to lose the
+behaviour you already had, and keeping the old data in the fit is the cheapest insurance
+against it.
+
+The descriptor set is a two-body term at 4.5 Å plus six SOAP descriptors: a short and a long
+length scale for each of the three elements as the central atom. Carbon and oxygen get 3.0 and
+4.5 Å, hydrogen gets 2.5 and 3.5 Å, because hydrogen's chemical environment is decided much
+closer in and spending a 4.5 Å descriptor on it mostly buys noise. About 12,000 sparse points
+in total.
+
+<Plate n={1}>
+  <Image src={DesignSpace} alt="Three panels. The top shows six 3D scatter plots of the training set in carbon-to-oxygen ratio, carbon-to-hydrogen ratio and density, split across bulk, surface and cluster environments and across annealing and optimisation. Below, line plots of coordination fraction and ring-size frequency comparing the two generation methods." widths={[640, 824]} sizes="(max-width: 1000px) 100vw, 900px" />
+  <Fragment slot="caption">
+    The training set as a designed object. Each point in (a) is one configuration placed by
+    stoichiometry and density and coloured by formation energy, which makes the coverage
+    auditable: gaps are visible rather than inferred. Panels (b) and (c) show why both
+    generation methods were needed. Random structure search and high-temperature annealing
+    produce genuinely different networks, annealing favouring seven-membered rings and search
+    favouring nine, and a model trained on either alone inherits that bias.
+    <span class="credit">Own work, from the unpublished 2021 draft.</span>
+  </Fragment>
+</Plate>
+
+The one piece of real methodology is in how the fit is regularised. GAP fits need a per-configuration
+estimate of how much to trust each force, and the standard practice at the time was to split the
+training set into named categories by hand and assign each a tolerance. The draft is blunt about
+why that does not scale:
+
+> In previous models, this problem has been approached by manually separating the training
+> data set into configuration types based on their known physical characteristics. While this
+> approach has precipitated some success, it is not particularly extensible.
+
+The replacement scales each atom's force tolerance with the magnitude of the force on it and
+with the average over its configuration, so a quiet crystal and a violent liquid get different
+treatment without anyone deciding in advance which is which. It is the part of the project I
+would still defend.
+
+The database was assembled over ten rounds of active learning: fit a model, drive random
+structure search and molecular dynamics with it, find where it is uncertain, recompute those
+configurations with CP2K, refit. The directory names record which chemistry kept failing.
+Four separate rounds are labelled `RSS_OH`, targeted searches for hydroxyl configurations,
+because O–H was the environment the model kept getting wrong and one round of patching never
+fixed it.
+
+## What it showed
+
+The pure-carbon limit survives, which was the first thing to check: lattice parameters,
+phonons, formation energies, defects and surfaces all reproduce the GAP-20 test suite.
+
+<Plate n={2}>
+  <Image src={QuenchValidation} alt="Two panels comparing DFT and GAP for quenched liquid CHO. Left, the population of each coordination number; right, the frequency of each ring size. The two methods track closely, with GAP over-predicting three-coordinated atoms and under-predicting four-coordinated ones." widths={[640, 1180, 1352]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Liquid CHO quenched independently under DFT and under the potential, compared on network
+    structure rather than on energy. Ring statistics agree closely. Coordination does not
+    quite: the model puts about 9% too many atoms in three-fold sites and correspondingly too
+    few in four-fold ones, consistently enough across the individual quenches, drawn faint
+    behind, that it is a real bias and not sampling noise. That gap was known and never closed.
+    <span class="credit">Own work, from the unpublished 2021 draft.</span>
+  </Fragment>
+</Plate>
+
+The harder test is whether it generalises off the training distribution. A hundred structures
+found by potential-driven random structure search, none of them in the fit, were recomputed
+with DFT and compared.
+
+<Plate n={3}>
+  <Image src={RssParity} alt="A parity plot of GAP against DFT energies for a hundred novel structures, tight along the diagonal, with one point falling far below it; beneath, the residuals, flat near zero apart from that single outlier at 0.77 eV per atom." widths={[640, 963]} sizes="(max-width: 1000px) 100vw, 800px" />
+  <Fragment slot="caption">
+    A hundred structures the model found for itself, then recomputed with DFT. The agreement
+    holds across a 1.8 eV per atom range, which is the property that makes a potential usable
+    for structure search rather than only for interpolation. The single point 0.77 eV per atom
+    below the line is worth more attention than the ninety-nine on it: a structure the model
+    believes is far more stable than it is, which is exactly the failure that quietly poisons a
+    search.
+    <span class="credit">Own work, from the unpublished 2021 draft.</span>
+  </Fragment>
+</Plate>
+
+Fifty small organic molecules from QM9, none of them seen in training, came out around
+50 meV per atom, with outliers to 400. That is nowhere near the accuracy of models fitted to
+QM9 itself, and the draft says so plainly: the aim was to be physically reasonable off-domain,
+not competitive on someone else's benchmark. Liquid water reproduces AIMD radial distribution
+functions at 300 K, with the same caveat attached in the draft, that this is explicitly not a
+water potential and should not be used as one.
+
+## Setting it on fire
+
+The result I still like best is the one that costs the least to explain. Eight methane
+molecules and sixteen oxygen molecules, which is the exact stoichiometry of complete
+combustion, compressed into a 10 Å periodic box and held at 3000 K for 50 picoseconds.
+
+The training set does contain the pieces. Among the reference states are twenty isolated O₂
+configurations, twenty of CO, a handful of water and one CO₂, sitting alongside a couple of
+hundred thousand atoms of condensed-phase carbon. What it does not contain anywhere is a
+reaction. No trajectory in which methane becomes carbon dioxide, no transition state, no
+half-broken C–H bond caught on the way to somewhere else. The model has been shown the
+reactants and the products as separate static objects, and never the path between them.
+
+Whether the path falls out of that anyway is a fair question and not an obvious yes.
+
+<Plate n={4}>
+  <Fragment set:html={combustionSeries} />
+  <Fragment slot="caption">
+    Methane burning under CHO-GAP. Oxygen is drawn as an open ring, carbon and hydrogen as
+    filled discs, large and small; depth is drawn as fading. At 0 ps the box is eight methane
+    tetrahedra and sixteen oxygen dimers on a lattice. By 50 ps seven of the eight carbons have
+    reached CO₂, the eighth is stranded as CO, and twelve waters have formed, with the
+    remaining hydrogen sitting in the free radicals a 3000 K flame should contain. Atom counts
+    are conserved exactly at every frame.
+    <span class="credit">
+      Own work. Generated by <code>scripts/figures/combustion_frames.py</code> and
+      <code>scripts/figures/render_cluster.py</code> from the original trajectory.
+    </span>
+  </Fragment>
+</Plate>
+
+It burns. Counting connected molecules in the final frame gives seven CO₂, one CO, twelve
+H₂O, and the rest of the hydrogen distributed over OH radicals, free H atoms and one peroxide.
+Carbon, hydrogen and oxygen all balance exactly, which is a check on my analysis rather than on
+the physics, but a necessary one.
+
+The honest reading is that this is a sanity check and not a validation. Nobody should quote a
+rate constant from it. What it demonstrates is that a potential fitted to static condensed-phase
+configurations, with no reactive data at all, does not fall over when handed a reaction, and
+lands on the right products for roughly the right reasons. That is the minimum bar for the thing
+the project actually wanted, which was to grow carbon from biomass rather than to burn methane.
+
+## The result that was promised and never delivered
+
+The abstract commits to something much larger:
+
+> We demonstrate the capabilities of CHO-GAP-22 by simulating the formation of hard carbons
+> directly from the widely available CHO containing biopolymers, lignin and cellulose.
+
+That demonstration is not in the manuscript. The section where it should sit is bullet points
+and an open TODO.
+
+The work partly existed. Lignin pyrolysis was run and Jean-Marc Leyssale analysed 111
+configurations from the trajectory: the oligomer fragments into pieces of five to forty
+carbons, char grows, gas and oil come off, and the final char content agrees with both
+experiment and previous ReaxFF simulations. On a Van Krevelen diagram against real type-III
+organic matter it falls short, sitting at too early a stage of pyrolysis, releasing too little
+oxygen and holding onto too much hydrogen. Char samples were sent to a lab in Nancy for
+elemental analysis in March 2021 and came back at 92 to 94% carbon, so there was real material
+to compare against.
+
+None of that was ever written up.
+
+## Why it stopped
+
+Not for any of the reasons above. The model kept being improved, and in early 2022 an
+iteration made it worse. From my own status notes at the time:
+
+> V121. Trained with new structures and new sigma parameters. However, initial indications
+> were not promising with phonon dispersion curves (etc.) being significantly poorer than with
+> the previous "good" model (V106). Phonons for diamond and nanotubes could not be computed as
+> the optimisation failed. Due to the number of changes made to fit this into 1Tb of memory,
+> it's challenging to say what precisely was the cause.
+
+That last sentence is the whole lesson. Several things changed at once because the fit had to
+be squeezed into the memory available, and when the result got worse there was no way to
+attribute it. The next model was a deliberate revert to V106 plus new structures, trained for
+over a week on 1.5 Tb. By then the project had other demands on it and the manuscript, already
+missing an introduction and a conclusion, never got them.
+
+There is a smaller episode in the same directory that ended better. A note dated 4 May 2021
+records that the Hartree to electronvolt conversion had been done with 13.605 rather than
+27.211, so every energy in the collated database was out by a factor of two. The broken data
+was kept rather than deleted, everything was recomputed, and the recomputation is a numbered
+iteration of its own. That is the failure mode caught early. The V121 regression is the same
+class of problem caught late, with too many variables moving to isolate it.
+
+## Where this sits
+
+It is the direct successor to [GAP-20](/work/carbon-gap-20/) and it inherits that project's
+argument, that a potential is worth building when the useful unit of publication is the model
+itself. The difference is that GAP-20 shipped and this did not, which makes it the clearest
+example I have of the distance between a model that works and a piece of finished work.
+
+I would draw two things from it now. The first is that the discipline that matters in a long
+fit is version control over the training procedure, not over the code: changing the data, the
+regularisation and the memory footprint in one step made a two-week regression permanently
+unattributable. The second is about what to write down and when. The science here was
+essentially done in August 2021. The parts that were missing were an introduction, a
+conclusion, and one demonstration that had already half been run.
+
+The same instinct shows up in [the work I did afterwards](/work/antibody-selection/), where the
+deliverable was a decision someone would act on rather than a model, and the model existing was
+never the point at which anything was finished.
+
+## Credit
+
+The 2021 draft lists Patrick Rowe as corresponding author, with Carla de Tomas, Cedric Weber,
+Jean-Marc Leyssale and Gábor Csányi. It carries no statement of individual contributions, so
+beyond the lignin analysis noted above, which is Leyssale's, I am not going to attribute
+specific pieces of it.
+
+Nothing here is published. The figures are from my own unfinished manuscript and the
+combustion figure is generated from the original trajectory, so there is no licence attached
+to any of it beyond my own.
