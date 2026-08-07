@@ -3,40 +3,59 @@ title: Antibody selection and engineering workflows
 year: "2022–24"
 featured: true
 order: 3
-stub: true
-stubNote: >-
-  Placeholder. The wall-label fields are carried over from the CV. This entry covers work done at AbCellera, so it needs a pass for what is publishable before it goes live — no unpublished internal results, target names or partner details.
-summary: Structure-based simulation and ML scoring over lab-automation data, deployed
-  across more than thirty clinical targets at AbCellera.
-method: Structure-based simulation and ML scoring over lab-automation data
-system: Therapeutic antibodies, from early screening to candidate delivery
-result: Deployed across more than thirty clinical targets at AbCellera
+summary: Simulation and ML scoring over lab-automation data at AbCellera, deciding which
+  antibodies out of a very large number are worth an experiment.
+method: Structure-based simulation and ML scoring over high-throughput screening data
+system: Therapeutic antibodies, from early screening through to candidate delivery
+result: Deployed across more than thirty clinical targets
 tags: [proteins, antibodies, ml-engineering]
 ---
 
-import DraftNotice from "@/components/DraftNotice.astro";
+Antibody discovery has the opposite problem to most of computational chemistry. It is not
+short of data and it is not short of candidates. A single campaign produces far more binders
+than anyone can characterise properly, and the real constraint is assay time. The useful
+question is not *which of these is best* but *which of these is worth measuring, and can you
+decide early enough for the answer to change what happens next*.
 
-## The problem
+That framing is what the work was about. Three years of it at AbCellera in Vancouver, across
+more than thirty clinical programmes.
 
-Antibody discovery generates far more candidates than can be characterised
-experimentally. The bottleneck is not finding binders; it is deciding which of them
-are worth the assay time, early enough for the decision to matter.
+## What the work was
 
-## What was built
+Three layers, and the boring one mattered most.
 
-AI and simulation-driven workflows for antibody selection and engineering, running
-over lab-automation data, plus the data architecture and automated pipelines
-underneath them.
+**Data.** High-throughput antibody discovery runs on lab automation, and lab automation
+produces data that is voluminous, heterogeneous and rarely assembled with modelling in mind.
+A large fraction of the effort went into the pipelines and the data architecture underneath
+everything else, because a scoring function is worth nothing if the assay results it is
+trained on cannot be joined reliably to the sequences that produced them.
 
-## What it changed
+**Simulation.** Structure-based work on the molecules themselves: the interface a binder
+makes with its target, and the properties that decide whether a good binder can be
+manufactured, formulated and dosed at all.
 
-Deployed across more than thirty clinical targets.
+**Scoring.** Models over both, aimed at ranking and triage rather than at prediction for its
+own sake. The output that matters is a shortlist a team will actually run.
 
-## How to check it
+## What is visible from outside
 
-<DraftNotice>
-This is the section that needs the most thought. The work is largely unpublished, so
-the evidence available is indirect. Options: point at published methods the approach
-builds on, describe the validation design without the results, or ask what has been
-cleared for external use.
-</DraftNotice>
+Most of this is unpublished, as industrial work generally is. Two pieces of it are public,
+and both are on this site:
+
+[Selecting CD3-binding antibodies for T-cell engagers](/work/cd3-binder-selection/) is the
+clearest published example of the underlying approach: profile a large panel functionally,
+find the axes that actually organise it, then select across those axes rather than picking
+favourites. [The peptide-MHC T-cell engager programme](/work/tce-pmhc/) is one of the
+campaigns that consumed the output.
+
+I am not going to describe the internal platform beyond that, or name targets or partners.
+The two posters are the part that has been cleared for the outside world, and they are a fair
+sample of the shape of the work.
+
+## Where this sits
+
+Read against the earlier pages here, this looks like a change of field. It is less of one
+than it appears. Ranking a panel of antibodies by a cheap model, against the possibility that
+the cheap model is confidently wrong somewhere you have not looked, is
+[the carbon potential question](/work/gap-20/) with proteins substituted in. The units
+change; the failure modes do not.

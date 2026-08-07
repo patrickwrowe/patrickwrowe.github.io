@@ -4,9 +4,9 @@ kind: paper
 year: "2021"
 order: 22
 summary: Committee neural network potentials built by active learning from a single short
-  AIMD trajectory — six aqueous systems, no per-system tuning, days rather than years.
+  AIMD trajectory. Six aqueous systems, no per-system tuning, days rather than years.
 method: Committee neural network potentials with query-by-committee active learning
-system: Six aqueous systems — ions in solution, water in nanotubes and confined between sheets, water on rutile TiO₂
+system: Six aqueous systems, from ions in solution to nanoconfined water and an oxide interface
 published: Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118 (2021)
 authors: Christoph Schran, Fabian L. Thiemann, Patrick Rowe, Erich A. Müller, Ondřej Marsalek, Angelos Michaelides
 doi: 10.1073/pnas.2110077118
@@ -37,7 +37,7 @@ space, with the hyperparameter scans and the sampling strategy to match.
 The argument here is that most scientific questions do not need a model like that. They need
 one that is correct at a single thermodynamic state point, for a single system, and such a
 model can be built in a few days with almost no human input. The interesting part is not that
-this is possible in principle but that it can be made routine — the same protocol, unchanged,
+this is possible in principle but that it can be made routine: the same protocol, unchanged,
 applied to six chemically dissimilar systems.
 
 ## What we built
@@ -51,7 +51,7 @@ The active learning loop starts from twenty randomly chosen frames of one short 
 trajectory. Train the committee, then repeatedly add the twenty frames on which the members
 disagree most about the atomic forces. The loop needs no new electronic structure
 calculations at any point, because the reference trajectory already carries energies and
-forces for every frame — the expensive step happened once, before the loop began. Convergence
+forces for every frame, so the expensive step happened once, before the loop began. Convergence
 arrives at roughly 300 training structures.
 
 <Plate n={2}>
@@ -60,7 +60,7 @@ arrives at roughly 300 training structures.
     The protocol, and the six systems it was applied to unchanged. A short ab initio
     trajectory goes in at the top; the committee is grown by query-by-committee selection in
     the middle; long simulation comes out at the bottom. The systems below span solvated ions,
-    two flavours of nanoconfinement and an oxide interface — chosen to have as little in
+    two flavours of nanoconfinement and an oxide interface, chosen to have as little in
     common as possible.
     <span class="credit">
       Fig. 1 from Schran, Thiemann, Rowe, Müller, Marsalek and Michaelides,
@@ -95,7 +95,7 @@ more than a nanometre into the liquid.
     Water on rutile TiO₂(110). Panels E and F are the same adsorption free energy map computed
     from ab initio dynamics and from the committee potential: the first has too little
     statistics to resolve the minima, the second is converged. Panel D is the argument for
-    carrying a committee at all — the model's own error estimate, resolved against distance
+    carrying a committee at all. The model's own error estimate, resolved against distance
     from the surface, stays between 40 and 80 meV Å⁻¹ across the whole water region and does
     not drift over the trajectory.
     <span class="credit">

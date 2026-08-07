@@ -7,7 +7,7 @@ summary: A laminar MoS₂ membrane that switches between water-permeable and imp
   pH, and remembers which state it was last in. Ab initio molecular dynamics ruled out the
   obvious mechanism.
 method: Ab initio molecular dynamics of confined water at four lithium loadings, CP2K at optB88-vdW
-system: Water confined between MoS₂ sheets — 2H and 1T′ polymorphs, Li/Mo from 0.02 to 0.3
+system: Water confined between MoS₂ sheets, 2H and 1T′ polymorphs, Li/Mo from 0.02 to 0.3
 published: Nature 616, 719–723 (2023)
 authors: Chunchun Hu, Amritroop Achari, Patrick Rowe, Hongjie Xiao, Swathi Suran, Zhongwu Li,
   Kaiwen Huang, Cheng Chi, Christy T. Cherian, Vasu Sreepal, Phil D. Bentley, Andrew Pratt,
@@ -38,9 +38,9 @@ this time with Kostya Novoselov's group as well, and again the sequence was that
 experimentalists found something striking and wanted a mechanism for it rather than a
 description of it. Their membranes did not simply switch between passing water and blocking
 it. They *remembered* which state they had last been in, and the memory was robust enough to
-survive ten cycles without measurable degradation. That is hysteresis in a transport
-property, which is common in biology and rare in a synthetic laminate, and it is not the sort
-of behaviour a static structural picture accounts for.
+survive ten cycles without measurable degradation. Hysteresis in a transport property is
+common in biology and rare in a synthetic laminate, and it is not the sort of behaviour a
+static structural picture accounts for.
 
 Angelos Michaelides and I designed the ab initio molecular dynamics; I ran and analysed it
 with him. Everything experimental is Manchester's, as is the classical molecular dynamics of
@@ -62,8 +62,8 @@ monotonically until, above about 90% 2H, it drops below the detection limit.
   <Fragment slot="caption">
     The membranes and the basic result. Panels a–c show the three MoS₂ polymorphs; d is AFM
     of the exfoliated flakes with a ~1 nm height profile and a photograph of a 2 µm
-    free-standing membrane. Panel e is the permeation measurement — weight loss from a sealed
-    water-filled container — for as-prepared 1T′, 2H, and acid- and base-treated membranes,
+    free-standing membrane. Panel e is the permeation measurement, weight loss from a sealed
+    water-filled container, for as-prepared 1T′, 2H, and acid- and base-treated membranes,
     with the inset showing permeation collapsing as annealing converts 1T′ to 2H.
     <span class="credit">
       Fig. 1 from Hu, Achari, Rowe et al., Nature 616, 719–723 (2023). Accepted manuscript,
@@ -75,9 +75,9 @@ monotonically until, above about 90% 2H, it drops below the detection limit.
 The interesting behaviour appears when the 1T′ membrane is conditioned at different pH. Water
 vapour permeation switches by a few orders of magnitude, and the switch does not retrace its
 path. Taking a membrane up from pH 1 it stays shut until about pH 11; bringing it back down
-it stays open until about pH 4. Liquid permeance shows the same loop — below the
-0.01 L m⁻² h⁻¹ bar⁻¹ sensitivity limit after acid treatment, 1.1 L m⁻² h⁻¹ bar⁻¹ after pH 12.1
-— and so does sodium ion permeation against feed pH.
+it stays open until about pH 4. Liquid permeance shows the same loop, running from below the
+0.01 L m⁻² h⁻¹ bar⁻¹ sensitivity limit after acid treatment to 1.1 L m⁻² h⁻¹ bar⁻¹ after
+pH 12.1, and so does sodium ion permeation against feed pH.
 
 <Plate n={3}>
   <Image src={Hysteresis} alt="Three panels showing open hysteresis loops: water vapour permeation rate, liquid water permeance and sodium ion permeation rate, each against the pH the membrane was conditioned at." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
@@ -130,8 +130,8 @@ the state variable the membrane remembers.
 ## What the simulations were for
 
 That leaves a specific question the experiments could not answer directly. Lithium content
-controls permeability — but does it do so by changing how fast water moves once it is inside
-the channel, or by controlling whether water gets into the channel at all? Those are
+controls permeability, but does it do so by changing how fast water moves once it is inside the
+channel, or by controlling whether water gets into the channel at all? Those are
 different physical pictures with different consequences, and they are indistinguishable in a
 macroscopic flux measurement.
 
@@ -144,8 +144,8 @@ switches.
 
 Confined water forms a well-defined bilayer in every case, and it is remarkably insensitive
 to what it is confined by. The 2H and 1T′ polymorphs have very different Mo–S and Mo–Mo bond
-length distributions — 1T′ is broad and bimodal, reflecting continuous thermal reorganisation
-of the metal sublattice — and yet the water structure between them is almost identical. Water
+length distributions, 1T′ being broad and bimodal as the metal sublattice continuously
+reorganises, and yet the water structure between them is almost identical. Water
 sits preferentially directly above sulfur atoms rather than in the interstitial sites, which
 indicates hopping rather than continuous diffusion.
 
@@ -156,7 +156,7 @@ indicates hopping rather than continuous diffusion.
     the MoS₂ basal plane at low (left) and high (right) lithium loading, accumulated over the
     production trajectory, with the molybdenum (blue ×) and sulfur (white ○) lattice positions
     overlaid. Density collects on lattice sites and stays flat in between rather than
-    spreading evenly across the plane — water occupies discrete positions and moves between
+    spreading evenly across the plane. Water occupies discrete positions and moves between
     them, which is the structural signature behind the hopping picture.
     <span class="credit">
       Own work, from the CP2K trajectories behind Fig. 4. Not published at this resolution;
@@ -175,7 +175,7 @@ permeability changes by orders of magnitude.
 
 That is a negative result and it is the useful one. Whatever the membrane is doing, it is not
 modulating the diffusivity of water inside an already-open channel. The switch has to be in
-whether the channel opens — which is what the accompanying classical simulations of water
+whether the channel opens at all, which is what the accompanying classical simulations of water
 entry address, and what the lithium-driven collapse from 11.4 Å to 6.4 Å describes.
 
 ## Where this sits
@@ -188,9 +188,9 @@ On the simulation side the work sits in the Michaelides group's line on nanoconf
 the optB88-vdW functional used here is Klimeš, Bowler and Michaelides' own, and bilayer water,
 ice-like confined phases and hopping diffusion are recurring subjects in that group. It is
 also the second Manchester collaboration of the same shape as
-[the vermiculite membranes work](/work/vermiculite-membranes/) three years earlier —
-an experimental group with a clean anomaly, and simulations run to distinguish between
-candidate mechanisms rather than to reproduce the measurement.
+[the vermiculite membranes work](/work/vermiculite-membranes/) three years earlier: an
+experimental group with a clean anomaly, and simulations run to distinguish between candidate
+mechanisms rather than to reproduce the measurement.
 
 Data availability is by request to the corresponding authors; no repository or dataset DOI
 accompanies the paper. The published figures reproduced here are from the CC BY accepted

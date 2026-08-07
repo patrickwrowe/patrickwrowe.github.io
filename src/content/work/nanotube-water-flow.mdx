@@ -6,7 +6,7 @@ order: 24
 summary: Why water flows fast through carbon nanotubes and slowly through boron nitride ones.
   Geometry sets the curvature dependence, chemistry sets the material dependence.
 method: Committee neural network potentials at revPBE-D3 accuracy, over 40 ns of dynamics
-system: Sixteen armchair carbon and boron nitride nanotubes, 1.6–5.5 nm diameter, plus flat graphene and hBN
+system: Sixteen armchair carbon and boron nitride nanotubes, 1.6–5.5 nm across, plus flat graphene and hBN
 published: ACS Nano 16, 10775–10782 (2022)
 authors: Fabian L. Thiemann, Christoph Schran, Patrick Rowe, Erich A. Müller, Angelos Michaelides
 doi: 10.1021/acsnano.2c02784
@@ -31,8 +31,8 @@ import Mechanism from "./figures/nanotube-water-flow/fig3-diffusion-mechanism.pn
 Water moves through carbon nanotubes far faster than continuum hydrodynamics allows, and the
 effect gets stronger as the tubes get narrower. Through boron nitride nanotubes, which are
 geometrically almost identical and differ only in what the wall is made of, it does not. This
-had been measured repeatedly since the mid-2000s and had resisted explanation for well over a
-decade — long enough that it was a standing embarrassment for a field otherwise confident it
+had been measured repeatedly since the mid-2000s and resisted explanation for well over a
+decade, long enough to be a standing embarrassment for a field otherwise confident it
 understood interfacial water.
 
 The obstacle was not conceptual so much as computational. Explaining the difference requires
@@ -51,10 +51,10 @@ the structure and the dynamics of liquid water, and it matches diffusion Monte C
 coupled-cluster interaction energies for water on graphene and inside carbon nanotubes. A
 model that gets the water right and the interface wrong would answer nothing here.
 
-The training sets were grown in three generations — the confined systems first, then bulk
-water and flat sheets, then configurations with quantum nuclei from path-integral dynamics —
-reaching 1096 structures for carbon–water and 885 for boron nitride–water. Small training
-sets, because the systems are narrow; that is the argument the methods paper made.
+The training sets were grown in three generations: the confined systems first, then bulk water
+and flat sheets, then configurations with quantum nuclei from path-integral dynamics. They
+reach 1096 structures for carbon–water and 885 for boron nitride–water. Small training sets,
+because the systems are narrow, which is the argument the methods paper made.
 
 With those we simulated sixteen armchair nanotubes of each material, radii from 0.82 to
 2.77 nm, plus flat graphene and hBN sheets: 966 to 8328 atoms per system, at least 1 ns each,
@@ -68,7 +68,7 @@ flow is imposed and nothing is driven out of equilibrium to extract them.
 Water experiences a friction coefficient four to five times larger on boron nitride than on
 the equivalent carbon system, at every curvature studied. On flat sheets the values are
 roughly 4.5 × 10⁴ N s m⁻³ for monolayer graphene and 17 × 10⁴ N s m⁻³ for hBN. Both materials
-show a strong radius dependence — narrower tubes are slipperier — and both converge to their
+show a strong radius dependence, narrower tubes being slipperier, and both converge to their
 flat-surface values above about 2.5 nm radius. The smallest boron nitride nanotube is about as
 slippery as flat graphene, which is a useful way to see that the two effects are comparable
 in size and independent.
@@ -81,8 +81,9 @@ everything follows from it.
   <Image src={Corrugation} alt="Oxygen and hydrogen free energy surface corrugation against tube radius for carbon and boron nitride nanotubes, the linear correlation between friction and the sum of squared corrugations, and eight three-dimensional renderings of the free energy surfaces." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
   <Fragment slot="caption">
     The explanation in one figure. Oxygen corrugation (a) rises with radius and is nearly
-    identical for both materials — a geometric effect. Hydrogen corrugation (b) hardly depends
-    on radius but is about four times larger on boron nitride — a chemical one. Panel (c) is
+    identical for both materials, which is a geometric effect. Hydrogen corrugation (b) hardly
+    depends on radius but is about four times larger on boron nitride, which is a chemical one.
+    Panel (c) is
     the strongest single piece of evidence in the paper: the friction coefficient is linear in
     the sum of the two squared corrugations, across all sixteen tubes and both materials, which
     means both atom types have to be counted. Panels (d) and (e) render the surfaces
@@ -95,7 +96,7 @@ everything follows from it.
 </Plate>
 
 The oxygen free energy surface flattens as the tube narrows, from about 3.8 meV of corrugation
-at the smallest radii — identical in both materials — to 6.9 meV for carbon and 9.1 meV for
+at the smallest radii, identical in both materials, to 6.9 meV for carbon and 9.1 meV for
 boron nitride at the largest. Curvature smooths the landscape an oxygen atom sees, and it does
 so for the same geometric reason in both materials. That accounts for the radius dependence.
 
@@ -106,7 +107,7 @@ accounts for the material dependence, and it is chemistry rather than geometry.
 
 Following individual molecules makes the difference concrete. On graphene, a water molecule
 slides with its orientation more or less irrelevant, and the hydrogen probability density in
-the contact layer is close to homogeneous — within about ±2% along a cut. On hBN the hydrogens
+the contact layer is close to homogeneous, within about ±2% along a cut. On hBN the hydrogens
 dock onto nitrogen atoms and the molecule waits there before hopping to the next nitrogen
 site, and the density is modulated from 0.86 to 1.18. The hydrogen–nitrogen interaction is far
 too weak to be called a hydrogen bond, but it raises the barrier enough to change how the
@@ -143,9 +144,9 @@ reconciliation is surface charge from hydroxide chemisorbed on boron in alkaline
 plausibly promoted by defects. No water dissociation occurred in these simulations, so the
 question is left open rather than answered.
 
-Extensive convergence tests — water density, system size, trajectory length, hydrogen mass,
-choice of functional, nuclear quantum effects and wall flexibility — shift the absolute
-numbers but leave the trends intact. Both the curvature dependence and the factor of four
+Extensive convergence tests shift the absolute numbers but leave the trends intact: water
+density, system size, trajectory length, hydrogen mass, choice of functional, nuclear quantum
+effects and wall flexibility. Both the curvature dependence and the factor of four
 between materials survive all of them.
 
 ## Contribution
@@ -164,9 +165,9 @@ nanotubes were two of the six demonstration systems there; here they stop being 
 demonstration and become the object of study, scaled from a single (12,12) tube to sixteen
 tubes up to 5.5 nm across.
 
-It also extends earlier ab initio work from the same group — Tocci, Joly and Michaelides
-(2014) first found a factor of three to five difference in friction between graphene and hBN,
-but from short trajectories on flat sheets only, with no access to curvature. Those values
+It also extends earlier ab initio work from the same group. Tocci, Joly and Michaelides (2014)
+first found a factor of three to five difference in friction between graphene and hBN, but from
+short trajectories on flat sheets only, with no access to curvature. Those values
 are plotted alongside the new ones in the first figure. And it answers a specific suggestion
 by Poggioli and Limmer (2021) that the material dependence might come down to
 hydrogen–nitrogen interactions: separating the oxygen and hydrogen free energy surfaces is

@@ -6,7 +6,7 @@ order: 26
 summary: A GAP for hexagonal boron nitride, an order of magnitude more accurate than the
   classical alternatives, used to compare rippling in hBN against graphene under strain.
 method: Gaussian approximation potential with a subtracted long-range two-body term, trained on PBE+D3
-system: Hexagonal boron nitride — monolayer, bilayer, bulk and nanotubes, 0–3000 K
+system: Hexagonal boron nitride, from monolayer to bulk, plus nanotubes, 0–3000 K
 published: J. Phys. Chem. C 124, 22278–22290 (2020)
 authors: Fabian L. Thiemann, Patrick Rowe, Erich A. Müller, Angelos Michaelides
 doi: 10.1021/acs.jpcc.0c05831
@@ -33,14 +33,14 @@ builds the missing half and then runs the comparison.
 ## What we built
 
 A Gaussian approximation potential for hBN, fitted to tightly converged PBE+D3 reference data
-from VASP at an 1100 eV plane-wave cutoff. The database spans more than 22,000 configurations —
-monolayers, bilayers, bulk and nanotubes of arbitrary chirality, from 0 to 3000 K, under
-uniaxial strains up to 5% — from which roughly 1600 structures were selected by
-farthest-point sampling as the actual training set, with 1450 held out for validation.
+from VASP at an 1100 eV plane-wave cutoff. The database spans more than 22,000 configurations: monolayers, bilayers, bulk and nanotubes
+of arbitrary chirality, from 0 to 3000 K, under uniaxial strains up to 5%. Roughly 1600 of
+those were picked out by farthest-point sampling as the actual training set, with 1450 held
+back for validation.
 
 The interesting technical problem is the same one GAP-20 had run into a few months earlier.
 The SOAP descriptor has a finite cutoff, and in a layered material the interlayer interaction
-has not decayed by the time you reach it — in hBN it runs out to about 10 Å. The fix, taken
+has not decayed by the time you reach it; in hBN it runs out to about 10 Å. The fix, taken
 directly from [GAP-20](/work/carbon-gap-20/), is to fit a two-body model to the interlayer
 interaction curve out to 10 Å, subtract its energies and forces from the reference data, and
 fit the main model to what remains. The SOAP cutoff, at 4.5 Å, and the 5000 sparse points come
@@ -49,7 +49,7 @@ from the same source.
 ## What the model does
 
 Against 1450 held-out DFT configurations the force RMSE is **0.09 eV Å⁻¹**, against 1.09 for
-Tersoff, 1.19 for ExTeP and 6.17 for ReaxFF — an order of magnitude better than the best
+Tersoff, 1.19 for ExTeP and 6.17 for ReaxFF. An order of magnitude better than the best
 classical alternative. Lattice parameters across bulk, bilayer, monolayer and nanotubes come
 out to 0.10% mean error, and formation energies to 3 meV per atom against 45–67 meV for the
 classical potentials.
@@ -71,7 +71,7 @@ fitted.
 
 ## What the comparison showed
 
-The rippling simulations run 7200-atom sheets — about 15 × 15 nm — in LAMMPS for roughly 0.5 ns
+The rippling simulations run 7200-atom sheets, about 15 × 15 nm, in LAMMPS for roughly 0.5 ns
 per state point, at relative strains from −2.0% to +2.0%, with the graphene half driven by the
 2018 graphene potential so that both materials are treated at equivalent accuracy.
 
@@ -89,7 +89,7 @@ compression against roughly 1 Å under 2% tension. The scaling exponent is indep
 bending rigidity: κ sets how far the sheet moves, not how the fluctuations scale.
 
 Both materials also cross over from short-lived incoherent thermal fluctuations to spatially
-coherent, soliton-like ripples, and they do so at the same place — between −0.25% and −0.5%
+coherent, soliton-like ripples, and they do so at the same place: between −0.25% and −0.5%
 compression.
 
 The model costs several orders of magnitude less than the DFT it replaces, and about three
@@ -106,9 +106,9 @@ point count from GAP-20.
 
 ## Where this sits
 
-This is the third model in a line — [graphene](/work/graphene-potential/) in 2018,
-[carbon](/work/carbon-gap-20/) in 2020, hBN a few months after that — and the first to be built
-for a binary material rather than an element.
+This is the third model in a line, after [graphene](/work/graphene-potential/) in 2018 and
+[carbon](/work/carbon-gap-20/) earlier in 2020, and the first built for a binary material
+rather than an element.
 
 It is the direct methodological predecessor of
 [the defect-dependent corrugation work](/work/graphene-corrugation/) the following year, which
@@ -128,7 +128,7 @@ CC BY 4.0 and runs in LAMMPS through QUIP.
 ## A note on the figures
 
 This page carries no reproduced figures. The article is © 2020 the American Chemical Society
-with no open licence anywhere — not on the publisher's site, not in the UCL Discovery or
+with no open licence anywhere: not on the publisher's site, not in the UCL Discovery or
 Imperial College deposits, and the arXiv notice is a licence granted to arXiv rather than a
 reuse grant. The *data* deposit is CC BY 4.0, but that covers the potential and its training
 sets, not the paper's figures.

@@ -1,40 +1,66 @@
 ---
 title: Learning solid–liquid interfaces
-year: "2019"
+year: "2019–22"
 featured: true
 order: 4
-stub: true
-stubNote: >-
-  Placeholder. The wall-label fields are carried over from the CV. Note that `RESULT` here currently reads as a collaboration credit rather than an outcome — per spec 01 §6.1 the field should say what the work changed or enabled. Worth rewriting.
-summary: A machine-learned framework for building interface potentials, applied to
-  water on two-dimensional materials.
-method: Machine-learned framework for building interface potentials
-system: Water on two-dimensional materials
-result: With experimentalists at the National Graphene Institute
+summary: A run of work at UCL on machine-learned models for water against a surface, and on
+  getting experimental groups to use them on their own problems.
+method: Machine-learned potentials for interfacial water, built from short ab initio trajectories
+system: Water on and inside two-dimensional materials, and against layered minerals
+result: A protocol that produces a working interface model in days, applied across four papers
 tags: [interatomic-potentials, interfaces, water]
 ---
 
-import DraftNotice from "@/components/DraftNotice.astro";
+How water behaves against a surface governs friction, flow, wetting and nucleation at the
+nanoscale. It is also the regime where the usual tools give out: continuum hydrodynamics
+stops applying somewhere around a few molecular diameters, and first-principles dynamics
+cannot reach the length and time scales the questions are asked at. Two-dimensional materials
+sharpen the problem, because in a nanotube or a laminate gallery the interface is essentially
+all there is.
 
-## The problem
+This is a thread rather than a single paper. It ran through the back half of my time at UCL,
+in Angelos Michaelides' group, and it has two halves that fed each other.
 
-How water behaves against a surface governs friction, flow and nucleation at the
-nanoscale, and it is exactly the regime where continuum models stop applying and
-first-principles methods become unaffordable. Two-dimensional materials make the
-problem sharper: the interface is essentially all there is.
+## Making interface models cheap
 
-## What was built
+The methodological half is
+[machine learning potentials for complex aqueous systems made simple](/work/aqueous-potentials/).
+The argument there is that most interfacial questions do not need a general model of an
+element's whole chemistry. They need a model that is right for one system at one state point,
+and such a model can be built in days from a short ab initio trajectory, with no per-system
+tuning and a committee of networks reporting its own uncertainty as it runs.
 
-A machine-learned framework for constructing interface potentials, applied to water
-on two-dimensional materials.
+Six deliberately dissimilar systems went through the same unchanged protocol: ions in
+solution, water in carbon and boron nitride nanotubes, water between MoS₂ sheets, and water on
+rutile TiO₂.
 
-## What it changed
+## Spending them
 
-Carried out with experimentalists at the National Graphene Institute.
+The other half is what the models were for.
 
-## How to check it
+[Water flow in single-wall nanotubes](/work/nanotube-water-flow/) is the clearest payoff. Two
+of the six demonstration systems above stopped being demonstrations and became the object of
+study, over forty nanoseconds across sixteen tube radii, which is what it took to separate
+the geometric part of nanotube friction from the chemical part.
 
-<DraftNotice>
-To finish this page: the paper reference and venue — omitted rather than guessed —
-plus what the potential was validated against and where it breaks down.
-</DraftNotice>
+Alongside that ran the collaborations with Rahul Nair's experimental group at the National
+Graphene Institute in Manchester, on
+[vermiculite membranes](/work/vermiculite-membranes/) and later
+[MoS₂ membranes](/work/mos2-membranes/). Those followed a consistent pattern: the
+experimentalists had a clean anomaly they could measure and could not explain, and wanted a
+mechanism rather than a curve fit. Both ended up hinging on the structure of a nanometre or
+two of confined water.
+
+## What I took from it
+
+Two things, and neither is about water.
+
+The first is that the useful unit of work here was a protocol rather than a model. A model
+someone else has to refit before they can use it does not travel; a procedure that reliably
+produces a working model in a few days does.
+
+The second is that the hardest part of an interdisciplinary collaboration is agreeing what
+question the simulation is answering. The MoS₂ work is the good example: the informative
+result was a *negative* one, that lithium loading does not change how fast water diffuses in
+an open channel, which only counts as an answer because the question had been sharpened
+enough beforehand for a negative to eliminate something.

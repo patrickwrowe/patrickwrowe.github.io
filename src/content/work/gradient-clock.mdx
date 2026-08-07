@@ -4,7 +4,7 @@ year: "2025"
 order: 7
 summary: A clock whose hands are the whole screen. Design by Yoni and Harish Persad, code by
   me. Running here, in your browser, right now.
-method: Vanilla HTML, CSS and JavaScript — conic gradients, no framework, no build step
+method: Vanilla HTML, CSS and JavaScript; conic gradients, no framework, no build step
 system: A wall clock, if the hands were the size of the wall
 result: Live and self-hosted here; also running at harishpersad.com
 demo: gradient-clock
@@ -41,15 +41,15 @@ at the numbers.
 
 ## Building it
 
-Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies — the whole thing
+Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. The whole thing
 is five files and it loads instantly. Time comes from the client, so there is no server
 involved at any point.
 
 The interesting problem was colour rather than time. Two hands, each with its own two-colour
 gradient, overlapping and rotating past one another: what happens where they cross decides
 whether the thing looks deliberate or muddy. Rather than pick one answer, the controls expose
-CSS's blend modes directly — fourteen of them, from `multiply` through to `luminosity` — and
-you can watch the same clock go from soft to harsh by changing one setting.
+CSS's blend modes directly, fourteen of them from `multiply` through to `luminosity`, and you
+can watch the same clock go from soft to harsh by changing one setting.
 
 The rest was the ordinary work of making a design real: matching the gradient extents to what
 the designers had drawn, keeping it legible from across a room, and making it survive being

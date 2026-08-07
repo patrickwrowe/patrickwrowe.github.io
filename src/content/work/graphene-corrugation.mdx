@@ -18,7 +18,7 @@ links:
 ---
 
 Free-standing graphene is never flat. A two-dimensional membrane at finite temperature ripples
-and wrinkles, and that corrugation is not a nuisance to be averaged away — it controls the
+and wrinkles, and that corrugation is not a nuisance to be averaged away. It controls the
 electronic structure, the mechanical response and the chemical reactivity of the sheet. Real
 graphene is also never perfect. So the question this paper asks is direct: how much does a
 point defect change the shape of the sheet around it, and does the answer depend on which
@@ -44,10 +44,10 @@ Two choices in the setup matter more than they might appear.
 Defects were placed randomly subject to a minimum 10 Å separation, with three independent
 placements per defect type and concentration, and every simulation was started from a *flat*
 sheet with the vacancy reconstruction left to happen on its own rather than being imposed by
-the initial configuration. That is the honest way to run the experiment, and it turns out to be
-the discriminating one.
+the initial configuration. The honest way to run the experiment, and as it turns out the
+discriminating one.
 
-Corrugation is reported as an amplification factor — the standard deviation of the atomic
+Corrugation is reported as an amplification factor: the standard deviation of the atomic
 height distribution divided by the same quantity for pristine graphene at the same size. The
 ratio is used deliberately, because absolute out-of-plane displacement in a flexible membrane
 grows with the size of the system, so an absolute height would say more about the simulation
@@ -57,7 +57,7 @@ cell than about the defect.
 
 Defects amplify corrugation substantially, and by an amount that depends on which defect it is.
 At 3% concentration a divacancy-laden sheet is roughly five times more corrugated than pristine
-graphene, and a Stone–Wales sheet about three times — a factor of two between the two defect
+graphene and a Stone–Wales sheet about three times, a factor of two between the two defect
 types at equal concentration. The amplification rises steeply at low concentration and
 plateaus above about 1.5%, and it is already well clear of unity by 0.2%. For scale, the
 corrugation induced by 1% defects is comparable to that of pristine graphene held under 2%
@@ -70,16 +70,16 @@ Pristine graphene has an inclination of about 0.066 and, necessarily, zero Gauss
 an environment made only of hexagons is developable, so rippling in clean graphene is pure
 local tilting with no intrinsic curvature anywhere.
 
-A Stone–Wales defect has an inclination of about 0.270 in isolation — four to five times the
-pristine value — and still zero Gaussian curvature. The tilt is intrinsic to the defect, not a
+A Stone–Wales defect has an inclination of about 0.270 in isolation, four to five times the
+pristine value, and still zero Gaussian curvature. The tilt is intrinsic to the defect, not a
 collective effect, and raising the concentration changes it by less than 20%. Stone–Wales
 defects are strong, independent, flat-but-tilted seeds.
 
 A divacancy behaves completely differently. Its inclination runs from 0.086 to 0.33 and its
 Gaussian curvature from −0.001 to −0.012 Å⁻² across the concentration range: roughly fourfold
-and tenfold increases. Negative Gaussian curvature means a saddle — a hyperbolic paraboloid,
-or a crisp — and the strong concentration dependence means divacancies are coupling to one
-another rather than acting independently. Their perturbations superimpose and interfere.
+and tenfold increases. Negative Gaussian curvature means a saddle, a hyperbolic paraboloid or
+a crisp, and the strong concentration dependence means divacancies are coupling to one another
+rather than acting independently. Their perturbations superimpose and interfere.
 
 So the two defects amplify corrugation by genuinely different routes: one imposes a fixed tilt,
 the other imposes a curvature that grows as the defects begin to interact.
@@ -90,13 +90,13 @@ The paper ran the same simulations at 1% concentration with LCBOP and REBO II as
 agree qualitatively on the amplification factor, so at first glance the machine-learned
 potential looks like an expensive way to reach the same conclusion.
 
-It is not, and the reason is worth stating. Both classical potentials overestimate the
-divacancy reconstruction barrier badly enough that, started from a flat sheet with unrelaxed
-vacancies, they never reconstruct and never corrugate. They only reproduce the result if the
-reconstructed defect is supplied to them in the initial configuration — that is, if you already
-know the answer. A potential that gets the right result only when told what it is cannot be
-used to discover anything, and this is a clean example of the difference between reproducing a
-known result and being able to find one.
+It is not. Both classical potentials overestimate the divacancy reconstruction barrier badly
+enough that, started from a flat sheet with unrelaxed vacancies, they never reconstruct and
+never corrugate. They only reproduce the result if the reconstructed defect is handed to them
+in the initial configuration: that is, if you already know the answer. A potential that gets
+the right result only when told what it is cannot be used to discover anything, which is about
+as clean a demonstration as you could want of the difference between reproducing a known result
+and being able to find one.
 
 ## Where this sits
 
@@ -110,7 +110,7 @@ the interplay between defects and graphene morphology at close to quantum-mechan
 and GAP-20 is what makes that claim available.
 
 It is a direct methodological sibling of
-[the hexagonal boron nitride rippling study](/work/hbn-rippling/) from the previous year — same
+[the hexagonal boron nitride rippling study](/work/hbn-rippling/) from the previous year: same
 first two authors, same template of a machine-learned potential driving large-scale dynamics of
 a two-dimensional membrane, and deliberately the same system size so the two are comparable.
 

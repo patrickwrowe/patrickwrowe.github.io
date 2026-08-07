@@ -6,14 +6,14 @@ summary: Every textbook picture of a d orbital is someone's artistic impression.
   the wavefunction and draws the isosurface that actually follows from it.
 method: Vectorised evaluation of hydrogenic wavefunctions on an xarray grid, marching cubes for isosurfaces
 system: One-electron atomic orbitals at arbitrary n, l and m
-result: Coarse evaluation, interpolation, then a smooth isosurface — pure Python, no viewer
+result: Coarse evaluation, interpolation, then a smooth isosurface. Pure Python, no viewer
 tags: [quantum-chemistry, visualisation, python]
 links:
   - { label: Code, url: "https://github.com/patrickwrowe/orbitals" }
 ---
 
 Almost every orbital picture you have seen is a drawing. Someone looked at the analytic form,
-decided roughly what shape it implied, and drew that — which is why the four lobes of a d
+decided roughly what shape it implied, and drew that. Which is why the four lobes of a d
 orbital are so often identical, so often symmetric, and so often subtly wrong about where the
 density actually goes.
 
@@ -24,7 +24,7 @@ The wavefunctions are known in closed form. There is no reason to draw them by h
 Give it three quantum numbers and it evaluates the one-electron wavefunction on a
 three-dimensional grid, then renders the probability density either as a point cloud or as a
 marching-cubes isosurface. Cartesian and spherical implementations sit behind the same
-interface, so you can pick whichever is natural for what comes next — Cartesian for plotting,
+interface, so you can pick whichever is natural for what comes next: Cartesian for plotting,
 spherical if the result is feeding a calculation with physical meaning.
 
 The grid is an `xarray` object and every evaluation is vectorised, which matters more than it

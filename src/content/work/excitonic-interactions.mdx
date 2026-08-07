@@ -1,5 +1,5 @@
 ---
-title: Short-range excitonic interactions in light-harvesting complexes and organic semiconductors
+title: Importance and nature of short-range excitonic interactions in light-harvesting complexes and organic semiconductors
 kind: paper
 year: "2017"
 order: 29
@@ -17,14 +17,14 @@ links:
 ---
 
 When an excited state moves from one molecule to another, the rate depends on the excitonic
-coupling between them, and essentially every model of energy transfer — in photosynthesis, in
-organic solar cells, in light-emitting films — takes that coupling from a Coulombic
-calculation. Often from the crudest version of one: treat each chromophore's transition
-density as a point dipole and compute the interaction between two dipoles.
+coupling between them. Essentially every model of energy transfer takes that coupling from a
+Coulombic calculation, whether the subject is photosynthesis, an organic solar cell or a
+light-emitting film. Often from the crudest version of one: treat each chromophore's transition
+density as a point dipole, and compute the interaction between two dipoles.
 
 That approximation has a clear physical justification, which is that it becomes exact as the
 molecules move apart. The question this paper asks is what it costs when they do not move
-apart — when chromophores are stacked in contact, as they are in a pigment–protein complex and
+apart, when chromophores are stacked in contact, as they are in a pigment–protein complex and
 in every molecular semiconductor.
 
 The answer is that it costs most of the coupling.
@@ -34,12 +34,12 @@ The answer is that it costs most of the coupling.
 Excitonic couplings computed two ways for the same chromophore pairs, so that the difference
 between them isolates exactly the term the standard approach discards.
 
-The Coulombic coupling came from transition density cubes — the full electrostatic
-interaction between the two transition densities, without a multipole expansion. The *total*
+The Coulombic coupling came from transition density cubes: the full electrostatic interaction
+between the two transition densities, without a multipole expansion. The *total*
 coupling came from a diabatisation scheme based on Mulliken population analysis, which
 retains everything: electrostatics plus the short-range terms that only exist where the two
 molecular wavefunctions actually overlap. Subtract one from the other and what remains is the
-short-range contribution — exchange, orbital overlap and penetration.
+short-range contribution, which is exchange, orbital overlap and penetration.
 
 Everything ran at TDDFT with the LC-ωPBE range-separated functional and a 6-31G** basis in
 NWChem, on homodimers only, with phytyl tails cut back to methyl groups so that the
@@ -61,7 +61,7 @@ opposite ends of that scale.
 In the light-harvesting complexes the effect is real but contained. The most strongly
 interacting bacteriochlorophyll dimers in FMO carry a short-range contribution of about 28%,
 which in absolute terms is 4 meV. In the LH2 B850 ring, where the pigments are packed
-considerably closer, neighbouring bacteriochlorophylls reach 66% — around 3 meV out of 5. In
+considerably closer, neighbouring bacteriochlorophylls reach 66%, around 3 meV out of 5. In
 peridinin–chlorophyll protein the peridinin dimers come in at 22% and 10%.
 
 In the molecular semiconductors it is not contained at all. Face-to-face dimers in
@@ -77,7 +77,7 @@ fine. Chromophores that touch are not.
 
 A second result concerns the approximations themselves rather than the physics. Atomic
 transition charges, the standard cheap stand-in for the full transition density, turn out to
-carry systematic — not random — errors when used for the Coulombic coupling. And the
+carry systematic rather than random errors when used for the Coulombic coupling. And the
 dipole–dipole approximation is worse than its reputation: at 6 Å it recovers only about 67%
 even of the dipole contribution, and it does not converge onto the right answer as cleanly
 with distance as the textbook argument implies. The approximation that is supposed to be
@@ -112,5 +112,5 @@ structure calculation can be trusted, and what breaks when it cannot.
 This page carries no reproduced figures. *Journal of Chemical Theory and Computation* is an
 ACS journal and the article is all rights reserved. The freely readable copy is the accepted
 manuscript deposited in the Warwick Research Archive Portal, whose terms permit personal and
-non-commercial reading — a deposit permission, not a reuse grant, and not a basis for
-republishing the figures here.
+non-commercial reading, which is a deposit permission rather than a reuse grant and not a
+basis for republishing the figures here.

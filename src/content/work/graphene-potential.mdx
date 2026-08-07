@@ -6,7 +6,7 @@ order: 20
 summary: A Gaussian approximation potential for graphene, roughly twenty times more accurate
   than the best empirical alternative and four orders of magnitude cheaper than the DFT it
   replaces.
-method: Gaussian approximation potential — two-body, three-body and SOAP descriptors, trained iteratively on plane-wave DFT
+method: Gaussian approximation potential with two-body, three-body and SOAP descriptors, trained iteratively on plane-wave DFT
 system: Free-standing graphene, 300–4000 K
 published: Physical Review B 97, 054303 (2018)
 authors: Patrick Rowe, Gábor Csányi, Dario Alfè, Angelos Michaelides
@@ -32,8 +32,8 @@ import RamanG from "./figures/graphene-potential/fig6-raman-g-band.png";
 Simulating graphene at finite temperature meant choosing between two unsatisfactory options.
 Density functional theory gives the right answer, but costs enough that a few hundred atoms
 for a few picoseconds is a serious calculation on a national facility. Empirical bond-order
-potentials run six orders of magnitude faster, and disagree with one another — and often with
-experiment — about properties as basic as whether the lattice expands or contracts when it is
+potentials run six orders of magnitude faster, and disagree with one another, and often with
+experiment, about properties as basic as whether the lattice expands or contracts when it is
 heated. Almost every interesting question about graphene at temperature falls in the gap
 between the two.
 
@@ -65,8 +65,8 @@ would have chosen.
 Against DFT forces on an independent set of configurations, the model reaches an RMSE of
 **0.028 eV Å⁻¹** in-plane and **0.019 eV Å⁻¹** out-of-plane. The best empirical competitor,
 AIREBO, manages 0.548 eV Å⁻¹; LCBOP 0.595, REBO 0.722, ReaxFF 1.226, and Tersoff 3.122 with
-individual errors above 11 eV Å⁻¹. That is a factor of twenty over the best alternative and
-a factor of a hundred over the worst.
+individual errors above 11 eV Å⁻¹. A factor of twenty over the best alternative, and a factor
+of a hundred over the worst.
 
 <Plate n={2}>
   <Image src={ForceErrors} alt="Force parity plots and error distributions for four models against DFT reference forces. The machine-learned potential forms a clean diagonal; Tersoff scatters widely." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
@@ -117,7 +117,7 @@ then fragments the sheet above 1500 K, far below any physical melting point.
   </Fragment>
 </Plate>
 
-**Raman softening.** The E₂g mode at Γ — the G band — softens as graphene is heated, and
+**Raman softening.** The E₂g mode at Γ, the G band, softens as graphene is heated, and
 variable-temperature Raman spectroscopy measures that softening directly. Comparing against
 it required correcting the experimental data for the strain the graphene picks up from its
 silicon nitride substrate, which is the sort of step that separates a genuine comparison with
@@ -125,8 +125,8 @@ experiment from a comparison with an idealised model of it. Once corrected, the
 machine-learned potential tracks the measurements across 150–1400 K, as do REBO and AIREBO.
 Tersoff greatly overestimates the softening. LCBOP disagrees qualitatively, predicting that
 the band *hardens* over much of the range, despite having produced a respectable 0 K
-dispersion curve — a useful reminder that agreement at zero temperature does not imply
-agreement at finite temperature.
+dispersion curve. Agreement at zero temperature does not imply agreement at finite
+temperature.
 
 <Plate n={4}>
   <Image src={RamanG} alt="Shift in the graphene E-2g Gamma-point frequency between 150 and 1400 K, comparing five models against strain-corrected variable-temperature Raman measurements." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
@@ -144,14 +144,14 @@ agreement at finite temperature.
 **Cost.** Normalised per core, per molecular dynamics step, on 200 atoms: Tersoff 1, the
 machine-learned potential 340, DFTB 950, and ab initio molecular dynamics 2 × 10⁷. So the
 model is roughly four orders of magnitude cheaper than the theory it stands in for, and two
-to three orders more expensive than a bond-order potential. That is the trade the paper
-proposes, stated plainly rather than buried.
+to three orders more expensive than a bond-order potential. The paper states that trade
+plainly rather than burying it.
 
 ## Limitations
 
 The model is accurate because it is narrow. It is trained on graphene, and by construction
 it cannot describe diamond or any other phase of carbon; asked to, it will fail confidently.
-The reverse also holds, and we tested it — the general-purpose amorphous-carbon potential of
+The reverse also holds, and we tested it. The general-purpose amorphous-carbon potential of
 Deringer and Csányi, applied to graphene, gives force errors of 0.270 eV Å⁻¹, an order of
 magnitude worse than the dedicated model, and a lattice parameter 1.2% too small.
 

@@ -6,7 +6,7 @@ order: 1
 summary: One machine-learned potential covering diamond, graphite, graphene, nanotubes,
   fullerenes and amorphous carbon. Released as a model you can run, not a recipe.
 method: Gaussian approximation potential over 6,088 configurations of optB88-vdW reference data
-system: Carbon in every form it takes — crystalline, defective, nanostructured, amorphous, liquid
+system: Carbon in every form it takes, from crystalline through nanostructured to amorphous and liquid
 result: Model and training set published under CC BY; runs in LAMMPS as downloaded
 tags: [interatomic-potentials, carbon, materials, machine-learning]
 links:
@@ -27,8 +27,8 @@ it was tested.
 
 ## What you get
 
-A Gaussian approximation potential — Gaussian process regression on the SOAP descriptor,
-learning energies and forces directly from plane-wave DFT — fitted to 6,088 configurations
+A Gaussian approximation potential, meaning Gaussian process regression on the SOAP descriptor
+learning energies and forces directly from plane-wave DFT, fitted to 6,088 configurations
 computed with the dispersion-inclusive optB88-vdW functional. The training set merges the
 existing amorphous-carbon database with the graphene database from
 [my earlier potential](/work/graphene-potential/), extended with point defects, surfaces,
@@ -61,8 +61,8 @@ someone building a different carbon model would want.
 Generality is not free and the paper quantifies the bill. Phonon frequencies at
 high-symmetry points come out to 4 meV against the 1 meV of the graphene-only model: a factor
 of four, traded for diamond, nanotubes, defects, surfaces, the amorphous phase and the liquid.
-If graphene is genuinely all you need, the specialist model is still better. If it is not, this
-is the one to reach for.
+If graphene is genuinely all you need, the specialist model is still better. If it is not,
+this is the one to reach for.
 
 ## Where this sits
 
@@ -72,6 +72,6 @@ how much of an expensive calculation can a cheap model absorb before it stops be
 trustworthy, and how do you find out where that edge is.
 
 The year after, I co-authored [a paper](/work/aqueous-potentials/) arguing more or less the
-opposite case — that most people are better served by a quick, disposable, system-specific
+opposite case: that most people are better served by a quick, disposable, system-specific
 potential than by a years-long general-purpose one. It cites GAP-20 as the example of the
 thing it is offering an alternative to. Both are right, for different questions.

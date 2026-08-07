@@ -13,9 +13,8 @@ stubNote: >-
 ## The descriptor is the whole game
 
 A potential can only distinguish two environments that its descriptor distinguishes.
-Everything downstream — the regression, the training set, the validation protocol —
-is constrained by that one choice, and it is the part most papers spend the least
-time on.
+Everything downstream is constrained by that one choice: the regression, the training
+set, the validation protocol. It is also the part most papers spend the least time on.
 
 ## Smoothness is not a nice-to-have
 
@@ -27,7 +26,7 @@ a few million steps.
 
 Outline: the argument that models fail outside their training distribution in ways
 that look like model failures and are actually sampling failures. Needs a worked
-example — the amorphous carbon case is the obvious one, and the hero figure on the
+example. The amorphous carbon case is the obvious one, and the hero figure on the
 landing page is already the right illustration.
 
 ## What to write next

@@ -7,7 +7,7 @@ summary: Only about 15% of human proteins reach the cell surface, which is where
   have been stuck. This one reads a peptide presented from inside the cell.
 method: Antibody discovery against pMHC, 200+ bispecifics profiled, cryo-EM and positional scanning
 system: MAGE-A4 peptide on MHC class I; T-cell engagers against MAGE-A4-positive tumour lines
-published: SITC 2023 and AACR 2024 — JITC 11(Suppl 1) A1550, Cancer Res. 84(6_Suppl) 2373
+published: JITC 11(Suppl 1) A1550, SITC 2023; Cancer Res. 84(6_Suppl) 2373, AACR 2024
 authors: Davide Tortora, Peter Bergqvist, Tim Jacobs and 28 others including Patrick Rowe,
   with Bryan C. Barnhart as senior author (SITC 2023 poster; the AACR 2024 one lists 35)
 doi: 10.1136/jitc-2023-SITC2023.1395
@@ -22,9 +22,9 @@ import PosterSitc from "./figures/tce-pmhc/poster-sitc-2023-mage-pmhc.png";
 import PosterAacr from "./figures/tce-pmhc/poster-aacr-2024-mage-a4.png";
 
 T-cell engagers can only attack what they can see, and what they can see is the cell surface.
-Fewer than 15% of cellular proteins go there. The other 85% — including most of the proteins
-that actually distinguish a cancer cell from a healthy one — are intracellular, and by the
-usual logic unreachable.
+Fewer than 15% of cellular proteins go there. The other 85% are intracellular, and by the usual
+logic unreachable. That 85% includes most of the proteins that actually distinguish a cancer
+cell from a healthy one.
 
 They are not quite unreachable. Every cell continuously chops up its internal proteins and
 displays the fragments on MHC class I, which is how the immune system audits what is going on
@@ -33,7 +33,7 @@ in a groove. Building a T-cell engager that targets one of those would open the 
 the proteome.
 
 The difficulty is specificity, and it is severe. An MHC molecule presenting the wrong peptide
-looks almost exactly like one presenting the right peptide — the same large protein, the same
+looks almost exactly like one presenting the right peptide: the same large protein, the same
 fold, differing in a handful of side chains pointing out of a groove. A binder that latches
 onto the MHC rather than its cargo will find that cargo on every cell in the body.
 
@@ -55,9 +55,9 @@ route to specificity than engineering affinity in afterwards.
 
 ## What was built
 
-The target is MAGE-A4, a cancer-testis antigen — expressed in tumours and, among normal
-adult tissues, essentially only in testis, which is immune-privileged. Intracellular, so
-reachable only as pMHC.
+The target is MAGE-A4, a cancer-testis antigen, expressed in tumours and, among normal adult
+tissues, essentially only in testis, which is immune-privileged. Intracellular, so reachable
+only as pMHC.
 
 Discovery produced 45 MAGE-A4-pMHC antibodies, from which 6 were taken forward across 4
 clonal families, spanning affinities from 7 nM to 15 µM. Even at the panel stage they were
@@ -66,7 +66,7 @@ counter-screened against 19 unrelated pMHCs.
 Those 6 were then paired against 19 CD3-binding antibodies drawn from
 [the functionally clustered CD3 panel](/work/cd3-binder-selection/), producing over 200
 bispecifics in a 1×1 format. Twelve were selected for detailed assessment, spanning roughly
-four orders of magnitude in potency, and one — the lead — carried forward.
+four orders of magnitude in potency, and one of those, the lead, carried forward.
 
 ## What the lead does
 
@@ -74,8 +74,8 @@ The specificity screen is the result that matters, because it is the one the who
 turns on. Across a panel of more than 180 non-MAGE peptides, the lead bispecific bound none
 of them. Its binding is restricted to MAGE-A4 and MAGE-A8 pMHC.
 
-That is a strong result and it is worth reading precisely: restricted to two related
-antigens, not to one. MAGE-A8 cross-reactivity is real and is the kind of thing that has to
+A strong result, and worth reading precisely: restricted to two related antigens, not to
+one. MAGE-A8 cross-reactivity is real and is the kind of thing that has to
 be carried forward into preclinical work rather than rounded away.
 
 Functionally, the lead kills around 75% of MAGE-A4-positive cells at the top of the dose
@@ -97,8 +97,8 @@ peptide-centric binding is a repeatable outcome of this discovery route rather t
 molecule.
 
 The critical contact is arginine at position 6, whose side chain projects fully out into
-solvent — the single most readable feature the peptide offers. A positional scan across all
-ten peptide positions confirms Arg 6 as the dominant determinant, and separates the lead's
+solvent, making it the single most readable feature the peptide offers. A positional scan
+across all ten peptide positions confirms Arg 6 as the dominant determinant, and separates the lead's
 recognition profile from a clinical benchmark molecule across the full set of positions.
 
 So the structural evidence and the functional evidence agree: this molecule discriminates on
@@ -111,7 +111,7 @@ A late-list author throughout: 25th of 31 on the SITC 2023 poster and 23rd of 35
 2024 one. Neither carries a statement of individual contributions, so I will not claim a
 specific role here.
 
-This is a large and mostly experimental programme — antibody discovery, cell killing assays,
+This is a large and mostly experimental programme: antibody discovery, cell killing assays,
 cytokine panels and cryo-EM. The one concrete link to my own line of work is that the CD3
 binders paired in here come from
 [the functionally clustered panel](/work/cd3-binder-selection/), which is the piece I am
@@ -134,7 +134,7 @@ halving the story.
     unrelated peptide-MHCs, the pairing of six binders with 19 CD3 arms into over 200
     bispecifics, and the functional profiles of the twelve selected leads."
   href="/posters/abcellera-sitc-2023-mage-pmhc.pdf"
-  credit="Poster 1395, SITC 2023 — discovery and the selection of twelve candidates.
+  credit="Poster 1395, SITC 2023: discovery and the selection of twelve candidates.
     © AbCellera Biologics Inc., reproduced in full from the copy published at abcellera.com."
 />
 
@@ -146,6 +146,6 @@ halving the story.
     cryo-EM structures of the antibody on peptide-MHC, and a positional scan across the ten
     peptide positions."
   href="/posters/abcellera-aacr-2024-mage-a4.pdf"
-  credit="Poster 2373, AACR 2024 — the deep characterisation of the lead. © AbCellera
+  credit="Poster 2373, AACR 2024: the deep characterisation of the lead. © AbCellera
     Biologics Inc., reproduced in full from the copy published at abcellera.com."
 />

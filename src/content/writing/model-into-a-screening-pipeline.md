@@ -17,13 +17,14 @@ model and an experienced scientist disagree, who is right, and how would anyone 
 ## Calibration beats accuracy
 
 Outline: why a well-calibrated mediocre model is more useful in a screening cascade
-than a sharp uncalibrated one — because the downstream decision is a threshold, and a
+than a sharp uncalibrated one, because the downstream decision is a threshold and a
 threshold needs a probability that means something.
 
 ## The split is the experiment
 
-Outline: random splits flatter models. Domain-appropriate splits — scaffold, temporal,
-target-level — are what tell you whether the thing will work on next month's chemistry.
+Outline: random splits flatter models. Domain-appropriate splits, whether scaffold,
+temporal or target-level, are what tell you whether the thing will work on next
+month's chemistry.
 
 ## Trust is built at the boundary
 

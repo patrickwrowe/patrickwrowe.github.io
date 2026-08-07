@@ -24,19 +24,19 @@ import Amorphous from "./figures/carbon-clusters/amorphous-carbon-1.0gcc.png";
 // rather than <Image> so the SVG resolves --ink and --graphite from the tokens.
 import clusterSeries from "./figures/carbon-clusters/cluster-size-series.svg?raw";
 
-Carbon clusters — chains, rings, fullerenes, nano-onions, amorphous nanoparticles — occupy a
-structural space far too large for first-principles structure search to cover past a few tens
-of atoms. The cost is not in generating candidate structures, which is cheap, but in relaxing
+Carbon clusters occupy a structural space far too large for first-principles structure search
+to cover past a few tens of atoms: chains, rings, fullerenes, nano-onions, amorphous
+nanoparticles. The cost is not in generating candidate structures, which is cheap, but in relaxing
 each one, which is a DFT calculation. Replace the relaxation with an interatomic potential and
 the search extends by an order of magnitude in system size.
 
 That substitution is only worth making if the potential relaxes a structure to the same place
-DFT would. This paper tests whether any of them does, and it is the one paper on this list where
-my own work is the thing being evaluated rather than the thing doing the evaluating.
+DFT would. This paper tests whether any of them does. It is also the one paper here where my own
+work is the thing being evaluated rather than the thing doing the evaluating.
 
 ## What was done
 
-AIRSS — ab initio random structure search — coupled to geometry optimisation inside LAMMPS, so
+AIRSS, ab initio random structure search, coupled to geometry optimisation inside LAMMPS, so
 that the expensive DFT relaxation step is replaced by a potential while every other search
 parameter stays fixed. Seven carbon potentials were put through it: six classical, in Tersoff,
 C-EDIP, LCBOP-I, ReaxFF, REBO-II and AIREBO, and one machine-learned, in
@@ -50,11 +50,11 @@ distribution functions. Each method was run twice over: once with symmetry opera
 generating ordered candidates, and once in C₁ only, generating a deliberately disordered set.
 
 Holding every search parameter fixed across all eight methods is what makes the comparison mean
-anything. It is also what exposes a failure mode a straight energy benchmark would have missed,
-which is the most interesting result in the paper.
+anything. It also exposes a failure mode a straight energy benchmark would have missed, which
+turned out to be the most interesting result in the paper.
 
 Getting the relaxations to behave took more work than expected. AIRSS's default conjugate-gradient
-protocol left a large fraction of structures sitting above 100 MPa of internal pressure — relaxed
+protocol left a large fraction of structures sitting above 100 MPa of internal pressure: relaxed
 by the optimiser's own criteria, but not actually at a minimum. Adding a FIRE damped-dynamics
 stage followed by a Hessian-free truncated-Newton step brought them to essentially zero pressure.
 Structures that are not properly relaxed produce energy distributions that look plausible and
@@ -62,8 +62,8 @@ compare badly, which would have contaminated every number in the benchmark.
 
 ## Gas-phase carbon, from chains to cages
 
-The clusters here are isolated in vacuum — genuinely gas-phase carbon, with no periodic boundary
-propping the structure up and every atom either bonded or dangling. That is a harsher test of a
+The clusters here are isolated in vacuum. Genuinely gas-phase carbon, with no periodic boundary
+propping the structure up and every atom either bonded or dangling. A harsher test of a
 potential than bulk, because most carbon potentials were fitted to condensed phases where
 under-coordinated atoms are rare.
 
@@ -74,7 +74,7 @@ begin to densify above roughly C₁₂₀.
 
 The classical potentials fail this progression in two distinct ways, and the failures are more
 diagnostic than the energies. Tersoff and LCBOP-I hold a spurious 35% sp fraction all the way
-from C₃₀ to C₂₀₀, building sp-rich surface shells that DFT does not produce — an artefact of how
+from C₃₀ to C₂₀₀, building sp-rich surface shells that DFT does not produce, an artefact of how
 they treat under-coordinated surface atoms. REBO-II and AIREBO fail in the opposite direction,
 becoming trapped in over-dense sp³ configurations, unable to relax away from the compact
 geometries the random search hands them. One family cannot stop making surfaces; the other
@@ -92,14 +92,14 @@ only potential that fails to resolve the twin bond-length peaks at 1.41 and 1.46
 
 Worth setting out plainly, since it is my own model and I ran the searches that found these.
 
-It over-binds C₆₀ by 0.10 eV per atom — the smallest error of the seven, but in the opposite
+It over-binds C₆₀ by 0.10 eV per atom, the smallest error of the seven but in the opposite
 direction to everyone else's. It puts the chain-to-ring transition at C₁₀ where DFT puts it at
 C₈. It gives a slightly larger sp³ fraction than DFT for disordered clusters above C₁₀₀. And for
 the second- and third-lowest C₆₀ isomers no potential reproduced the DFT point-group symmetries,
 GAP-20 included, though its energies were closest.
 
-The most instructive result is a miss. In the broad C₄–C₂₀₀ search, GAP-20 — along with REBO-II
-and AIREBO — failed to return Buckminsterfullerene among its minimum-energy structures. It only
+The most instructive result is a miss. In the broad C₄–C₂₀₀ search, GAP-20 failed to return
+Buckminsterfullerene among its minimum-energy structures, as did REBO-II and AIREBO. It only
 appeared once a dedicated low-density search was run at C₆₀ specifically.
 
 The right reading is that this is a property of the search, not of the potential. The same
@@ -111,8 +111,8 @@ easy thing to forget when a structure search is being used as an oracle.
 
 ## Large clusters, and the shift to amorphous
 
-With the benchmark settled, GAP-20 alone was used to push the search from C₂₀₀ to C₇₂₀ — a size
-regime out of DFT's reach, which is the entire point of the exercise.
+With the benchmark settled, GAP-20 alone was used to push the search from C₂₀₀ to C₇₂₀, a size
+regime out of DFT's reach, which was the entire point of the exercise.
 
 Clusters stay predominantly sp² hollow cages up to about C₃₂₀. Above that the sp³ fraction
 climbs and the structures become faceted sp² shells encapsulating sp³ cores, which is the same
@@ -124,8 +124,8 @@ The more interesting finding is that non-canonical isomers compete. In the gener
 the lowest structure found was a hollow *octahedral* pseudo-fullerene at −7.57 eV per atom,
 beating the icosahedral pseudo-fullerenes the same search produced. A targeted low-density
 search did eventually recover the canonical icosahedral C₂₄₀ as the true minimum at −7.81 eV
-per atom — but with octahedral cages between −7.77 and −7.57, close enough behind that the
-textbook picture of large fullerenes as necessarily icosahedral is less settled than it looks.
+per atom, but with octahedral cages between −7.77 and −7.57, close enough behind that the
+textbook picture of large fullerenes as necessarily icosahedral looks less settled than it did.
 
 <Plate n={1}>
   <Fragment set:html={clusterSeries} />
@@ -145,7 +145,7 @@ textbook picture of large fullerenes as necessarily icosahedral is less settled 
 <Plate n={2}>
   <Image src={Amorphous} alt="A periodic cell of low-density amorphous carbon: curved, interpenetrating graphitic sheets enclosing large voids, rendered in ball-and-stick monochrome." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
   <Fragment slot="caption">
-    Low-density amorphous carbon at 1.0 g cm⁻³ — curved sp² sheets enclosing voids on the
+    Low-density amorphous carbon at 1.0 g cm⁻³: curved sp² sheets enclosing voids on the
     scale of the pores themselves, not the dense sp³ network the phrase "amorphous carbon"
     usually calls to mind. A periodic cell rather than an isolated cluster, so this is where
     the size progression above is heading once the shells stop closing on themselves.
@@ -157,9 +157,9 @@ textbook picture of large fullerenes as necessarily icosahedral is less settled 
 
 ## Contribution
 
-Third of five authors. I ran the AIRSS structure searches — both the DFT reference and the
-potential-driven searches that the benchmark compares against it — and the large-cluster
-extension from C₂₀₀ to C₇₂₀ was run under GAP-20 on the same machinery.
+Third of five authors. I ran the AIRSS structure searches, both the DFT reference and the
+potential-driven searches the benchmark compares against it, and the large-cluster extension
+from C₂₀₀ to C₇₂₀ was run under GAP-20 on the same machinery.
 
 I should be straight about the conflict this creates: I am the author of GAP-20, and the searches
 that concluded GAP-20 is the best of the seven were mine. The comparison was designed to be
@@ -175,8 +175,8 @@ at Warwick and Bordeaux.
 ## Where this sits
 
 It sits downstream of [GAP-20](/work/carbon-gap-20/) and evaluates it on a class of structure it
-was not trained for — isolated clusters, with curvature, surfaces and dangling bonds rather
-than bulk or periodic environments. That is the interesting test, and the agreement holds up
+was not trained for: isolated clusters, with curvature, surfaces and dangling bonds rather
+than bulk or periodic environments. Which is the interesting test, and the agreement holds up
 despite the reference DFT here using a different functional from the one GAP-20 was fitted to.
 An independent study across 1812 C₆₀ isomers, cited here, reached a similar conclusion.
 

@@ -3,10 +3,10 @@ title: An accurate and transferable machine learning potential for carbon
 kind: paper
 year: "2020"
 order: 21
-summary: GAP-20 — a single machine-learned potential covering diamond, graphite, graphene,
+summary: GAP-20, a single machine-learned potential covering diamond, graphite, graphene,
   nanotubes, fullerenes and amorphous carbon, validated against DFT across all of them.
 method: Gaussian approximation potential with an r⁻⁶ long-range term, trained on optB88-vdW reference data
-system: Carbon — crystalline phases, defects, surfaces, nanostructures, liquid
+system: Carbon, from crystalline phases through defects and surfaces to nanostructures and liquid
 published: J. Chem. Phys. 153, 034702 (2020)
 authors: Patrick Rowe, Volker L. Deringer, Piero Gasparotto, Gábor Csányi, Angelos Michaelides
 doi: 10.1063/5.0005084
@@ -44,8 +44,8 @@ to have both in a single model, and to say precisely what having both costs.
 ## What we built
 
 A Gaussian approximation potential trained on plane-wave DFT with the dispersion-inclusive
-optB88-vdW functional. The training set merges two existing databases — the amorphous-carbon
-set behind GAP-17 and the graphene set from the 2018 paper — and extends them with point
+optB88-vdW functional. The training set merges two existing databases, the amorphous-carbon
+set behind GAP-17 and the graphene set from the 2018 paper, and extends them with point
 defects, surfaces, nanotubes and other nanostructures. Every configuration was recomputed at
 one consistent level of theory regardless of where it came from. That recomputation is
 unglamorous and it is what makes merging two independently constructed databases defensible
@@ -60,9 +60,9 @@ explicit long-range term the layers in graphite do not attract one another and t
 structure is unbound. Dispersion is not a correction here; it is the interaction holding half
 the phase diagram together.
 
-The second is a systematic scan of the SOAP hyperparameters — cutoff radius, number of sparse
-points, basis order — against force error on a held-out set, rather than inheriting the
-defaults that had accumulated in the literature. We settled on a 4.5 Å cutoff and 9000 sparse
+The second is a systematic scan of the SOAP hyperparameters, cutoff radius and number of
+sparse points and basis order, against force error on a held-out set, rather than inheriting
+the defaults that had accumulated in the literature. We settled on a 4.5 Å cutoff and 9000 sparse
 points. The force error converges by roughly 1500 sparse points, so 9000 is well past
 saturation, but the additional evaluation cost is negligible and the margin is cheap
 insurance against configurations the scan did not cover.
@@ -78,7 +78,7 @@ parameters: Tersoff 5%, REBO-II 4%, AIREBO 1%, LCBOP 0.3%.
   <Fragment slot="caption">
     Formation energies of the crystalline phases. Panel (a) shows atomisation energies, where
     the spread between models is dominated by how badly each one over-stabilises the isolated
-    gas-phase atom — a reference-state artefact rather than a statement about the solids.
+    gas-phase atom, which is a reference-state artefact rather than a statement about the solids.
     Panel (b) removes it by referencing every model to its own graphite, which is the
     comparison that means something.
     <span class="credit">
@@ -100,7 +100,7 @@ are typically within 7%, with the relaxed (111) reconstruction the worst case at
   <Fragment slot="caption">
     Phonon dispersions for diamond, graphene and the (9,0) and (9,9) nanotubes against the
     optB88-vdW reference. The dashed blue line in panel B is the graphene-only model from
-    2018 — the visible, and small, cost of generalising.
+    2018: the visible, and small, cost of generalising.
     <span class="credit">
       Fig. 5 from Rowe, Deringer, Gasparotto, Csányi and Michaelides,
       J. Chem. Phys. 153, 034702 (2020).
@@ -137,7 +137,7 @@ bond angles approaching 180°.
 
 The model merges two lineages: the GAP-17 amorphous-carbon database of Deringer and Csányi,
 and my own [graphene potential](/work/graphene-potential/). The abstract frames it exactly
-that way — combining the flexibility needed for amorphous carbon with the numerical accuracy
+that way, as combining the flexibility needed for amorphous carbon with the numerical accuracy
 needed for crystalline graphene.
 
 The cost of doing so is quantified rather than hidden. Phonon frequencies at high-symmetry
