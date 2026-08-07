@@ -1,0 +1,77 @@
+---
+title: GAP-20, a general-purpose potential for carbon
+year: "2020"
+featured: true
+order: 1
+summary: One machine-learned potential covering diamond, graphite, graphene, nanotubes,
+  fullerenes and amorphous carbon. Released as a model you can run, not a recipe.
+method: Gaussian approximation potential over 6,088 configurations of optB88-vdW reference data
+system: Carbon in every form it takes — crystalline, defective, nanostructured, amorphous, liquid
+result: Model and training set published under CC BY; runs in LAMMPS as downloaded
+tags: [interatomic-potentials, carbon, materials, machine-learning]
+links:
+  - { label: Code, url: "https://github.com/patrickwrowe/Carbon_GAP" }
+  - { label: Data, url: "https://doi.org/10.17863/CAM.54529" }
+  - { label: Paper, url: "https://doi.org/10.1063/5.0005084" }
+---
+
+Carbon is several materials wearing one element. Diamond is a rigid tetrahedral network,
+graphite is stacked sheets held together by dispersion, a nanotube is one of those sheets
+rolled up, and amorphous carbon is a disordered mixture of all of it. Historically, an
+interatomic potential fitted to one of these was wrong about the others, and you picked your
+potential by picking which part of carbon you cared about.
+
+GAP-20 is one model that handles all of them, and this page is about the model as a thing you
+can download and use. [The paper](/work/carbon-gap-20/) covers how it was built and how hard
+it was tested.
+
+## What you get
+
+A Gaussian approximation potential — Gaussian process regression on the SOAP descriptor,
+learning energies and forces directly from plane-wave DFT — fitted to 6,088 configurations
+computed with the dispersion-inclusive optB88-vdW functional. The training set merges the
+existing amorphous-carbon database with the graphene database from
+[my earlier potential](/work/graphene-potential/), extended with point defects, surfaces,
+nanotubes and other nanostructures, and recomputed end to end at one consistent level of
+theory.
+
+Two decisions do most of the work. An explicit r⁻⁶ term handles long-range dispersion, without
+which the SOAP cutoff cannot see across the gap between graphite layers and the structure
+simply falls apart. And the SOAP hyperparameters were scanned against held-out force error
+rather than inherited from the literature.
+
+On the crystalline allotropes it gets lattice parameters to 0.2% and formation energies to
+0.5%. Defect and surface energies mostly land within 10%, with diamond defects the honest
+weak spot at 25–35%.
+
+## Why it was released this way
+
+The repository holds the fitted potential, the complete training set as an extended XYZ file,
+and a worked LAMMPS job you can run. Nothing needs refitting. That was the point: a potential
+distributed as a methodology section is a potential nobody outside the group ever uses, and
+the useful unit of publication for this kind of work is the artefact, not the description of
+it.
+
+The model and the training data are CC BY 4.0. The training set is arguably the more valuable
+half of the release: it took far longer to assemble than the fit did, and it is the part
+someone building a different carbon model would want.
+
+## What it cost
+
+Generality is not free and the paper quantifies the bill. Phonon frequencies at
+high-symmetry points come out to 4 meV against the 1 meV of the graphene-only model: a factor
+of four, traded for diamond, nanotubes, defects, surfaces, the amorphous phase and the liquid.
+If graphene is genuinely all you need, the specialist model is still better. If it is not, this
+is the one to reach for.
+
+## Where this sits
+
+It is the most-used thing I have built, at around 360 citations as of mid-2026. Most of what
+followed on this site, at Manchester and later at AbCellera, is a variation on one question:
+how much of an expensive calculation can a cheap model absorb before it stops being
+trustworthy, and how do you find out where that edge is.
+
+The year after, I co-authored [a paper](/work/aqueous-potentials/) arguing more or less the
+opposite case — that most people are better served by a quick, disposable, system-specific
+potential than by a years-long general-purpose one. It cites GAP-20 as the example of the
+thing it is offering an alternative to. Both are right, for different questions.

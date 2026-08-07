@@ -1,0 +1,90 @@
+<!-- Author: Patrick Rowe -->
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>Continuum Clock</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
+        <meta author="Patrick Rowe" />
+        <link rel="stylesheet" href="clock.css" />
+        <link rel="stylesheet" href="controls.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="welcome-message">
+                <h1 class="title-text">Continuum Clock</h1>
+                <h3>Design by Yoni & Harish, Code by Patrick Rowe</h3>
+                <h3>Click anywhere for options</h3>
+            </div>
+            <div class="clock">
+                <div class="clock-face">
+                    <div id="hour-hand" class="hour hand"></div>
+                    <div id="minute-hand" class="minute hand"></div>
+                    <div id="second-hand" class="second hand"></div>
+                </div>
+            </div>
+            <div class="controls-button-container" id="controls-button-container"></div>
+                <div class="controls hidden" id="controls">
+                    <div class="controls-button-container" id="controls-button-container-close"></div>
+
+                    <div class="controls-container">
+                        
+                        <!-- Hour Hand -->
+                        <div class="controls-block" id="hour-hand-controls">
+                            <div>
+                                <label for="hour-hand-colour-1">Hour Hand Leading Colour</label>
+                                <div class="button-grp" id="hour-hand-colour-1"></div>
+                                <label for="hour-hand-colour-2">Hour Hand Trailing Colour</label>
+                                <div class="button-grp" id="hour-hand-colour-2"></div>
+                            </div>
+                            <div>
+                                <label for="hour-extent-slider">Hour Hand Gradient</label>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" class="slider clock-face hour hand" id="hour-extent-slider">
+                                </div>
+                            </div> 
+                        </div>
+
+                        <!-- Minute Hand -->
+                        <div class="controls-block" id="minute-hand-controls">
+                            <div>
+                                <label for="minute-hand-colour-1">Minute Hand Leading Colour</label>
+                                <div class="button-grp" id="minute-hand-colour-1"></div>
+                                <label for="minute-hand-colour-2">Minute Hand Trailing Colour</label>
+                                <div class="button-grp" id="minute-hand-colour-2"></div>
+                            </div>
+                            <div>
+                                <label for="minute-extent-slider">Minute Hand Gradient</label>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" class="slider clock-face minute hand" id="minute-extent-slider">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Blending -->
+                        <div class="controls-block" id="blending-controls">
+                            <div class="button-container">
+                                <label for="color-blend-mode">Color Blend Mode</label>
+                                <div class="button-grp" id="color-blend-mode"></div>
+                            </div>
+                        </div>
+
+                        <!-- Actions, remove for the time-being -->
+                        <!-- <div>
+                            <div class="button-container">
+                                <button id="close-controls" class="controls-button">✓</button>
+                                <button id="reset-controls" class="controls-button">↺</button>
+                            </div> 
+                        </div> -->
+                            
+                    </div>   
+                </div>
+            </div>
+        </div>
+
+        <script src="clock.js" type="module"></script>
+        <script src="controls.js" type="module"></script>
+    </body>
+</html>

@@ -3,45 +3,68 @@ title: Generative language models for small molecules
 year: "2025"
 featured: true
 order: 2
-stub: true
-stubNote: >-
-  Placeholder. The wall-label fields are carried over from the CV. The demo this entry advertises does not exist yet — it is Phase 5 in spec 01 §9, and the landing page currently flags it as live. Either build it or drop the flag before this goes public.
-summary: An autoregressive transformer over SMILES, trained from scratch, with
-  sampling and property filtering running in the browser.
-method: Autoregressive transformer over SMILES, trained from scratch
-system: Drug-like small molecules
-result: Sampling and property filtering, running in the browser
-tags: [generative-models, cheminformatics, demos]
-demo: molecular-generation
+summary: Character-level recurrent models trained from scratch on ChEMBL, conditioned on what
+  the drug is meant to treat. A side project about what SMILES is like to model.
+method: Character-level LSTMs over SMILES, trained from scratch, conditioned on indication
+system: ChEMBL — late-stage and approved drugs across the 50 most common indications
+result: Conditional generation from an indication label, with the failure modes separated out
+tags: [generative-models, cheminformatics, machine-learning]
+links:
+  - { label: Code, url: "https://github.com/patrickwrowe/Language-Models-for-AI-Molecule-Generation" }
 ---
 
-import DraftNotice from "@/components/DraftNotice.astro";
+This is a side project, and it exists because SMILES is a genuinely odd thing to hand a
+language model. A SMILES string looks like text and behaves like a serialised graph. It has a
+grammar with long-range dependencies — every open bracket needs its close, every ring-opening
+digit needs its partner, possibly thirty characters later — and unlike English, a string that
+gets the grammar slightly wrong does not read awkwardly, it denotes nothing at all.
 
-## The problem
+So there is a clean question underneath: what does a small model have to learn before it can
+produce a molecule, and what does it get wrong on the way?
 
-Generating valid SMILES is harder than the papers make it sound. A model that
-produces syntactically correct strings most of the time still produces a stream of
-molecules that a chemist would not consider, and the failure modes are not the ones
-you would predict from validation loss.
+## What it does
 
-## What was built
+Character-level recurrent models over SMILES, written in PyTorch and trained from scratch
+rather than fine-tuned from anything. A plain RNN and an LSTM to establish the floor, then the
+model the project is actually about: an LSTM whose initial hidden and cell states are produced
+from an indication vector, so generation can be conditioned on what the molecule is supposed
+to treat.
 
-An autoregressive transformer over SMILES, trained from scratch rather than
-fine-tuned, with sampling and property filtering.
+The training data is ChEMBL, restricted to molecules that reached phase 4 or 5 of clinical
+development, labelled with their MeSH indications and cut to the fifty most common. Ask for an
+antineoplastic and the model is being steered towards that region of chemical space by its own
+starting state, rather than by filtering the output afterwards.
 
-## What it changed
+The tokeniser is trained on the same corpus and committed alongside the code, since
+character-level, atom-level and learned-subword vocabularies each break differently on ring
+closures.
 
-The sampling loop runs client-side. There is no server, no cold start and no cost per
-request.
+## What it gets wrong
 
-## How to check it
+A small LSTM trained this way does learn valid SMILES, which means it has implicitly picked up
+atom valences, common functional groups and the bracket-matching rules of the notation. That
+is more than it sounds like.
 
-The demo will let you sample from the model directly and see the validity and
-property statistics of what comes out, including where it fails.
+The failures split cleanly in two, and the split is the useful output:
 
-<DraftNotice>
-To finish this page: the training set and its provenance, tokenisation choices,
-validity and novelty rates measured honestly, and the Tier-0 precomputed molecule
-browser described in spec 03 §7 — which ships first and doubles as this page's static
-fallback.
-</DraftNotice>
+**Syntactic** — the string is not valid SMILES. Usually an unclosed parenthesis or a ring
+digit opened and never closed, both of which are exactly the long-range dependencies a
+character-level recurrent model is worst at.
+
+**Semantic** — the string parses but the molecule cannot exist, typically an atom given more
+bonds than it has. Fluorine with two of them.
+
+There is also a persistent bias towards long saturated hydrocarbon chains, which is
+straightforwardly the model hedging: if you have no idea what comes next, another carbon is
+rarely locally wrong.
+
+This is why a bare validity percentage is a weak metric. Two models at the same validity rate
+can be wrong in these two quite different ways, and only one of them gets better with scale in
+the way you would hope. There is more on this in
+[SMILES is a strange language to model](/writing/smiles-is-a-strange-language/).
+
+## Status
+
+Active, occasionally, on evenings. The code and the notebooks are on GitHub; the notebooks are
+the readable entry point, since each one carries its own outputs and figures. Transformer
+variants and honest novelty benchmarking are the obvious next steps and are not done yet.

@@ -1,0 +1,232 @@
+/* Author: Patrick Rowe */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Helvetica, Arial, sans-serif;
+
+}
+
+:root {
+  --dark-grey: #0a0a23;
+  --white: #ffffff;
+
+  --clock-diameter: 1000vw;
+  --clock-face-diameter: calc(var(--clock-diameter) - 25px);
+  --clock-face-radius: calc(var(--clock-face-diameter) / 2);
+
+
+  /* Not needed now that there's JS */
+  --hour-rotate-deg: 0deg;
+  --minute-rotate-deg: 0deg;
+  --second-rotate-deg: 0deg;
+
+  /* Not needed now that there's JS */
+  --hour-rotate-pc: calc(100 * var(--hour-rotate-deg) / 360);
+  --minute-rotate-pc: calc(100 * var(--minute-rotate-deg) / 360);
+  --second-rotate-pc: calc(100 * var(--second-rotate-deg) / 360);
+
+  --minute-hand-width: 3px;
+
+  --hour-hand-color-1: var(--dark-grey);
+  --hour-hand-color-2: transparent;
+  --hour-hand-extent: 100%;
+
+  --minute-hand-color-1: var(--dark-grey);
+  --minute-hand-color-2: transparent;
+  --minute-hand-extent: 20%;
+}
+
+html {
+    overflow: hidden;
+}
+
+body {
+  color: var(--white);
+  background-color: var(--dark-grey);
+}
+
+.container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.welcome-message {
+    position: absolute;
+    margin: auto;
+    font-size: 1rem;
+    color: var(--white);
+    z-index: 100;
+    padding-bottom: 25em;
+    text-align: center;
+
+    /* 
+    backdrop-filter: blur(20px);
+    border-radius: 5px;
+    padding: 10px;
+    /*
+
+    /* fade out after 5 seconds */
+    animation: fadeOut 5s forwards;
+}
+
+.title-text {
+    padding-bottom: 1rem;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.clock {
+    height: var(--clock-diameter);
+    width: var(--clock-diameter);
+    background-color: var(--white);
+    border-radius: 100%;
+}
+
+.clock-face {
+    height: var(--clock-face-diameter);
+    width: var(--clock-face-diameter);
+
+    border-radius: 100%;
+    position: relative;
+    top: 12.5px;
+    left: 12.5px;
+}
+
+.hand {
+    position: absolute;
+}
+
+.hour {
+    height: inherit;
+    width: inherit;
+    border-radius: 100%;
+    position: relative;
+    top: 0;
+
+    background-image: conic-gradient(
+        var(--hour-hand-color-1),
+        var(--hour-hand-color-2) var(--hour-hand-extent),
+        var(--hour-hand-color-2)
+    );
+
+    transform: rotate(
+        var(--hour-rotate-deg)
+    );
+
+    transition: ease-in-out;
+    transition-duration: 1s;
+}
+
+
+/* for second as a hand */
+.second {
+    visibility: hidden;
+    top: 0;
+    left: 50%;
+    position: absolute;
+    height: var(--clock-face-radius);
+    width: 1px;
+    border-radius: 1px;
+
+    background-color: #0a0a23;
+    transform-origin: bottom;
+    transform: rotate(  
+        var(--second-rotate-deg)
+    );
+
+    border: 0;
+
+    transition: ease-in-out;
+    transition-duration: 1s;
+}
+
+/* for minute as a gradient of its own */
+.minute {
+    top: 0;
+    position: absolute;
+    height: inherit;
+    width: inherit;
+    border-radius: 100%;
+
+    background-image: conic-gradient(
+        var(--minute-hand-color-1),
+        var(--minute-hand-color-2) var(--minute-hand-extent),
+        var(--minute-hand-color-2)
+    );
+
+
+    transform: rotate(
+        var(--minute-rotate-deg)
+    );
+
+    transition: ease-in-out;
+    transition-duration: 1s;
+
+    mix-blend-mode: normal;
+}
+
+/* for second as a gradient of its own */
+/* .second {
+    top: 0;
+    position: absolute;
+    height: var(--clock-face-diameter);
+    width: var(--clock-face-diameter);
+    border-radius: 100%;
+
+    background-image: conic-gradient(
+        transparent,
+        transparent var(--second-rotate-pc),
+        var(--dark-grey)
+    );
+
+    transform: rotate(
+        var(--second-rotate-deg)
+    );
+} */
+
+/* .hour {
+    top: 50%;
+    left: 50%;
+    transform-origin: 0%;
+    transform: rotate(
+        var(--hour-rotate-deg)
+    );
+    height: 5px;
+    width: calc(var(--clock-face-diameter)/2);
+    background-color: red;
+} */
+
+/* .minute {
+    background-image: conic-gradient(
+        var(--white) 0%,
+        var(--dark-grey)
+    );
+}
+
+.second {
+    background-image: conic-gradient(
+        var(--white) 0%,
+        var(--dark-grey)
+    );
+} */

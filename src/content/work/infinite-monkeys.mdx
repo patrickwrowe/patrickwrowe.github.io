@@ -1,0 +1,51 @@
+---
+title: Infinite monkeys — character-level language models
+year: "2025"
+order: 6
+summary: Small recurrent networks trained character by character on Shakespeare, to find out
+  how much of a language a model can pick up with no idea that words exist.
+method: Character-level RNNs and LSTMs in PyTorch, trained from scratch
+system: The complete works of Shakespeare, one character at a time
+result: Coherent-looking pastiche from a model that never saw a word boundary
+tags: [generative-models, machine-learning, python]
+links:
+  - { label: Code, url: "https://github.com/patrickwrowe/infinite-monkeys" }
+---
+
+A character-level model is given no help at all. It does not know that words exist, or spaces,
+or that a line beginning with a capitalised name followed by a full stop means somebody is
+about to speak. All of that has to be inferred from the raw stream of characters.
+
+Which makes it a good instrument. Anything the model produces that looks like structure is
+structure it worked out for itself, and the point of the exercise is watching where that
+runs out.
+
+## What comes out
+
+It learns the shape of the thing very convincingly. Stage directions, speaker labels, the
+indentation of verse, the vocabulary and cadence — all of it arrives without being asked for.
+Prompted with `AUGUSTUS.`, it produces:
+
+> Pedro. It, protest you, and such a plighted speeding too.
+> But let me ripht from honesty to for his grape.
+
+Which is, at a glance, Shakespeare. Read it again and it is nothing at all. The syntax is
+plausible, the words are mostly real, and the meaning never arrives. What the model has
+learned is the local texture of the language rather than anything above the sentence — and
+`ripht` for `right` shows exactly how it is spelling: character by character, from what
+usually follows what.
+
+That gap between "looks right" and "is right" is the whole reason to build these. It is the
+same gap that shows up in
+[the molecular generation project](/work/molecular-generation/), where a model produces
+strings that look like valid SMILES and denote nothing. Chemistry is the less forgiving case,
+because there the reader is a parser rather than a person, and it fails loudly.
+
+## Where it sits
+
+A learning exercise, kept public because it is a clean and honest demonstration of what a
+small recurrent network can and cannot do. The companion repository,
+[pytorch-character-level-language-models](https://github.com/patrickwrowe/pytorch-character-level-language-models),
+does the classification side of the same idea.
+
+I am not putting any playwrights out of work.

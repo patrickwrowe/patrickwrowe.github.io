@@ -1,0 +1,434 @@
+/* Author: Patrick Rowe */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+:root {
+    --dark-grey: #0a0a23;
+    --white: #ffffff;
+    --button-size: 40px;
+    --slider-size: 75px;
+
+    --font-size-small: 1rem;
+    --font-size-medium: 1.25rem;
+    --font-size-large: 1.5rem;
+
+    --spacing-small: 10px;
+    --spacing-medium: 15px;
+    --spacing-large: 20px;
+
+    /* We need this because otherwise text can be invisible on a white background */
+    text-shadow: 1px 0 2px #555, 0 -1px 2px #555, 0 1px 2px #555, -1px 0 2px #555;
+}
+
+html {
+    overflow: hidden;
+}
+  
+label {
+    font-size: 1.25rem;
+
+    font-size: var(--font-size-medium);
+    margin-left: var(--spacing-medium);
+    margin-bottom: var(--spacing-small);
+    margin-top: var(--spacing-small);
+
+    /* padding: var(--spacing-medium) 100px var(--spacing-medium) 100px; */
+}
+
+
+.controls-header {
+    font-size: var(--font-size-large);
+    margin-bottom: var(--spacing-medium);
+    padding: var(--spacing-medium);
+}
+
+.controls {
+    position: absolute;
+    height: 100vh;
+    width: 75vw;
+    left: 0;
+    padding-left: 15px;
+    padding-top: 15px;
+
+    display: flex;
+    flex-direction: column;
+    z-index: 0;
+}
+
+.controls-block {
+    margin: 25px;
+}
+
+.controls-container {
+    margin: 5px;
+    width: 50vw;
+
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-items: left;
+    justify-content: space-between;
+
+    height: 100%;
+}
+
+/* The slider itself */
+.slider {
+    -webkit-appearance: none;  
+    appearance: none;
+    width: var(--slider-size); 
+    height: var(--slider-size);
+    outline: 1px solid white; 
+
+    /* Fix vertical; don't rotate to match the clock rotation */
+    /* Messes with controls */
+    transform: rotate(270deg) !important;
+
+    border-radius: 100%;
+    display: block;
+
+    z-index: 1000;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Override default look */
+        appearance: hidden;
+        width: 0px;
+        height: 0px; 
+        background: transparent; 
+        border: transparent;
+        cursor: pointer; 
+    }
+
+    &::-moz-range-thumb {
+        width: 0px; 
+        height: 0px; 
+        background: transparent; 
+        cursor: pointer; 
+        border: transparent;
+    }
+
+    &:hover {
+        cursor: pointer; 
+        transform: scale(1.1);
+        transition: 0.3s;
+    }
+    &:active {
+        cursor: pointer; 
+    }
+}
+
+.slider-container {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: left;
+
+    margin: 5px;
+    padding: 5px;
+    padding-left: 10px;
+
+}
+
+.button-grp {
+    z-index: 1000;
+    padding-left: 10px;
+}
+
+.button-grp button {
+    color: white; /* White text */
+    height: var(--button-size);
+    width: var(--button-size);
+    cursor: pointer; /* Pointer/hand icon */
+    float: left; /* Float the buttons side by side */
+    border: 1px solid white; /* Gray border */
+    background-color: transparent;
+    border-radius: 100pc;
+    margin: 5px;
+    transition: 0.5s;
+
+    z-index: 1000;
+  }
+  
+  /* Clear floats (clearfix hack) */
+.button-grp:after {
+    content: "";
+    clear: both;
+    display: table;
+    padding-bottom: 5px;
+}
+
+.button-grp:last-of-type {
+    padding-bottom: 25px;
+}
+  
+  /* Add a background color on hover */
+.button-grp button:hover {
+    transform: scale(1.1);
+    transition: 0.3s;
+}
+
+.btn-selected {
+    transform: scale(0.75) !important;
+    transition: 0.5s;
+}
+
+.hidden {
+    display: none;
+}
+
+
+.controls-button-container {
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    right: 0;
+    padding: 15px;
+    margin: 10px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: left;
+
+    &:hover {
+        cursor: pointer;
+    }
+
+}
+
+#controls-button-container-close {
+    position: absolute;
+    z-index: 500; /* Lower z-index to ensure it doesn't overlap the color buttons */
+}
+
+.controls-button {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    height: var(--button-size);
+    width: var(--button-size);
+    cursor: pointer; /* Pointer/hand icon */
+    border-radius: 100pc;
+    float: left;
+    border: 1px solid white;
+    margin: 5px;
+    transition: 0.5s;
+
+    z-index: 1000;
+
+    &:hover {
+        transform: scale(1.1);
+        transition: 0.3s;
+    }
+}
+
+.blend-button.controls-button {
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+ 
+.blend-button {
+    position: relative;
+    top: 0px !important;
+    left: 0px !important;
+
+    border: 1px solid transparent;
+    z-index: 1000;
+
+}
+
+.blend-button.controls-button.clock-face {
+    position: relative;
+    top: -1px !important;
+    left: -1px !important;
+    margin: 0px;
+    padding: 0px;
+
+    border: 1px solid transparent;
+}
+
+.blend-button.hour, .blend-button.minute {
+    position: relative;
+    top: -1px !important;
+    left: -1px !important;
+    margin: 0px !important;
+    padding: 0px   !important;
+}
+
+.blend-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.colour-button {
+    position: relative;
+    z-index: 1000;
+}
+
+.cap {
+    height: inherit;
+    width: inherit;
+    position: relative;
+    border-radius: 100%;
+    top:  -1px !important;
+    left: -1px !important;
+    margin: 0px !important;
+    padding: 0px !important; 
+    background-color: transparent;
+    border: 1px solid white;
+
+    z-index: 1000;
+}
+
+.blend-button .hour,
+.blend-button .minute {
+    position: absolute;
+    border: 1px solid white;
+}
+
+.tooltip {
+    position: relative;
+    text-shadow: 1px 0 1px #555, 0 -1px 1px #555, 0 1px 1px #555, -1px 0 1px #555;
+    font-size: 1rem;
+
+    padding-top: 2px;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    visibility: hidden;
+    text-align: center;
+}
+
+.blend-button:hover .tooltip {
+    visibility: visible; /* Show the tooltip */
+    z-index: 1000;
+}
+
+
+#blending-controls {
+    margin-top: 100px;
+}
+
+/* Absolute positioning of hour hand  controls at top, minute in middle and blend at bottom */
+/* #hour-hand-controls {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+#minute-hand-controls {
+    position: absolute;
+    top: 45%;
+    left: 20px;
+}
+
+#blending-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+} */
+
+/* Responsive styles */
+
+@media (max-width: 1000px) {
+    .controls-container {
+        width: 90vw; 
+        margin: 0 auto; 
+    }
+}
+
+@media (max-height: 850px ) {
+    .controls {
+        width: 100vw; 
+        height: 100vh; 
+        left: 0;
+        top: 0;
+    }
+
+    .controls-container {
+        width: 90vw;
+        margin: 0 auto; 
+    }
+
+    #blending-controls {
+        margin-top: 50px; 
+    }
+
+    .controls-block {
+        margin: 10px; 
+    }
+}
+
+@media (max-width: 600px) {
+    .controls {
+        width: 100vw; 
+        height: 100vh; 
+        padding: 10px; 
+        left: 0;
+        top: 0;
+        z-index: 1000; 
+    }
+
+    .controls-container {
+        width: 90vw; /* Reduce width slightly for padding */
+        margin: 0 auto; /* Center the container */
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center align items */
+        justify-content: flex-start; /* Start items from the top */
+    }
+
+    label {
+        font-size: var(--font-size-small); /* Reduce font size for smaller screens */
+        margin: 5px 0; 
+    }
+
+    :root {
+        --button-size: 30px;
+        --slider-size: 40px;
+    }
+
+    .button-grp button {
+        margin: 3px; 
+    }
+}
+
+/* Additional styles for very small screens (e.g., iPhone SE) */
+@media (max-width: 375px) {
+    :root {
+        --button-size: 20px;
+        --slider-size: 30px;
+    }
+
+    .controls {
+        padding: 5px; /* Reduce padding for very small screens */
+    }
+
+    .controls-container {
+        width: 95vw;
+    }
+
+    label {
+        font-size: 0.9rem;
+    }
+
+    .controls-header {
+        font-size: 1rem; /* Reduce header font size */
+    }
+}
