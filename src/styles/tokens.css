@@ -12,7 +12,18 @@
   --ink: #15161A; /* primary text, strong rules */
   --graphite: #63666E; /* secondary text, all metadata */
   --hairline: #DEDDD7; /* rules, borders */
-  --lustre: #4B4A7C; /* the only accent — state and anomaly, never decoration */
+  /* The only accent — state and anomaly, never decoration. Intercalation gold:
+   * graphite is grey until you put something between the layers, and then KC8 and
+   * LiC6 come out bronze. The accent is what the palette's own material does under
+   * chemistry.
+   *
+   * Two values, one hue, split by job — not a lightness ramp. --lustre is 1.96:1 on
+   * --paper, so it may only carry marks that don't have to be read as text: titles at
+   * --t-title and up, glyphs, 1-2px rules, figure fills. --lustre-deep is 5.46:1 and
+   * takes every use that must stay legible — the 11px mono labels, body-sized hovers,
+   * and the focus ring, which needs 3:1 under WCAG 2.2 regardless of how it looks. */
+  --lustre: #EFA400;
+  --lustre-deep: #8C5A08;
 
   /* Three tints the prototype uses that spec §5.1 does not name. Tokenised here
    * rather than left as literals in components (CLAUDE.md: tokens only). They are
@@ -20,7 +31,9 @@
   --ink-soft: #2A2C33; /* hero body prose */
   --ink-quiet: #3A3C43; /* wall-label values */
   --mark: #B6B5AE; /* the resting arrow on a wall label */
-  --lustre-wash: rgba(75, 74, 124, 0.028); /* wall-label hover ground */
+  /* Wall-label hover ground. The bright end of the accent lives here, where it is
+   * a ground rather than a foreground and carries no contrast burden. */
+  --lustre-wash: rgba(255, 196, 0, 0.09);
 
   /* §5.2 Type — sans labels, serif reads, mono is data.
    * --font-* are injected by the Astro Fonts API (see astro.config.mjs) and already
@@ -41,8 +54,16 @@
   --ls-statement: -0.028em;
   --ls-label: 0.09em;
 
-  /* Measure. */
-  --measure-prose: 62ch;
+  /* Measure. Three nested widths, all sharing the article's left edge: text is
+   * inset inside --measure-figure, which is inset inside --shell. A figure that
+   * ran the full shell was twice the width of the text it belonged to.
+   *
+   * --measure-prose is the readable line length and is the reason the text column
+   * does not simply fill the shell: at --t-body the shell would set roughly 110
+   * characters to the line, against a 45–75 range that is readable. 74ch is the
+   * top of that range. */
+  --measure-prose: 74ch;
+  --measure-figure: 54rem; /* plate breakout and the rule under a page title */
   --measure-hero: 56ch;
   --measure-statement: 19ch;
 

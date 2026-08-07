@@ -12,6 +12,11 @@ links:
   - { label: Code, url: "https://github.com/patrickwrowe/orbitals" }
 ---
 
+import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
+import Interpolation from "./figures/orbitals/interpolation.png";
+import Isosurfaces from "./figures/orbitals/isosurfaces.png";
+
 Almost every orbital picture you have seen is a drawing. Someone looked at the analytic form,
 decided roughly what shape it implied, and drew that. Which is why the four lobes of a d
 orbital are so often identical, so often symmetric, and so often subtly wrong about where the
@@ -37,6 +42,30 @@ the wavefunction is evaluated on a coarse grid and interpolated up before render
 quantitative uses the coarse values; only the picture uses the interpolated ones. Mixing those
 up would be an easy way to publish a very smooth lie, so the two paths stay separate and the
 docs say which is which.
+
+<Plate n={1}>
+  <Image src={Interpolation} alt="Two three-dimensional scatter plots of the 2p orbital probability density. On the left a sparse 20-cubed grid of coloured points; on the right the same wavefunction interpolated to a 50-cubed grid, where the two lobes are dense and continuous." widths={[640, 1180, 2180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    The 2p orbital evaluated on a 20³ grid (left) and the same values interpolated up to 50³
+    (right), both drawn as point clouds coloured by probability density. The left panel is what
+    was actually computed and the only one anything quantitative should use. The right panel is
+    the picture. Nothing was added between them except interpolation, which is exactly why the
+    two have to stay labelled.
+    <span class="credit">Own work, from the project's own examples.</span>
+  </Fragment>
+</Plate>
+
+<Plate n={2}>
+  <Image src={Isosurfaces} alt="Two marching-cubes isosurfaces rendered as triangulated meshes: the two-lobed 2p orbital on the left, and the 4d-z-squared orbital on the right with two large axial lobes and a torus around the middle." widths={[640, 1180, 2377]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Isosurfaces of the 2p orbital (left) and the 4d<sub>z²</sub> orbital (right), both drawn by
+    marching cubes at a fixed fraction of the maximum density. The triangulation is left visible
+    rather than smooth-shaded, so the resolution of the underlying grid is legible in the
+    picture instead of being hidden by it. The 4d<sub>z²</sub> lobes are not the identical
+    footballs of the textbook diagram.
+    <span class="credit">Own work, from the project's own examples.</span>
+  </Fragment>
+</Plate>
 
 ## Why bother
 

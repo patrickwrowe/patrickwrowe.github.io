@@ -26,6 +26,9 @@ const { n, animate = false } = Astro.props;
 </figure>
 
 <style>
+  /* Width lives on the figure, not on the frame, so the caption and its rule are
+   * the same width as the artwork by construction. Sizing the frame alone is what
+   * made the figure look like it was overflowing its own caption. */
   .plate {
     margin: 0;
     margin-top: clamp(3rem, 7vw, 5rem);
@@ -59,7 +62,6 @@ const { n, animate = false } = Astro.props;
     margin-top: 0.9rem;
     padding-top: 0.9rem;
     border-top: 1px solid var(--hairline);
-    max-width: 74ch;
   }
   .plate__fig {
     white-space: nowrap;
@@ -76,17 +78,22 @@ const { n, animate = false } = Astro.props;
   }
 
   @media (min-width: 700px) {
-    .plate__frame {
+    .plate {
       margin-inline: calc(var(--gutter) * -0.5);
     }
   }
-  /* Journal figures are multi-panel composites; at the 62ch prose measure the
-   * panels stop being readable. Past the measure the plate breaks out rightwards
-   * to the full shell, while the caption stays in the text column. */
+  /* Journal figures are multi-panel composites; at the prose measure the panels
+   * stop being readable. Past the measure the plate breaks out rightwards to
+   * --measure-figure. It stops there rather than at the full shell: a figure
+   * twice the width of its own text reads as a banner that the prose is wrapped
+   * around, not as a figure. */
   @media (min-width: 1000px) {
-    .plate__frame {
+    .plate {
       margin-inline: 0;
-      width: calc(min(var(--shell), 100vw) - var(--gutter) * 2);
+      width: min(
+        var(--measure-figure),
+        calc(min(var(--shell), 100vw) - var(--gutter) * 2)
+      );
     }
   }
   @media (max-width: 640px) {

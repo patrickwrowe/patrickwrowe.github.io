@@ -13,6 +13,11 @@ links:
   - { label: Code, url: "https://github.com/patrickwrowe/Language-Models-for-AI-Molecule-Generation" }
 ---
 
+import Plate from "@/components/Plate.astro";
+import { Image } from "astro:assets";
+import Indications from "./figures/molecular-generation/indication-frequencies.png";
+import Samples from "./figures/molecular-generation/conditional-samples.png";
+
 This is a side project, and it exists because SMILES is a genuinely odd thing to hand a
 language model. A SMILES string looks like text and behaves like a serialised graph. It has a
 grammar with long-range dependencies: every open bracket needs its close, and every
@@ -40,6 +45,18 @@ The tokeniser is trained on the same corpus and committed alongside the code, si
 character-level, atom-level and learned-subword vocabularies each break differently on ring
 closures.
 
+<Plate n={1}>
+  <Image src={Indications} alt="Log-scale bar chart of molecule counts for each of about sixty MeSH indication headings in the training set, falling steeply from an Other category and Neoplasms through Breast Neoplasms and Cardiovascular Diseases to a long flat tail." widths={[640, 1180, 1605]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    What the model is being conditioned on: molecule counts per MeSH indication in the ChEMBL
+    subset, on a log scale. The distribution is the awkward part. Neoplasms carries several
+    hundred molecules and most of the tail carries fewer than a hundred, so the conditioning
+    signal is far stronger for some labels than others, and any honest evaluation has to be
+    read per indication rather than in aggregate.
+    <span class="credit">Own work, from the project's own notebooks.</span>
+  </Fragment>
+</Plate>
+
 ## What it gets wrong
 
 A small LSTM trained this way does learn valid SMILES, which means it has implicitly picked up
@@ -58,6 +75,19 @@ bonds than it has. Fluorine with two of them.
 There is also a persistent bias towards long saturated hydrocarbon chains, which is
 straightforwardly the model hedging: if you have no idea what comes next, another carbon is
 rarely locally wrong.
+
+<Plate n={2}>
+  <Image src={Samples} alt="Two five-by-five grids of generated chemical structures. The left grid, labelled Bacterial Infections, is structurally varied. The right grid, labelled Cardiovascular Diseases, shares a common sulfonamide scaffold across every molecule." widths={[640, 1180, 2060]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Twenty-five samples conditioned on <b>Bacterial Infections</b> (left) at temperature 0.9,
+    and twenty-five on <b>Cardiovascular Diseases</b> (right) at temperature 0.7, the second set
+    additionally prompted with a fragment of sulfamethoxazole. The right-hand grid keeps the
+    sulfonamide scaffold it was handed and varies everything else, which is the behaviour you
+    want if the model is going to be useful for anything: hold the part a chemist has already
+    decided on, and explore around it.
+    <span class="credit">Own work, from the project's own notebooks.</span>
+  </Fragment>
+</Plate>
 
 This is why a bare validity percentage is a weak metric. Two models at the same validity rate
 can be wrong in these two quite different ways, and only one of them gets better with scale in

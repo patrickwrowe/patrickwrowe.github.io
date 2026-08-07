@@ -1,20 +1,22 @@
 ---
-// Header. Nav is Work · Writing · CV only — About is reached from the footer and
-// from the name (spec 01 §4). Not sticky: the gallery convention is that chrome
-// gets out of the way.
+// Header. The name is the route home; all four top-level routes sit in the nav.
+// Spec 01 §4 originally kept About out of the nav and reached it from the name —
+// that was overridden, and the spec line updated to match. Not sticky: the gallery
+// convention is that chrome gets out of the way.
 interface Props {
-  section?: "work" | "writing" | "cv";
+  section?: "work" | "writing" | "cv" | "about";
 }
 const { section } = Astro.props;
 ---
 
 <header class="site-head">
   <div class="shell site-head__inner">
-    <a class="site-head__name" href="/about/">Patrick Rowe<span>, PhD</span></a>
+    <a class="site-head__name" href="/">Patrick Rowe</a>
     <nav class="site-nav" aria-label="Primary">
       <a href="/work/" aria-current={section === "work" ? "page" : undefined}>Work</a>
       <a href="/writing/" aria-current={section === "writing" ? "page" : undefined}>Writing</a>
       <a href="/cv/" aria-current={section === "cv" ? "page" : undefined}>CV</a>
+      <a href="/about/" aria-current={section === "about" ? "page" : undefined}>About</a>
     </nav>
   </div>
 </header>
@@ -34,10 +36,10 @@ const { section } = Astro.props;
     font-size: var(--t-small);
     font-weight: 500;
     letter-spacing: -0.005em;
+    transition: color var(--transition);
   }
-  .site-head__name span {
-    color: var(--graphite);
-    font-weight: 400;
+  .site-head__name:hover {
+    color: var(--lustre);
   }
   .site-nav {
     display: flex;
@@ -56,9 +58,15 @@ const { section } = Astro.props;
       color var(--transition),
       border-color var(--transition);
   }
-  .site-nav a:hover,
+  /* Current page and hover are different states and must stay legible apart: the
+   * current page is persistent text, so it takes --ink; hover is momentary, so it
+   * takes the bright accent. Both are underlined in --lustre. */
   .site-nav a[aria-current] {
     color: var(--ink);
+    border-bottom-color: var(--lustre);
+  }
+  .site-nav a:hover {
+    color: var(--lustre);
     border-bottom-color: var(--lustre);
   }
 </style>

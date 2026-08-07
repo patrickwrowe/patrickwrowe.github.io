@@ -17,6 +17,7 @@ links:
 import Plate from "@/components/Plate.astro";
 import { Image } from "astro:assets";
 import ClockStill from "./figures/gradient-clock/still.png";
+import ClockControls from "./figures/gradient-clock/controls.png";
 
 Not science. A collaboration with the designers [Harish Persad](http://harishpersad.com/) and
 Yoni, who had an idea for a clock and needed someone to make it run.
@@ -54,6 +55,17 @@ can watch the same clock go from soft to harsh by changing one setting.
 The rest was the ordinary work of making a design real: matching the gradient extents to what
 the designers had drawn, keeping it legible from across a room, and making it survive being
 resized from a phone to a television.
+
+<Plate n={2}>
+  <Image src={ClockControls} alt="The clock in a green and purple palette with the control panel open, showing colour swatches for the leading and trailing colours of each hand, two gradient extent sliders shaped like the hands themselves, and a row of blend mode buttons." widths={[640, 1180, 1600]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    The controls, which appear on a click anywhere. Leading and trailing colour per hand, a
+    gradient extent slider for each, and the blend mode row along the bottom. The sliders are
+    miniature versions of the hands they control, so the thing you are adjusting and the control
+    you adjust it with are the same shape.
+    <span class="credit">Own work, from the project repository.</span>
+  </Fragment>
+</Plate>
 
 ## Credits
 

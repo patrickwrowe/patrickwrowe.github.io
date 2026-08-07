@@ -69,6 +69,10 @@ const { year, title, href, fields, flag } = Astro.props;
     font-weight: 500;
     letter-spacing: -0.016em;
     line-height: 1.25;
+    transition: color var(--transition);
+  }
+  .entry:hover .entry__title {
+    color: var(--lustre);
   }
   .entry__fields {
     display: grid;
@@ -107,7 +111,7 @@ const { year, title, href, fields, flag } = Astro.props;
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--lustre);
+    color: var(--lustre-deep);
     border: 1px solid currentColor;
     border-radius: 2px;
     padding: 0.15rem 0.4rem;

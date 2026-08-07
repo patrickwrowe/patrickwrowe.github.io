@@ -1,11 +1,11 @@
 ---
-// Long-form layout — spec 01 §6.3. 62ch measure, KaTeX, Shiki, figure styling.
+// Long-form layout — spec 01 §6.3. 74ch measure, KaTeX, Shiki, figure styling.
 import Base from "@/layouts/Base.astro";
 
 interface Props {
   title: string;
   description: string;
-  section?: "work" | "writing" | "cv";
+  section?: "work" | "writing" | "cv" | "about";
   math?: boolean;
   /** Mono metadata row above the title: year, date, venue. */
   meta?: string;
@@ -43,7 +43,12 @@ const { title, description, section, math = false, meta, fields = [] } = Astro.p
   .prose-page {
     padding-block: clamp(3rem, 7vw, 5rem) var(--rhythm);
   }
+  /* The rule under the title is the article's widest element and sets the outer
+   * edge everything below is measured against, so it matches the plate rather
+   * than the shell. A full-shell rule over a half-width column reads as a header
+   * belonging to the site, not to the page. */
   .prose-head {
+    max-width: var(--measure-figure);
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--ink);
   }
@@ -109,9 +114,12 @@ const { title, description, section, math = false, meta, fields = [] } = Astro.p
   }
   .prose a {
     border-bottom: 1px solid var(--hairline);
-    transition: border-color var(--transition);
+    transition:
+      color var(--transition),
+      border-color var(--transition);
   }
   .prose a:hover {
+    color: var(--lustre);
     border-bottom-color: var(--lustre);
   }
   .prose strong {

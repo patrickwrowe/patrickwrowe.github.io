@@ -2,7 +2,8 @@
 title: An accurate and transferable machine learning potential for carbon
 kind: paper
 year: "2020"
-order: 21
+featured: true
+order: 1
 summary: GAP-20, a single machine-learned potential covering diamond, graphite, graphene,
   nanotubes, fullerenes and amorphous carbon, validated against DFT across all of them.
 method: Gaussian approximation potential with an r⁻⁶ long-range term, trained on optB88-vdW reference data
@@ -21,7 +22,8 @@ links:
   - { label: Paper, url: "https://pubs.aip.org/jcp/article/153/3/034702/1062660" }
   - { label: Preprint, url: "https://arxiv.org/abs/2006.13655" }
   - { label: Data, url: "https://doi.org/10.17863/CAM.54529" }
-  - { label: Code, url: "https://github.com/libAtoms/QUIP" }
+  - { label: Code, url: "https://github.com/patrickwrowe/Carbon_GAP" }
+  - { label: Docs, url: "https://libatoms.github.io/GAP/installation.html" }
 ---
 
 import Plate from "@/components/Plate.astro";
@@ -44,9 +46,9 @@ to have both in a single model, and to say precisely what having both costs.
 ## What we built
 
 A Gaussian approximation potential trained on plane-wave DFT with the dispersion-inclusive
-optB88-vdW functional. The training set merges two existing databases, the amorphous-carbon
-set behind GAP-17 and the graphene set from the 2018 paper, and extends them with point
-defects, surfaces, nanotubes and other nanostructures. Every configuration was recomputed at
+optB88-vdW functional, over a final training set of 6,088 configurations. It merges two
+existing databases, the amorphous-carbon set behind GAP-17 and the graphene set from the 2018
+paper, and extends them with point defects, surfaces, nanotubes and other nanostructures. Every configuration was recomputed at
 one consistent level of theory regardless of where it came from. That recomputation is
 unglamorous and it is what makes merging two independently constructed databases defensible
 at all; without it the model would be fitting the difference between two functionals as if it
@@ -145,12 +147,28 @@ points are correct to 4 meV, against 1 meV for the dedicated graphene model: a f
 four, traded for diamond, nanotubes, defects, surfaces and the amorphous phase. On the
 evidence of the random structure search, that is a good trade.
 
-The potential and its training configurations are published under CC BY 4.0 through the
-Cambridge repository, packaged as a QUIP file that runs directly in LAMMPS. Publishing the
-artefact rather than the recipe was deliberate: a potential that has to be refitted before it
-can be used will not be used.
-
 The following year I co-authored [a paper](/work/aqueous-potentials/) making close to the
 opposite argument, which cites GAP-20 as an example of the years-long, general-purpose model
 it proposes an alternative to. The two positions are not in conflict. They answer different
 questions about what a potential is for.
+
+It is the most-used thing I have built, at around 360 citations as of mid-2026.
+
+## Getting it
+
+[The repository](https://github.com/patrickwrowe/Carbon_GAP) holds the fitted potential as a
+QUIP file that runs directly in LAMMPS, the complete 6,088-configuration training set as an
+extended XYZ, and a worked example job. Nothing needs refitting before it can be used. The
+same artefacts are archived with a DOI through the
+[Cambridge repository](https://doi.org/10.17863/CAM.54529), and both the model and the data
+are CC BY 4.0.
+
+Publishing the artefact rather than the recipe was deliberate. A potential distributed as a
+methodology section is a potential nobody outside the group ever runs, and for this kind of
+work the useful unit of publication is the thing itself. Of the two halves, the training set
+is arguably the more valuable: it took far longer to assemble than the fit did, and it is what
+someone building a different carbon model would actually want.
+
+Running it needs QUIP and GAP, whose
+[installation instructions](https://libatoms.github.io/GAP/installation.html) are upstream;
+those carry their own licence, separate from the CC BY on the model.

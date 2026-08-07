@@ -2,7 +2,8 @@
 title: Machine learning potentials for complex aqueous systems made simple
 kind: paper
 year: "2021"
-order: 22
+featured: true
+order: 4
 summary: Committee neural network potentials built by active learning from a single short
   AIMD trajectory. Six aqueous systems, no per-system tuning, days rather than years.
 method: Committee neural network potentials with query-by-committee active learning
@@ -123,6 +124,38 @@ Marsalek's, and is credited to them under new analytic tools. My contribution is
 and execution of the model generation and its application across the six systems, not in
 authoring that codebase.
 
+## What the models were spent on
+
+This is the methodological half of a longer run of work on solid–liquid interfaces, and the
+protocol only earns its keep in what came after it.
+
+The nanotube systems here were demonstrations. A year later they became the object of study in
+[their own right](/work/nanotube-water-flow/), scaled from a single (12,12) tube to sixteen
+tubes up to 5.5 nm across and over forty nanoseconds of dynamics, which is what it took to
+separate the geometric part of nanotube friction from the chemical part.
+
+Alongside that ran the collaborations with Rahul Nair's experimental group at the National
+Graphene Institute in Manchester, on [vermiculite membranes](/work/vermiculite-membranes/) and
+later [MoS₂ membranes](/work/mos2-membranes/). Those ran at direct ab initio cost rather than
+through a learned potential, but they belong to the same thread and they followed a consistent
+pattern: the experimentalists had a clean anomaly they could measure and could not explain,
+and wanted a mechanism rather than a curve fit. Both ended up hinging on the structure of a
+nanometre or two of confined water.
+
+Two things came out of that stretch of work, and neither is about water.
+
+The first is that the useful unit here was a protocol rather than a model. A model someone
+else has to refit before they can use it does not travel; a procedure that reliably produces a
+working model in a few days does. Which is the same argument
+[GAP-20](/work/carbon-gap-20/) makes about publishing the artefact, arrived at from the
+opposite end.
+
+The second is that the hardest part of an interdisciplinary collaboration is agreeing what
+question the simulation is answering. The MoS₂ work is the good example: the informative
+result was a *negative* one, that lithium loading does not change how fast water diffuses in
+an open channel, and a negative only counts as an answer if the question was sharpened enough
+beforehand for it to eliminate something.
+
 ## Where this sits
 
 It builds directly on Schran, Brezina and Marsalek's committee neural network potentials from
@@ -134,7 +167,3 @@ Read alongside [GAP-20](/work/carbon-gap-20/), the two form a coherent sequence 
 contradiction: build the general-purpose potential, establish what it costs in effort and in
 accuracy, then make the case for a cheap state-point-specific alternative where generality is
 not what the question requires.
-
-The nanotube systems here were demonstrations of the protocol. A year later they became the
-object of study in [their own right](/work/nanotube-water-flow/), scaled from a single
-(12,12) tube to sixteen tubes up to 5.5 nm across.

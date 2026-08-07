@@ -163,7 +163,9 @@ Four top-level routes. Resist adding a fifth.
 
 ### Navigation
 
-Header: `Work · Writing · CV`. That's it. About is reached from the footer and from your name. The nav is not sticky — the gallery convention is that chrome gets out of the way.
+Header: `Work · Writing · CV · About` — all four top-level routes, and nothing else. Your name sits opposite and is the route home. The nav is not sticky — the gallery convention is that chrome gets out of the way.
+
+> Revised 2026-08-05. This previously read `Work · Writing · CV`, with About reached from the footer and from your name, and the name carried `, PhD`. Hiding a quarter of the site behind the wordmark made About the one route with no signpost.
 
 ---
 
@@ -234,7 +236,9 @@ Scale (fluid where it matters):
 | `--t-small` | 0.9375rem | Wall-label values, footer |
 | `--t-label` | 0.6875rem | The label primitive |
 
-Measure: prose caps at **62ch**, hero paragraph at **56ch**, statement at **19ch**.
+Measure: prose caps at **74ch**, hero paragraph at **56ch**, statement at **19ch**. Figures and the rule under a page title cap at **54rem** (`--measure-figure`), which is the article's outer edge — the shell is only the left rail.
+
+> Revised 2026-08-05. Prose was 62ch and the plate broke out to the full shell, making every figure roughly twice the width of the text it belonged to.
 
 ### 5.3 Layout
 
@@ -301,7 +305,7 @@ Captions are real captions: state what is shown, how it was produced, and why it
 |---|---|
 | `SiteHead` / `SiteFoot` | Static. `aria-current` on the active nav item. |
 | `Note.astro` | Compact writing-index row: date, title, one-line kicker. |
-| `Prose.astro` | Long-form layout: 62ch measure, KaTeX, Shiki, footnotes, figure styling. |
+| `Prose.astro` | Long-form layout: 74ch measure, KaTeX, Shiki, footnotes, figure styling. |
 | `Demo.astro` | Click-to-load frame for interactive demos. Fully specified in doc 03. |
 | `PubList.astro` | Renders `publications.json`. Author name emphasised; DOI + PDF links. |
 
@@ -344,7 +348,7 @@ Non-negotiable, checked before each deploy:
 - Lighthouse ≥ 95 on performance, accessibility, best practices, SEO for `/`, `/work/`, a project page and a post.
 - Total JS on `/` and `/writing/*`: **0 KB** (demo pages excepted).
 - Largest Contentful Paint < 1.2s on a simulated 4G connection.
-- Keyboard navigable throughout, visible focus rings (`--lustre`, 2px, 3px offset).
+- Keyboard navigable throughout, visible focus rings (`--lustre-deep`, 2px, 3px offset). The ring uses the deep accent, not the bright one: WCAG 2.2 wants 3:1 on a focus indicator and `--lustre` is 1.96:1 on `--paper`.
 - Text contrast ≥ 4.5:1. Note: `--graphite` on `--paper` is ~5.4:1 — fine for body, but do not lighten it further.
 - Every image has meaningful `alt`; every figure has a caption.
 - Works with JavaScript disabled, demos excepted.
