@@ -51,28 +51,38 @@ to have both in a single model, and to say precisely what having both costs.
 ## What we built
 
 A Gaussian approximation potential trained on plane-wave DFT with the dispersion-inclusive
-optB88-vdW functional, over a final training set of 6,088 configurations. It merges two
-existing databases, the amorphous-carbon set behind GAP-17 and the graphene set from the 2018
-paper, and extends them with point defects, surfaces, nanotubes and other nanostructures. Every configuration was recomputed at
-one consistent level of theory regardless of where it came from. That recomputation is
-unglamorous and it is what makes merging two independently constructed databases defensible
-at all; without it the model would be fitting the difference between two functionals as if it
-were physics.
+optB88-vdW functional, over a final training set of 6,088 configurations. The regression is a
+fairly standard GAP; the substance of the work, and the part that took by far the longest, was
+assembling the training set behind it.
 
-Two pieces of model engineering carry most of the weight.
+Rather than sample carbon opportunistically, we set out to enumerate its structural space. The
+database extends the amorphous-carbon set behind GAP-17 and the graphene set from the 2018
+paper with diamond and graphite, a library of every fullerene under 240 atoms, every nanotube
+chirality with indices 3 ≤ n, m ≤ 10 and a unit cell under 240 atoms, the exotic and
+hypothetical allotropes of the SACADA database, the low-index crystal surfaces and their
+reconstructions, and a large catalogue of defect structures. For each of these, ab initio and
+GAP-driven molecular dynamics across a range of temperatures sampled the phase space around the
+minimum, so the fit would see the thermally distorted structures a real simulation visits and
+not just the ideal geometry. That produced roughly 17,000 candidate configurations of one to
+240 atoms, every one recomputed at a single consistent level of theory regardless of its
+origin; without that recomputation the model would be fitting the difference between two
+functionals as if it were physics.
 
-The first is a semi-analytical spline fitted to an r⁻⁶ decay, added to the two-body term. The
-SOAP descriptor has a finite cutoff and simply cannot see interlayer distances, so without an
-explicit long-range term the layers in graphite do not attract one another and the whole
-structure is unbound. Dispersion is not a correction here; it is the interaction holding half
-the phase diagram together.
+Seventeen thousand is more than the fit can carry, so the set was curated rather than
+truncated. Farthest-point sampling took the most diverse configurations in descriptor space,
+in place of the usual practice of sparsifying the whole database, and that selection was then
+augmented with the GAP-17 data and around a thousand structures added by hand to pin down
+particular crystalline, defect and surface properties. Enumerating, sampling and curating this
+database, rather than any single modelling trick, was the bulk of the work, and it is the part
+someone building a different carbon model would still want today.
 
-The second is a systematic scan of the SOAP hyperparameters, cutoff radius and number of
-sparse points and basis order, against force error on a held-out set, rather than inheriting
-the defaults that had accumulated in the literature. We settled on a 4.5 Å cutoff and 9000 sparse
-points. The force error converges by roughly 1500 sparse points, so 9000 is well past
-saturation, but the additional evaluation cost is negligible and the margin is cheap
-insurance against configurations the scan did not cover.
+Two smaller pieces of engineering make the fit usable. A semi-analytical spline fitted to an
+r⁻⁶ decay is added to the two-body term, because the SOAP descriptor has a finite cutoff and
+cannot see interlayer distances, so without it the layers in graphite do not bind at all. The
+SOAP hyperparameters, cutoff radius and number of sparse points and basis order, were scanned
+against force error on a held-out set rather than inherited from the literature, settling on a
+4.5 Å cutoff and 9000 sparse points; the force error converges by roughly 1500, so the rest is
+cheap insurance against configurations the scan did not cover.
 
 ## What it showed
 
