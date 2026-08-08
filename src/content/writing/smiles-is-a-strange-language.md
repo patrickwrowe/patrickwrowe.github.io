@@ -4,8 +4,7 @@ date: 2026-06-09
 kicker: Canonicalisation, invalid strings, and what tokenisation costs you.
 tags: [generative-models, cheminformatics]
 stub: true
-stubNote: >-
-  Title and kicker are from the prototype; the prose below is an outline, not a finished piece.
+stubNote: An outline rather than a finished piece.
 ---
 
 ## It looks like text and it is not

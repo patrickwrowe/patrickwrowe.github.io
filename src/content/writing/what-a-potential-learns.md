@@ -6,8 +6,7 @@ tags: [interatomic-potentials, machine-learning]
 math: true
 dateless: true
 stub: true
-stubNote: >-
-  Title and kicker are from the prototype; the prose below is an outline, not a finished piece. Spec 02 §9 nominates this as one of the three posts worth writing, on the grounds that it is a piece nobody else can write.
+stubNote: An outline rather than a finished piece.
 ---
 
 ## The descriptor is the whole game

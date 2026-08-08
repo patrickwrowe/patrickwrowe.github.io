@@ -4,8 +4,7 @@ date: 2026-05-19
 kicker: The gap between a good validation number and a decision someone will act on.
 tags: [ml-engineering, drug-discovery]
 stub: true
-stubNote: >-
-  Title and kicker are from the prototype; the prose below is an outline, not a finished piece. This one is drawn from work at AbCellera and SandboxAQ, so it needs a pass for what is publishable before it goes live.
+stubNote: An outline rather than a finished piece.
 ---
 
 ## The validation number is the easy part

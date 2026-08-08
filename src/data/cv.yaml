@@ -1,12 +1,8 @@
-# Single source of truth for the CV — spec 02 §5.
+# CV content, transcribed from my CV; the `current` entry postdates the PDF.
 #
-# Transcribed from Patrick_Rowe_CV.pdf. Every line below comes from that document;
-# nothing here is inferred. The one exception is `current`, which the PDF predates —
-# it was confirmed separately and the PDF needs a refresh to match.
-#
-# Periods are free strings rather than parsed dates because the source CV uses mixed
-# precision ("May 2022 – Oct 2024" but also "2016 – 2020"), and rounding those to a
-# common format would assert precision the record does not have.
+# Periods are kept as free strings rather than parsed dates because the source CV mixes
+# precision ("May 2022 – Oct 2024" but also "2016 – 2020"), and forcing a common format
+# would assert precision the record does not have.
 
 name: Patrick Rowe
 postnominals: PhD

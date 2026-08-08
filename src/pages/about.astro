@@ -1,10 +1,6 @@
 ---
 import Prose from "@/layouts/Prose.astro";
-import DraftNotice from "@/components/DraftNotice.astro";
 import cv from "@/data/cv.yaml";
-
-// Spec 01 §4: short bio, photo, contact, the climbing/mountaineering paragraph.
-// Everything here is drawn from Patrick_Rowe_CV.pdf; the photo is still missing.
 ---
 
 <Prose
@@ -61,8 +57,4 @@ import cv from "@/data/cv.yaml";
     The fastest way to reach me is
     <a href={`mailto:${cv.links.email}`}>{cv.links.email}</a>.
   </p>
-
-  <DraftNotice>
-    Still missing: a photo. Spec 01 §4 calls for one on this page.
-  </DraftNotice>
 </Prose>

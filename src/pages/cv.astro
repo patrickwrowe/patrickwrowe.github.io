@@ -2,11 +2,9 @@
 import Base from "@/layouts/Base.astro";
 import cv from "@/data/cv.yaml";
 
-// src/data/cv.yaml is the single source — spec 02 §5. Periods are rendered as the
-// free strings the source CV uses, so no date parsing or formatting happens here.
-//
-// The YAML is not schema-checked (see src/env.d.ts), so these shapes are asserted
-// rather than validated.
+// Content comes from src/data/cv.yaml. Periods are rendered as the free strings the
+// source CV uses, so no date parsing or formatting happens here; the shapes below are
+// asserted rather than schema-checked.
 interface Entry {
   role?: string;
   qualification?: string;
