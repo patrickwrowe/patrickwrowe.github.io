@@ -18,25 +18,21 @@ const notes = (await getCollection("writing", isPublished))
 ---
 
 <Base
-  title="Patrick Rowe — Machine learning for molecules, materials and proteins"
+  title="Patrick Rowe. AI for science: molecules, materials and proteins"
   description="Patrick Rowe builds machine learning models for molecules, materials and proteins."
 >
   <section class="shell hero">
     <h1 class="hero__statement">Machine learning for molecules, materials and proteins.</h1>
     <p class="hero__body">
-      I build models that stand in for measurements too slow or too expensive to make:
-      interatomic potentials for carbon, property prediction for small molecules, sequence
-      models for antibody engineering. Currently a machine learning engineer at SandboxAQ,
-      working on drug discovery. Previously AbCellera, Cambridge and UCL.
+      Simulation and machine learnign for challenging scientific problems. Machine learning forcefields, 
+      sequence models for antibody engineering, small molecule property prediction for drug discovery. 
+      Currently an ML Engingeer in the AI Sim team at SandboxAQ. Previously AbCellera, Cambridge and UCL.
     </p>
 
     <Plate n={1} animate>
       <AmorphousCarbon />
       <Fragment slot="caption">
-        Amorphous graphene, <b>265 atoms</b>. A three-coordinate network relaxed from a
-        hexagonal sheet after 26 Stone&ndash;Wales bond rotations; five- and seven-membered
-        rings shaded. Disordered carbon of this kind is what <b>GAP-20</b> was built to
-        describe.
+        Stone&ndash;Wales defects in disordered graphene. 
       </Fragment>
     </Plate>
   </section>

@@ -13,6 +13,7 @@ __pycache__/
 # Env / secrets
 .env
 !.env.example
+.docs/
 
 # OS
 .DS_Store
