@@ -7,10 +7,10 @@ import yaml from "@rollup/plugin-yaml";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
-// TODO: replace with the real domain once registered (spec 00 §"Do these three things
-// first", item 2). Sitemap and RSS both need this to be the canonical origin.
+// Canonical origin for the custom domain (see public/CNAME); the sitemap and RSS feed
+// use this as their absolute base.
 export default defineConfig({
-  site: "https://patrickwrowe.github.io",
+  site: "https://www.patrickwrowe.com",
   trailingSlash: "always",
   integrations: [mdx(), sitemap()],
   // Self-hosted via the Astro 6 Fonts API — spec 01 §5.2. Three roles, three faces:
