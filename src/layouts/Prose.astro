@@ -10,12 +10,14 @@ interface Props {
   /** Mono metadata row above the title: year, date, venue. */
   meta?: string;
   fields?: { label: string; value: string }[];
+  /** The <title> tag, when it should differ from the visible heading; defaults to title. */
+  documentTitle?: string;
 }
 
-const { title, description, section, math = false, meta, fields = [] } = Astro.props;
+const { title, description, section, math = false, meta, fields = [], documentTitle } = Astro.props;
 ---
 
-<Base title={title} description={description} section={section} math={math}>
+<Base title={documentTitle ?? title} description={description} section={section} math={math}>
   <article class="shell prose-page">
     <header class="prose-head">
       {meta && <p class="label prose-head__meta">{meta}</p>}

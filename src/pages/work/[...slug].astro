@@ -31,7 +31,8 @@ const publicationsHere = isTheme
 ---
 
 <Prose
-  title={`${data.title} — Patrick Rowe`}
+  title={data.title}
+  documentTitle={`${data.title} — Patrick Rowe`}
   description={data.summary}
   section="work"
   math={data.math}
@@ -190,6 +191,9 @@ const publicationsHere = isTheme
     color: var(--graphite);
     border-bottom: 0;
   }
+  .prose a[href="#contents"]:hover {
+    color: var(--lustre);
+  }
   /* The section a reader arrived at from the Publications band or a redirect. State,
      not decoration, so this is a legitimate use of the accent. */
   .prose h2:target {
@@ -204,6 +208,9 @@ const publicationsHere = isTheme
   }
   .prose .pubs-here .pub__links a {
     border-bottom: 0;
+  }
+  .prose .pubs-here .pub + .pub {
+    margin-top: 0;
   }
   @media (max-width: 640px) {
     .prose .contents ol {
