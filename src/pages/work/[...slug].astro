@@ -5,7 +5,9 @@ import { Image } from "astro:assets";
 import Prose from "@/layouts/Prose.astro";
 import Plate from "@/components/Plate.astro";
 import DraftNotice from "@/components/DraftNotice.astro";
+import PubList from "@/components/PubList.astro";
 import { wallLabelFields, isPublished } from "@/lib/content";
+import { readingMinutes, byYearDesc } from "@/lib/publications";
 
 export const getStaticPaths = (async () => {
   const work = await getCollection("work", isPublished);
@@ -13,16 +15,27 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const { data } = entry;
+
+// Theme articles run to several thousand words — restructure spec §3.3. The contents
+// list is generated from the rendered headings so it cannot drift from them, the meta
+// row carries a reading time, and the publications the article covers are listed at
+// the end from the same record that feeds the Publications band.
+const isTheme = data.kind === "theme";
+const contents = isTheme ? headings.filter((heading) => heading.depth === 2) : [];
+const meta = isTheme ? `${data.year} · ${readingMinutes(entry.body ?? "")} MIN` : data.year;
+const publicationsHere = isTheme
+  ? (await getCollection("publications")).filter((pub) => pub.data.theme.id === entry.id).sort(byYearDesc)
+  : [];
 ---
 
 <Prose
-  title={data.title}
+  title={`${data.title} — Patrick Rowe`}
   description={data.summary}
   section="work"
   math={data.math}
-  meta={data.year}
+  meta={meta}
   fields={wallLabelFields(data)}
 >
   {
@@ -53,7 +66,31 @@ const { data } = entry;
     )
   }
 
+  {
+    contents.length > 0 && (
+      <nav id="contents" class="contents" aria-label="Contents">
+        <p class="label">Contents</p>
+        <ol>
+          {contents.map((heading) => (
+            <li>
+              <a href={`#${heading.slug}`}>{heading.text}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )
+  }
+
   <Content />
+
+  {
+    publicationsHere.length > 0 && (
+      <section class="pubs-here">
+        <h2 id="publications-in-this-article">Publications in this article</h2>
+        <PubList entries={publicationsHere} onThemePage />
+      </section>
+    )
+  }
 
   {
     data.links.length > 0 && (
@@ -67,8 +104,9 @@ const { data } = entry;
 </Prose>
 
 <style is:global>
-  /* Author list on a paper page. Mono would fight the wall label directly above it,
-     so this stays serif and small — a citation, not another metadata row. */
+  /* Author list on a paper page, and the Cite line that opens a theme section. Mono
+     would fight the wall label directly above it, so this stays serif and small — a
+     citation, not another metadata row. */
   .prose .authors {
     font-family: var(--serif);
     font-size: var(--t-small);
@@ -80,6 +118,10 @@ const { data } = entry;
   }
   .prose .authors a {
     border-bottom: 1px solid var(--hairline);
+  }
+  .prose .cite {
+    margin-top: 0.75em;
+    margin-bottom: 1.5em;
   }
   .prose .credit {
     display: block;
@@ -107,5 +149,65 @@ const { data } = entry;
   }
   .prose .links a:hover {
     color: var(--lustre);
+  }
+
+  /* Theme-article furniture — restructure spec §3.3. */
+  .prose .contents {
+    margin-top: 2.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .prose .contents ol {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 0.75rem;
+    font-family: var(--sans);
+    font-size: var(--t-small);
+    line-height: 1.6;
+    columns: 2;
+    column-gap: 2rem;
+  }
+  .prose .contents li {
+    break-inside: avoid;
+  }
+  .prose .contents li + li {
+    margin-top: 0.2em;
+  }
+  .prose .contents a {
+    border-bottom: 0;
+    color: var(--ink-soft);
+  }
+  .prose .contents a:hover {
+    color: var(--lustre);
+  }
+  /* The fixed return line every section ends with: `[Contents ↑](#contents)`. */
+  .prose a[href="#contents"] {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    border-bottom: 0;
+  }
+  /* The section a reader arrived at from the Publications band or a redirect. State,
+     not decoration, so this is a legitimate use of the accent. */
+  .prose h2:target {
+    color: var(--lustre);
+  }
+  .prose .pubs-here {
+    margin-top: 3.5rem;
+  }
+  .prose .pubs-here .pubs {
+    padding-left: 0;
+    margin-top: 1rem;
+  }
+  .prose .pubs-here .pub__links a {
+    border-bottom: 0;
+  }
+  @media (max-width: 640px) {
+    .prose .contents ol {
+      columns: 1;
+    }
   }
 </style>
