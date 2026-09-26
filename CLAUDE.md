@@ -1,14 +1,9 @@
 # CLAUDE.md
 
 Personal portfolio site for Patrick Rowe — ML engineer, computational chemistry/physics.
-Astro 6 → Cloudflare Pages. Static-first, zero JS by default, markdown in git, Python for
-every data pipeline.
-
-**Status: not yet scaffolded.** `patrickwrowe.github.io/` still holds the old hand-written
-static site (`index.html`, `styles.css`, `css/`, `js/`) — there is no `package.json`, no
-`src/`, no `scripts/`. Everything below describes the target, so the Invariants, Commands
-and Definition of done sections are aspirational until the Astro project exists. Delete this
-paragraph once it does.
+Astro 6 → GitHub Pages, built and deployed by `.github/workflows/deploy.yml` on every push
+to `main`. Static-first, zero JS by default, markdown in git, Python for every data
+pipeline.
 
 ## Read the spec before building
 
@@ -21,6 +16,12 @@ code — they contain decisions with reasons, and re-deriving them wastes a sess
 | Routes, IA, hosting, headers, performance budget | `docs/001-initial-spec-docs/01-...` §4, §7–8 |
 | New post, new project entry, schemas, notebooks, bibliography, CV | `docs/001-initial-spec-docs/02-content-and-publishing.md` |
 | Anything interactive, ONNX, WASM, RDKit, a hosted endpoint | `docs/001-initial-spec-docs/03-interactive-demos.md` |
+| Any content change, the publications record, theme articles, the copy pipeline | `docs/superpowers/specs/2026-09-26-content-restructure-and-rewrite-design.md` (§3 structure, §4 voice, §5 pipeline) |
+
+The three original specs and `docs/002-authoring-guide.md` predate the restructure. Where
+they disagree with the restructure spec, the restructure spec wins; it notes each
+disagreement. `docs/` is gitignored on purpose (the remote is public), so these files
+exist only locally.
 
 If the code and the spec disagree, **stop and say so**. Don't silently follow either one.
 
@@ -57,25 +58,41 @@ Do not break these without asking first.
 - **`prefers-reduced-motion: reduce` disables all animation.** Every time.
 - **Four top-level routes.** Work, Writing, CV, About. Adding a fifth is a design decision,
   not an implementation detail.
+- **Anchor-target `##` headings are permanent URLs.** They are the plain name of the work,
+  sentence case, five words or fewer, unique in the article, exactly as the table in the
+  restructure spec §3.6 gives them. No rewrite pass may change one.
+- **Every `##` section of a theme article ends with `[Contents ↑](#contents)`.**
+  `scripts/check_links.py` fails otherwise.
+- **`→` is internal, `↗` is external.** Link text names the target, never "here"; a DOI is
+  never the link text.
+- **Copy goes through the pipeline** in restructure spec §5: dossier, draft, Opus stylist,
+  separate Opus fact audit, Patrick. Blurbs, captions, alt text and wall-label fields are
+  part of the article and go through the same audit. The voice guide is
+  `docs/voice/derek-lowe.md` and the terminology sheet `docs/voice/terminology.md`.
 
 ## Conventions that differ from the obvious default
 
 - **Python owns anything that transforms data**; JS only renders. Bibliography parsing,
   notebook conversion, figure generation and model export are scripts in `scripts/`. Do not
   add a JS BibTeX parser, a JS notebook converter, or a build plugin that does data work.
-- **`src/data/publications.json` is generated.** Edit `scripts/publications.bib` and re-run
-  `bib_to_json.py`. Same for anything else marked generated in a header comment.
+- **`src/data/publications.yaml` is the publication record**, hand-maintained and validated
+  by the `publications` collection in `src/content.config.ts`. It feeds the Publications
+  band on `/work/`, each theme article's closing list, the `Cite` opener and `/cv/`. An
+  entry's `theme` is a reference to a `work` entry and its `anchor` is a `##` heading id in
+  that article; `scripts/check_links.py` confirms every anchor exists after a build.
 - **Content bends to the schema, not the reverse.** If a project won't fit the Zod schema in
   `src/content.config.ts`, fix the content. Loosening the schema needs a reason.
 - **Figures are SVG produced by a committed script** in `scripts/figures/`, not hand-drawn,
   never a screenshot of a plot. Strip white backgrounds so `--plate` shows through.
-- **Every molecular rendering of carbon goes through `scripts/figures/render_cluster.py`.**
-  It takes XYZ and emits a monochrome ball-and-stick SVG whose every stroke resolves to
-  `var(--ink)`, with depth encoded as opacity. Extend it rather than reaching for VMD,
-  Ovito or a fresh script — a screenshot of a viewer arrives with its own palette and
-  fights the page. Structures live beside it in `scripts/figures/data/` so figures
-  regenerate. Inline the output with `?raw` and `<Fragment set:html={...}>`, never
-  `<Image>`, or the custom properties never resolve.
+- **Two renderers, each with a job** (restructure spec §6.2). Single structures and small
+  slabs are monochrome SVG from `scripts/figures/render_cluster.py`: every stroke resolves
+  to `var(--ink)`, depth is opacity, inline it with `?raw` and
+  `<Fragment set:html={...}>`, never `<Image>`. Grids of large boxes and one hero render
+  per theme article are greyscale PNG from Blender via `molrender`: one grey per species,
+  no hue, view transform Standard, world pure white so `multiply` onto `--plate` shows no
+  box, placed with `<Image>` inside a `<Plate>`. Either way the producing script is
+  committed under `scripts/figures/` and its input structures under
+  `scripts/figures/data/`, so every figure regenerates. Never a screenshot of a viewer.
 - **Prose is British English** (—ise, —isation). Identifiers and library APIs stay as the
   library spells them.
 - **Internal links carry trailing slashes**: `/work/carbon-gap-20/`.
@@ -87,10 +104,16 @@ npm run dev              # localhost:4321
 npm run build            # also the type/schema check — run before claiming done
 npm run preview          # verify the built output, not just dev
 
-uv run scripts/bib_to_json.py            # publications.bib -> publications.json
-uv run scripts/notebook_to_post.py ...   # notebook -> writing entry
-uv run scripts/export_onnx.py            # checkpoint -> public/demos/<slug>/
+npm test                                  # node --test: src/lib helpers
+uv run scripts/check_links.py             # after npm run build: anchors, hrefs, redirects, return links, Fig. n
+uv run pytest scripts/tests               # the link check's own tests
+PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...]
+uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
+uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
 ```
+
+Inside a sandboxed session `uv` cannot write its cache; `.venv/bin/python` and
+`.venv/bin/pytest` run the same things.
 
 ## Pitfalls
 
