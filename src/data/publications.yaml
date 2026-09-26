@@ -1,5 +1,166 @@
 # The publication record. Schema: src/content.config.ts (`publications`). Restructure
 # spec §3.4 for the field meanings and §4.4 for the blurb brief. Keyed by `id`, which is
 # the slug of the paper page each entry replaces; `anchor` is the heading id in the theme
-# article, from the table in spec §3.6.
-[]
+# article, from the table in spec §3.6. Blurbs are written in each theme's session.
+# Posters, the thesis and the sodium manuscript are added in session 7.
+
+- id: graphene-potential
+  kind: paper
+  title: Development of a machine learning potential for graphene
+  authors: [P. Rowe, G. Csányi, D. Alfè, A. Michaelides]
+  venue: Phys. Rev. B 97, 054303
+  year: 2018
+  doi: 10.1103/PhysRevB.97.054303
+  theme: carbon
+  anchor: graphene-potential
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/1710.04187" }
+    - { label: Code, url: "https://github.com/libAtoms/QUIP" }
+
+- id: carbon-gap-20
+  kind: paper
+  title: An accurate and transferable machine learning potential for carbon
+  authors: [P. Rowe, V. L. Deringer, P. Gasparotto, G. Csányi, A. Michaelides]
+  venue: J. Chem. Phys. 153, 034702
+  year: 2020
+  doi: 10.1063/5.0005084
+  theme: carbon
+  anchor: gap-20
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2006.13655" }
+    - { label: Data, url: "https://doi.org/10.17863/CAM.54529" }
+    - { label: Code, url: "https://github.com/patrickwrowe/Carbon_GAP" }
+    - { label: Docs, url: "https://libatoms.github.io/GAP/installation.html" }
+
+- id: graphene-corrugation
+  kind: paper
+  title: Defect-dependent corrugation in graphene
+  authors: [F. L. Thiemann, P. Rowe, A. Zen, E. A. Müller, A. Michaelides]
+  venue: Nano Lett. 21, 8143–8150
+  year: 2021
+  doi: 10.1021/acs.nanolett.1c02585
+  theme: carbon
+  anchor: defect-corrugation
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2107.01128" }
+
+- id: carbon-clusters
+  kind: paper
+  title: "Accelerating the prediction of large carbon clusters via structure search: evaluation of machine-learning and classical potentials"
+  authors: [B. Karasulu, J.-M. Leyssale, P. Rowe, C. Weber, C. de Tomas]
+  venue: Carbon 191, 255–266
+  year: 2022
+  doi: 10.1016/j.carbon.2022.01.031
+  theme: carbon
+  anchor: cluster-benchmark
+  links:
+    - { label: Preprint, url: "https://hal.science/hal-03832937v1" }
+    - { label: Data, url: "https://github.com/bkarasulu/Carbon-PP-Benchmark-Paper-SI" }
+
+- id: vermiculite-membranes
+  kind: paper
+  title: Cation-controlled wetting properties of vermiculite membranes and its promise for fouling resistant oil–water separation
+  authors: [K. Huang, P. Rowe, C. Chi, V. Sreepal, T. Bohn, K.-G. Zhou, Y. Su, E. Prestat, P. Balakrishna Pillai, C. T. Cherian, A. Michaelides, R. R. Nair]
+  venue: Nat. Commun. 11, 1097
+  year: 2020
+  doi: 10.1038/s41467-020-14854-4
+  theme: two-dimensional-and-confined
+  anchor: vermiculite-membranes
+
+- id: hbn-rippling
+  kind: paper
+  title: Machine learning potential for hexagonal boron nitride applied to thermally and mechanically induced rippling
+  authors: [F. L. Thiemann, P. Rowe, E. A. Müller, A. Michaelides]
+  venue: J. Phys. Chem. C 124, 22278–22290
+  year: 2020
+  doi: 10.1021/acs.jpcc.0c05831
+  theme: two-dimensional-and-confined
+  anchor: boron-nitride-rippling
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2007.11448" }
+    - { label: Data, url: "https://doi.org/10.17863/CAM.66112" }
+    - { label: Code, url: "https://github.com/libAtoms/QUIP" }
+
+- id: aqueous-potentials
+  kind: paper
+  title: Machine learning potentials for complex aqueous systems made simple
+  authors: [C. Schran, F. L. Thiemann, P. Rowe, E. A. Müller, O. Marsalek, A. Michaelides]
+  venue: Proc. Natl. Acad. Sci. U.S.A. 118, e2110077118
+  year: 2021
+  doi: 10.1073/pnas.2110077118
+  theme: two-dimensional-and-confined
+  anchor: aqueous-potentials
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2106.00048" }
+    - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
+    - { label: Data, url: "https://doi.org/10.5281/zenodo.5235246" }
+
+- id: nanotube-water-flow
+  kind: paper
+  title: "Water flow in single-wall nanotubes: oxygen makes it slip, hydrogen makes it stick"
+  authors: [F. L. Thiemann, C. Schran, P. Rowe, E. A. Müller, A. Michaelides]
+  venue: ACS Nano 16, 10775–10782
+  year: 2022
+  doi: 10.1021/acsnano.2c02784
+  theme: two-dimensional-and-confined
+  anchor: nanotube-water-flow
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2202.04955" }
+    - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
+
+- id: mos2-membranes
+  kind: paper
+  title: pH-dependent water permeability switching and its memory in MoS₂ membranes
+  authors: [C. Hu, A. Achari, P. Rowe, H. Xiao, S. Suran, Z. Li, K. Huang, C. Chi, C. T. Cherian, V. Sreepal, P. D. Bentley, A. Pratt, N. Zhang, K. S. Novoselov, A. Michaelides, R. R. Nair]
+  venue: Nature 616, 719–723
+  year: 2023
+  doi: 10.1038/s41586-023-05849-4
+  theme: two-dimensional-and-confined
+  anchor: molybdenum-disulfide-membranes
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/2301.10195" }
+
+- id: excitonic-interactions
+  kind: paper
+  title: Importance and nature of short-range excitonic interactions in light harvesting complexes and organic semiconductors
+  authors: [R. P. Fornari, P. Rowe, D. Padula, A. Troisi]
+  venue: J. Chem. Theory Comput. 13, 3754–3763
+  year: 2017
+  doi: 10.1021/acs.jctc.7b00328
+  theme: excited-states
+  anchor: excitonic-interactions
+  links:
+    - { label: Preprint, url: "http://wrap.warwick.ac.uk/98549" }
+
+- id: multichromophore-dynamics
+  kind: paper
+  title: Structure–dynamics relation in physically plausible multi-chromophore systems
+  authors: [G. C. Knee, P. Rowe, L. D. Smith, A. Troisi, A. Datta]
+  venue: J. Phys. Chem. Lett. 8, 2328–2333
+  year: 2017
+  doi: 10.1021/acs.jpclett.7b00829
+  theme: excited-states
+  anchor: multichromophore-dynamics
+  links:
+    - { label: Preprint, url: "https://arxiv.org/abs/1704.01795" }
+    - { label: Data, url: "https://doi.org/10.6084/m9.figshare.c.3784874.v1" }
+
+- id: cd3-binder-selection
+  kind: paper
+  title: A rational approach for selecting CD3-binding antibodies for T-cell engager development
+  authors: [V. de Puyraimond, P. Rowe, J. Mai, P. Pouliot, K. Caldwell, L. Clifford, A. Goodman, P. Farber, H. Dhupar, D. Tortora, P. Bergqvist, J. Reimer, K. Herve, V. Li, I. Yu, J. Marwick, S. Carrarra, N. Blamey, M. Cid, C.-L. Crichlow, L. M. Bolten, T. Pinsky, G. Volkers, J. Fernandes Scortecci, G. Bodhankar, C. De Jong, S. Cullen, P. Xiang, C. Lai, A. Lee, G. Conaghan, A. Samiotakis, S. Hannie, R. Chappell, E. Lathouwers, L. Chong, K. Gibson, S. K. Masterman, K. Brown, K. Bullock, R. Tonikian, L. DeVorkin, S. Duncan, A. Yamniuk, K. Dalal, T. M. Jacobs, B. C. Barnhart]
+  venue: J. Immunother. Cancer 11 (Suppl 1), A1523
+  year: 2023
+  doi: 10.1136/jitc-2023-SITC2023.1367
+  theme: antibodies
+  anchor: cd3-binder-selection
+
+- id: tce-pmhc
+  kind: paper
+  title: Discovery and development of functional and specific T-cell engagers against a MAGE-A4 pMHC
+  authors: [D. Tortora, P. Bergqvist, T. Jacobs, P. Farber, R. Blackler, A. Samiotakis, H. Dhupar, A. Goodman, C.-L. Crichlow, M. Cid, J. Fernandes Scortecci, R. Goya, L. Chong, K. Gibson, E. Solano Salgado, P. Xiang, A. Lee, I. Yu, N. Blamey, G. Conaghan, V. de Puyraimond, C. Robb, F. Li, C. Briercliffe, P. Rowe, K. Dalal, S. Masterman, T. Fernandez, K. Bullock, R. Tonikian, B. C. Barnhart]
+  venue: J. Immunother. Cancer 11 (Suppl 1), A1550
+  year: 2023
+  doi: 10.1136/jitc-2023-SITC2023.1395
+  theme: antibodies
+  anchor: mage-a4-engagers
