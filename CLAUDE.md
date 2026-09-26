@@ -82,8 +82,9 @@ Do not break these without asking first.
   that article; `scripts/check_links.py` confirms every anchor exists after a build.
 - **Content bends to the schema, not the reverse.** If a project won't fit the Zod schema in
   `src/content.config.ts`, fix the content. Loosening the schema needs a reason.
-- **Figures are SVG produced by a committed script** in `scripts/figures/`, not hand-drawn,
-  never a screenshot of a plot. Strip white backgrounds so `--plate` shows through.
+- **Data figures are SVG produced by a committed script** in `scripts/figures/`: plots,
+  statistics and diagrams, not hand-drawn, never a screenshot of a plot. Strip white
+  backgrounds so `--plate` shows through. Molecular renderings follow the next bullet.
 - **Two renderers, each with a job** (restructure spec §6.2). Single structures and small
   slabs are monochrome SVG from `scripts/figures/render_cluster.py`: every stroke resolves
   to `var(--ink)`, depth is opacity, inline it with `?raw` and
@@ -133,7 +134,8 @@ Inside a sandboxed session `uv` cannot write its cache; `.venv/bin/python` and
 
 A task is not finished until:
 
-1. `npm run build` passes.
+1. `npm run build` passes, then `uv run scripts/check_links.py` reports 0 failed and
+   `npm test` passes.
 2. Visual changes have been **checked in a browser at 1280px and 390px** — screenshot it,
    don't reason about the CSS.
 3. Keyboard navigation and visible focus still work on anything interactive.
