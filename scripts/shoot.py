@@ -27,14 +27,24 @@ ROUTES = {
 
 
 def main() -> None:
+    """Screenshot ROUTES, or the routes given after the output directory, at both widths.
+
+    Usage:
+        python scripts/shoot.py [outdir] [route ...]
+
+    Names for routes given on the command line come from the route itself, so
+    ``/work/carbon/`` is saved as ``work-carbon-desktop.png``.
+    """
     out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "screenshots")
     out.mkdir(parents=True, exist_ok=True)
+    requested = sys.argv[2:]
+    routes = {route.strip("/").replace("/", "-") or "landing": route for route in requested} or ROUTES
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
         for label, width in WIDTHS.items():
             page = browser.new_page(viewport={"width": width, "height": 900})
-            for name, route in ROUTES.items():
+            for name, route in routes.items():
                 page.goto(f"{BASE}{route}", wait_until="networkidle")
                 page.wait_for_timeout(1400)  # let the plate scan-in settle
                 path = out / f"{name}-{label}.png"

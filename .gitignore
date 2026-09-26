@@ -20,3 +20,6 @@ docs/
 
 # Playwright browser binaries (see scripts/shoot.py)
 .playwright/
+
+# scripts/shoot.py output
+screenshots/

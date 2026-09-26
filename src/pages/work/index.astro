@@ -2,21 +2,45 @@
 import { getCollection } from "astro:content";
 import Base from "@/layouts/Base.astro";
 import WallLabel from "@/components/WallLabel.astro";
+import PubList from "@/components/PubList.astro";
 import { wallLabelFields, workSort, isPublished } from "@/lib/content";
+import { byYearDesc } from "@/lib/publications";
 
+// Three bands — restructure spec §3.2. Each band label is the heading at that level, so
+// it must be true of every row under it: Research holds theme articles, Projects holds
+// the standalone pages (a wall clock is not research), Publications holds the record.
+// Paper pages (kind: paper) are no longer listed; they are archived in session 8.
 const all = (await getCollection("work", isPublished)).sort(workSort);
-const projects = all.filter((entry) => entry.data.kind !== "paper");
-const papers = all.filter((entry) => entry.data.kind === "paper");
+const themes = all.filter((entry) => entry.data.kind === "theme");
+const projects = all.filter((entry) => entry.data.kind === "project");
+const publications = (await getCollection("publications")).sort(byYearDesc);
 ---
 
 <Base
   title="Work — Patrick Rowe"
-  description="Selected projects and the publication record: machine learning for molecules, materials and proteins."
+  description="Research articles, projects and the publication record: machine learning for molecules, materials and proteins."
   section="work"
 >
   <section class="shell band">
     <div class="band__head">
-      <h1 class="label">Projects</h1>
+      <h1 class="label">Research</h1>
+      <span class="band__more">{themes.length} entries</span>
+    </div>
+    {
+      themes.map((entry) => (
+        <WallLabel
+          year={entry.data.year}
+          title={entry.data.title}
+          href={`/work/${entry.id}/`}
+          fields={wallLabelFields(entry.data)}
+        />
+      ))
+    }
+  </section>
+
+  <section class="shell band band--tight">
+    <div class="band__head">
+      <h2 class="label">Projects</h2>
       <span class="band__more">{projects.length} entries</span>
     </div>
     {
@@ -32,24 +56,13 @@ const papers = all.filter((entry) => entry.data.kind === "paper");
     }
   </section>
 
-  {
-    papers.length > 0 && (
-      <section class="shell band band--tight">
-        <div class="band__head">
-          <h2 class="label">Papers</h2>
-          <span class="band__more">{papers.length} entries</span>
-        </div>
-        {papers.map((entry) => (
-          <WallLabel
-            year={entry.data.year}
-            title={entry.data.title}
-            href={`/work/${entry.id}/`}
-            fields={wallLabelFields(entry.data)}
-          />
-        ))}
-      </section>
-    )
-  }
+  <section class="shell band band--tight">
+    <div class="band__head">
+      <h2 class="label">Publications</h2>
+      <span class="band__more">{publications.length} entries</span>
+    </div>
+    <PubList entries={publications} blurbs id="publications" />
+  </section>
 </Base>
 
 <style>

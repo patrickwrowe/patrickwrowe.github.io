@@ -1,0 +1,149 @@
+---
+// The publication record as a catalogue band — restructure spec §3.2 and §3.4. Same grid
+// as the wall label so the three bands on /work/ read as one catalogue. Rows are NOT
+// links: each row carries two or more links of its own, and a whole-row link would
+// promise one destination where there are several. Hover applies to each link only.
+import { getEntries, type CollectionEntry } from "astro:content";
+import { listAuthors, kindMarker, externalLink } from "@/lib/publications";
+
+interface Props {
+  entries: CollectionEntry<"publications">[];
+  /** Show the blurb under the citation (the /work/ band). */
+  blurbs?: boolean;
+  /** On a theme page: link "Section ↑" to the anchor here instead of "Read in <theme> →". */
+  onThemePage?: boolean;
+  id?: string;
+}
+const { entries, blurbs = false, onThemePage = false, id } = Astro.props;
+
+// Resolve every entry's theme in one call; getEntries keeps the order of its input.
+const themes = await getEntries(entries.map((entry) => entry.data.theme));
+// Astro resolves reference() lazily, so this is where a typo in `theme` is caught.
+for (const index of entries.keys()) {
+  if (themes[index] === undefined) {
+    throw new Error(
+      `PubList: publication "${entries[index].id}" references theme "${entries[index].data.theme.id}", which is not in src/content/work`,
+    );
+  }
+}
+const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
+---
+
+<ol class="pubs" id={id}>
+  {
+    rows.map(({ pub, theme }) => {
+      const marker = kindMarker(pub.data.kind);
+      const external = externalLink(pub.data);
+      const parts = listAuthors(pub.data.authors);
+      return (
+        <li class="pub">
+          <span class="pub__year">{pub.data.year}</span>
+          <div class="pub__body">
+            <p class="pub__cite">
+              {parts.map((part, index) => (
+                <>
+                  {index > 0 && ", "}
+                  {part.me ? <b>{part.text}</b> : part.text}
+                </>
+              ))}
+              {". "}
+              <em>{pub.data.title}</em>.{pub.data.venue && ` ${pub.data.venue}.`}
+              {marker && <span class="label pub__kind">{marker}</span>}
+            </p>
+            {blurbs && pub.data.blurb && <p class="pub__blurb">{pub.data.blurb}</p>}
+            <p class="pub__links">
+              {onThemePage ? (
+                <a href={`#${pub.data.anchor}`}>Section &uarr;</a>
+              ) : (
+                <a href={`/work/${theme.id}/#${pub.data.anchor}`}>
+                  Read in {theme.data.shortTitle ?? theme.data.title} &rarr;
+                </a>
+              )}
+              {external && <a href={external.href}>{external.label} &nearr;</a>}
+              {pub.data.links.map((link) => (
+                <a href={link.url}>{link.label} &nearr;</a>
+              ))}
+            </p>
+          </div>
+        </li>
+      );
+    })
+  }
+</ol>
+
+<style>
+  .pubs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .pub {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0 1.5rem;
+    align-items: start;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .pub__year {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    color: var(--graphite);
+    padding-top: 0.35rem;
+  }
+  .pub__cite {
+    font-family: var(--serif);
+    font-size: var(--t-body);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: var(--measure-prose);
+  }
+  .pub__cite b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .pub__cite em {
+    color: var(--ink);
+  }
+  .pub__kind {
+    margin-left: 0.6rem;
+  }
+  .pub__blurb {
+    font-family: var(--serif);
+    font-size: var(--t-small);
+    line-height: 1.5;
+    color: var(--ink-quiet);
+    max-width: var(--measure-prose);
+    margin-top: 0.6rem;
+  }
+  .pub__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+  }
+  .pub__links a {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    transition: color var(--transition);
+  }
+  .pub__links a:hover {
+    color: var(--lustre);
+  }
+  @media (max-width: 640px) {
+    .pub {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .pub__year {
+      padding-top: 0;
+      margin-bottom: 0.5rem;
+    }
+  }
+</style>
