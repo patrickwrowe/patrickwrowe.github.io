@@ -10,7 +10,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "check:links": "uv run scripts/check_links.py"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.3",
