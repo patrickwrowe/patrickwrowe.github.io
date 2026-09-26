@@ -38,7 +38,9 @@ def main() -> None:
     out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "screenshots")
     out.mkdir(parents=True, exist_ok=True)
     requested = sys.argv[2:]
-    routes = {route.strip("/").replace("/", "-") or "landing": route for route in requested} or ROUTES
+    routes = {
+        route.strip("/").replace("/", "-") or "landing": route for route in requested
+    } or ROUTES
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()

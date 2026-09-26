@@ -5,6 +5,7 @@
 // promise one destination where there are several. Hover applies to each link only.
 import { getEntries, type CollectionEntry } from "astro:content";
 import { listAuthors, kindMarker, externalLink } from "@/lib/publications";
+import { isPublished } from "@/lib/content";
 
 interface Props {
   entries: CollectionEntry<"publications">[];
@@ -29,7 +30,7 @@ for (const index of entries.keys()) {
 const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
 ---
 
-<ol class="pubs" id={id}>
+<ol class="pubs" id={id} role="list">
   {
     rows.map(({ pub, theme }) => {
       const marker = kindMarker(pub.data.kind);
@@ -45,23 +46,34 @@ const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
                   {index > 0 && ", "}
                   {part.me ? <b>{part.text}</b> : part.text}
                 </>
-              ))}
-              {". "}
+              ))}.
               <em>{pub.data.title}</em>.{pub.data.venue && ` ${pub.data.venue}.`}
               {marker && <span class="label pub__kind">{marker}</span>}
             </p>
             {blurbs && pub.data.blurb && <p class="pub__blurb">{pub.data.blurb}</p>}
             <p class="pub__links">
               {onThemePage ? (
-                <a href={`#${pub.data.anchor}`}>Section &uarr;</a>
+                <a href={`#${pub.data.anchor}`}>
+                  Section <span aria-hidden="true">&uarr;</span>
+                </a>
               ) : (
-                <a href={`/work/${theme.id}/#${pub.data.anchor}`}>
-                  Read in {theme.data.shortTitle ?? theme.data.title} &rarr;
+                // A draft theme has no built page in production, so the row shows only
+                // its external link until the theme ships.
+                isPublished(theme) && (
+                  <a href={`/work/${theme.id}/#${pub.data.anchor}`}>
+                    Read in {theme.data.shortTitle ?? theme.data.title} <span aria-hidden="true">&rarr;</span>
+                  </a>
+                )
+              )}
+              {external && (
+                <a href={external.href}>
+                  {external.label} <span aria-hidden="true">&nearr;</span>
                 </a>
               )}
-              {external && <a href={external.href}>{external.label} &nearr;</a>}
               {pub.data.links.map((link) => (
-                <a href={link.url}>{link.label} &nearr;</a>
+                <a href={link.url}>
+                  {link.label} <span aria-hidden="true">&nearr;</span>
+                </a>
               ))}
             </p>
           </div>
@@ -103,6 +115,7 @@ const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
   .pub__cite b {
     color: var(--ink);
     font-weight: 600;
+    white-space: nowrap;
   }
   .pub__cite em {
     color: var(--ink);

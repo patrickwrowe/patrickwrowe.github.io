@@ -56,12 +56,12 @@ const publications = (await getCollection("publications")).sort(byYearDesc);
     }
   </section>
 
-  <section class="shell band band--tight">
+  <section class="shell band band--tight" id="publications">
     <div class="band__head">
       <h2 class="label">Publications</h2>
       <span class="band__more">{publications.length} entries</span>
     </div>
-    <PubList entries={publications} blurbs id="publications" />
+    <PubList entries={publications} blurbs />
   </section>
 </Base>
 
