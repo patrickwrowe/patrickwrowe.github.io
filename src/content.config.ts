@@ -11,6 +11,8 @@ import { z } from "zod";
 
 const LINK_LABELS = ["Paper", "Code", "Data", "Preprint", "Video", "Docs", "Poster", "Thesis"] as const;
 
+const WALL_LABEL_LIMIT = 90;
+
 const work = defineCollection({
   loader: glob({ pattern: "**/*.mdx", base: "./src/content/work" }),
   schema: ({ image }) =>
@@ -69,6 +71,29 @@ const work = defineCollection({
       // Rendered as a DraftNotice above the body. Same mechanism as `writing`, so
       // there is one way to mark a page provisional across both collections.
       stubNote: z.string().optional(),
+    })
+    // Wall-label cap is restructure spec §3.5. Theme-only: retiring `paper`/`project`
+    // pages (e.g. cho-gap's `result`) still exceed it and must keep building until archived.
+    .superRefine((entry, ctx) => {
+      if (entry.kind !== "theme") return;
+      for (const field of ["method", "system", "result"] as const) {
+        const value = entry[field];
+        if (value === undefined) continue;
+        if (value.length > WALL_LABEL_LIMIT) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `theme wall-label field "${field}" is ${value.length} characters; the limit is ${WALL_LABEL_LIMIT}`,
+          });
+        }
+        if (value.includes(";")) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `theme wall-label field "${field}" contains a semicolon`,
+          });
+        }
+      }
     }),
 });
 
@@ -92,8 +117,10 @@ const writing = defineCollection({
 
 // The publication record — restructure spec §3.4. One file feeds the Publications band
 // on /work/, each theme article's closing list, the Cite opener at the top of every
-// anchor-target section, and the block on /cv/. Validation here is the point: a typo in
-// `theme` or a missing external link fails the build instead of shipping a dead link.
+// anchor-target section, and the block on /cv/. A `theme` reference is validated when the
+// collection is read, which `PubList.astro` and `Cite.astro` do on every build once they
+// exist; `scripts/check_links.py` also fails on a theme that is not in `src/content/work`.
+// Until those land, a dangling reference is silent.
 // Entries are keyed by `id`, which is the slug of the paper page the entry replaces.
 const publications = defineCollection({
   loader: file("./src/data/publications.yaml"),
