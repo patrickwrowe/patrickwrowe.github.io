@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import textwrap
 from pathlib import Path
@@ -30,6 +31,7 @@ def make_site(
     tmp_path: Path,
     *,
     draft: bool = False,
+    stub: bool = False,
     blurb: bool = True,
     page_ids: tuple[str, ...] = ("contents", "gap-20", "cho-gap"),
     body: str = THEME_BODY,
@@ -43,7 +45,8 @@ def make_site(
     work.mkdir(parents=True)
     (src / "data").mkdir()
     (work / "carbon.mdx").write_text(
-        f"---\ntitle: Carbon\nkind: theme\ndraft: {'true' if draft else 'false'}\n---\n\n{body}"
+        f"---\ntitle: Carbon\nkind: theme\ndraft: {'true' if draft else 'false'}\n"
+        f"stub: {'true' if stub else 'false'}\n---\n\n{body}"
     )
     blurb_line = "  blurb: One sentence. Two sentences. Three sentences.\n" if blurb else ""
     (src / "data" / "publications.yaml").write_text(
@@ -51,8 +54,6 @@ def make_site(
         f"  doi: 10.1/x\n  theme: carbon\n  anchor: gap-20\n{blurb_line}"
     )
     if redirects is not None:
-        import json
-
         (src / "data" / "redirects.json").write_text(json.dumps(redirects))
     if not draft:
         page = dist / "work" / "carbon"
@@ -65,6 +66,7 @@ def make_site(
 
 
 def statuses(findings: list[check_links.Finding], check: str) -> list[str]:
+    """The statuses of every finding for one check, in report order."""
     return [finding.status for finding in findings if finding.check == check]
 
 
@@ -172,13 +174,26 @@ def test_every_theme_section_must_end_with_the_return_line(tmp_path: Path) -> No
 
 def test_figure_markers_must_run_from_one(tmp_path: Path) -> None:
     good = (
-        '<span class="label plate__fig">Fig. 1</span><span class="label plate__fig">Fig. 2</span>'
+        '<span class="label plate__fig" data-astro-cid-vz3ba7ul>Fig. 1</span>'
+        '<span class="label plate__fig" data-astro-cid-vz3ba7ul>Fig. 2</span>'
     )
     src, dist = make_site(tmp_path, extra_html=good)
     assert statuses(check_links.run_all(src, dist), "figures") == ["OK"]
-    bad = '<span class="label plate__fig">Fig. 1</span><span class="label plate__fig">Fig. 3</span>'
+    bad = (
+        '<span class="label plate__fig" data-astro-cid-vz3ba7ul>Fig. 1</span>'
+        '<span class="label plate__fig" data-astro-cid-vz3ba7ul>Fig. 3</span>'
+    )
     src, dist = make_site(tmp_path / "bad", extra_html=bad)
     assert "FAIL" in statuses(check_links.run_all(src, dist), "figures")
+
+
+def test_figure_check_fails_when_markers_exist_but_none_parse(tmp_path: Path) -> None:
+    unparseable = '<span class="label plate__fig" data-astro-cid-x>Figure 1</span>'
+    src, dist = make_site(tmp_path, extra_html=unparseable)
+    findings = check_links.run_all(src, dist)
+    figures = [finding for finding in findings if finding.check == "figures"]
+    assert [finding.status for finding in figures] == ["FAIL"]
+    assert "marker markup has changed" in figures[0].detail
 
 
 def test_main_exit_code_reflects_failures(
@@ -197,3 +212,64 @@ def test_attribute_names_ending_in_id_are_not_ids(tmp_path: Path) -> None:
     )
     findings = check_links.run_all(src, dist)
     assert statuses(findings, "anchor") == ["FAIL"]
+
+
+def test_cite_ok_when_anchor_matches_heading(tmp_path: Path) -> None:
+    src, dist = make_site(tmp_path)
+    findings = check_links.run_all(src, dist)
+    assert statuses(findings, "cite") == ["OK"]
+
+
+def test_cite_fails_when_heading_is_retitled(tmp_path: Path) -> None:
+    body = THEME_BODY.replace("## GAP-20\n", "## GAP-20 potential\n")
+    src, dist = make_site(tmp_path, body=body)
+    findings = check_links.run_all(src, dist)
+    cite = next(finding for finding in findings if finding.check == "cite")
+    assert cite.status == "FAIL"
+    assert "is not this heading's slug" in cite.detail
+
+
+def test_cite_fails_when_publication_is_not_cited(tmp_path: Path) -> None:
+    body = textwrap.dedent(
+        """\
+        ## GAP-20
+
+        [Contents ↑](#contents)
+
+        ## CHO-GAP
+
+        [Contents ↑](#contents)
+        """
+    )
+    src, dist = make_site(tmp_path, body=body)
+    findings = check_links.run_all(src, dist)
+    cite = next(finding for finding in findings if finding.check == "cite")
+    assert cite.status == "FAIL"
+    assert "has no <Cite>" in cite.detail
+
+
+def test_cite_fails_for_unknown_id(tmp_path: Path) -> None:
+    body = THEME_BODY.replace('id="carbon-gap-20"', 'id="nope"')
+    src, dist = make_site(tmp_path, body=body)
+    findings = check_links.run_all(src, dist)
+    cite_findings = [finding for finding in findings if finding.check == "cite"]
+    assert any(
+        finding.status == "FAIL" and "no publication with this id" in finding.detail
+        for finding in cite_findings
+    )
+
+
+def test_live_theme_must_not_be_stub(tmp_path: Path) -> None:
+    src, dist = make_site(tmp_path, stub=True)
+    findings = check_links.run_all(src, dist)
+    assert statuses(findings, "stub") == ["FAIL"]
+
+    src, dist = make_site(tmp_path / "draft", draft=True, stub=True)
+    findings = check_links.run_all(src, dist)
+    assert statuses(findings, "stub") == []
+
+
+def test_slugify_matches_the_site_headings() -> None:
+    assert check_links.slugify("GAP-20") == "gap-20"
+    assert check_links.slugify("Molybdenum disulfide membranes") == "molybdenum-disulfide-membranes"
+    assert check_links.slugify("MAGE-A4 engagers") == "mage-a4-engagers"

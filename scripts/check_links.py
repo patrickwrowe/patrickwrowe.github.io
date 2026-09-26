@@ -20,6 +20,10 @@ Checks, each reported per subject as OK, SKIPPED or FAIL:
 * ``contents-return``: every ``##`` section of a theme article ends with the line
   ``[Contents ↑](#contents)``.
 * ``figures``: the ``Fig. n`` plate markers on each page run 1 to N in order.
+* ``cite``: source-level anchor contract, drafts included. Every ``<Cite id>`` in a theme
+  article names a publication of that theme whose ``anchor`` is the enclosing ``##``
+  heading's slug, and every publication of the theme is cited somewhere in its article.
+* ``stub``: a live theme (``draft: false``) is not still marked ``stub: true``.
 
 Usage:
     uv run scripts/check_links.py                  # from the site root, after npm run build
@@ -42,9 +46,11 @@ import yaml
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---", re.S)
 ID_ATTR = re.compile(r'(?<![\w-])id="([^"]+)"')
 HREF_ATTR = re.compile(r'(?<![\w-])href="([^"]+)"')
-FIGURE_MARK = re.compile(r'class="label plate__fig">Fig\.\s*(\d+)<')
+FIGURE_MARK = re.compile(r'class="label plate__fig"[^>]*>Fig\.\s*(\d+)<')
+PLATE_MARK = re.compile(r'class="label plate__fig"')
 SECTION_START = re.compile(r"^## ", re.M)
 RETURN_LINE = "[Contents ↑](#contents)"
+CITE_ID = re.compile(r'<Cite\s+id="([^"]+)"')
 
 
 @dataclass(frozen=True)
@@ -208,12 +214,91 @@ def check_contents_returns(work_dir: Path, work: dict[str, dict]) -> list[Findin
     return findings
 
 
+def slugify(text: str) -> str:
+    """Approximate github-slugger for ASCII headings: lowercase, keep letters, digits,
+    spaces and hyphens, spaces become hyphens. Anchor-target headings are ASCII by rule."""
+    lowered = text.strip().lower()
+    kept = "".join(char for char in lowered if (char.isascii() and char.isalnum()) or char in " -")
+    return kept.replace(" ", "-")
+
+
+def check_theme_sources(
+    work_dir: Path, work: dict[str, dict], publications: list[dict]
+) -> list[Finding]:
+    """The anchor contract at source level, drafts included.
+
+    Every ``<Cite id>`` in a theme article must name a publication of that theme whose
+    ``anchor`` is the enclosing ``##`` heading's slug, and every publication of the theme
+    must be cited somewhere in its article. A live theme (``draft: false``) must not still
+    be marked ``stub: true``. Runs on the MDX, so it guards the contract while a theme is
+    a draft and the built page does not exist.
+    """
+    by_id = {pub["id"]: pub for pub in publications}
+    findings: list[Finding] = []
+    for slug, data in work.items():
+        if data.get("kind") != "theme":
+            continue
+        body = body_after_frontmatter((work_dir / f"{slug}.mdx").read_text())
+        cited: set[str] = set()
+        for section in SECTION_START.split(body)[1:]:
+            heading = section.split("\n", 1)[0].strip()
+            heading_slug = slugify(heading)
+            for cite_id in CITE_ID.findall(section):
+                cited.add(cite_id)
+                subject = f"{slug} ## {heading} <Cite id={cite_id}>"
+                pub = by_id.get(cite_id)
+                if pub is None:
+                    findings.append(Finding("cite", subject, "FAIL", "no publication with this id"))
+                elif pub["theme"] != slug:
+                    findings.append(
+                        Finding(
+                            "cite",
+                            subject,
+                            "FAIL",
+                            f"publication belongs to theme {pub['theme']!r}",
+                        )
+                    )
+                elif pub["anchor"] != heading_slug:
+                    findings.append(
+                        Finding(
+                            "cite",
+                            subject,
+                            "FAIL",
+                            f"anchor {pub['anchor']!r} is not this heading's slug {heading_slug!r}",
+                        )
+                    )
+                else:
+                    findings.append(Finding("cite", subject, "OK"))
+        for pub in publications:
+            if pub["theme"] == slug and pub["id"] not in cited:
+                findings.append(
+                    Finding(
+                        "cite",
+                        f"{slug} {pub['id']}",
+                        "FAIL",
+                        "publication has no <Cite> in its theme article",
+                    )
+                )
+        if not data.get("draft", False) and data.get("stub", False):
+            findings.append(Finding("stub", slug, "FAIL", "live theme still marked stub: true"))
+    return findings
+
+
 def check_figure_numbers(pages: dict[str, str]) -> list[Finding]:
     """Plate markers on each page run Fig. 1 to Fig. N in order."""
     findings: list[Finding] = []
     for route, html in pages.items():
         numbers = [int(number) for number in FIGURE_MARK.findall(html)]
         if not numbers:
+            if PLATE_MARK.search(html):
+                findings.append(
+                    Finding(
+                        "figures",
+                        route,
+                        "FAIL",
+                        "plate markers present but none parsed; the marker markup has changed",
+                    )
+                )
             continue
         expected = list(range(1, len(numbers) + 1))
         ok = numbers == expected
@@ -241,6 +326,7 @@ def run_all(src: Path, dist: Path) -> list[Finding]:
         *check_redirects(redirects, pages, dist),
         *check_internal_hrefs(pages, dist),
         *check_contents_returns(work_dir, work),
+        *check_theme_sources(work_dir, work, publications),
         *check_figure_numbers(pages),
     ]
 
