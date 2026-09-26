@@ -19,6 +19,10 @@ test("surname strips initials and keeps particles and double surnames", () => {
   assert.equal(surname("P. Rowe"), "Rowe");
 });
 
+test("surname strips an accented initial", () => {
+  assert.equal(surname("Á. Szabó"), "Szabó");
+});
+
 test("citationAuthors gives up to five surnames in full and et al. beyond", () => {
   assert.equal(
     citationAuthors(["P. Rowe", "V. L. Deringer", "P. Gasparotto", "G. Csányi", "A. Michaelides"]),

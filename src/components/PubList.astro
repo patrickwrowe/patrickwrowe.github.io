@@ -13,9 +13,8 @@ interface Props {
   blurbs?: boolean;
   /** On a theme page: link "Section ↑" to the anchor here instead of "Read in <theme> →". */
   onThemePage?: boolean;
-  id?: string;
 }
-const { entries, blurbs = false, onThemePage = false, id } = Astro.props;
+const { entries, blurbs = false, onThemePage = false } = Astro.props;
 
 // Resolve every entry's theme in one call; getEntries keeps the order of its input.
 const themes = await getEntries(entries.map((entry) => entry.data.theme));
@@ -30,7 +29,7 @@ for (const index of entries.keys()) {
 const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
 ---
 
-<ol class="pubs" id={id} role="list">
+<ol class="pubs" role="list">
   {
     rows.map(({ pub, theme }) => {
       const marker = kindMarker(pub.data.kind);

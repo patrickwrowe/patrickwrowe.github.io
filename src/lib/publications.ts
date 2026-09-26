@@ -17,7 +17,7 @@ export interface AuthorPart {
 const ELLIPSIS: AuthorPart = { text: "…", me: false };
 
 /** An initial, with or without a hyphenated second initial: "P." or "J.-M.". */
-const INITIAL = /^[A-Z]\.(?:-[A-Z]\.)*$/;
+const INITIAL = /^\p{Lu}\.(?:-\p{Lu}\.)*$/u;
 
 /** "V. L. Deringer" -> "Deringer"; "V. de Puyraimond" -> "de Puyraimond". */
 export function surname(name: string): string {

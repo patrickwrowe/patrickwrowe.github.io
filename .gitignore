@@ -23,3 +23,7 @@ docs/
 
 # scripts/shoot.py output
 screenshots/
+
+# Local tooling config
+.claude/
+.mcp.json

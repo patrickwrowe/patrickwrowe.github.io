@@ -51,7 +51,7 @@ const work = defineCollection({
         .array(
           z.object({
             label: z.enum(LINK_LABELS),
-            url: z.string().url(),
+            url: z.url(),
           }),
         )
         .default([]),
@@ -81,18 +81,32 @@ const work = defineCollection({
         if (value === undefined) continue;
         if (value.length > WALL_LABEL_LIMIT) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             path: [field],
             message: `theme wall-label field "${field}" is ${value.length} characters; the limit is ${WALL_LABEL_LIMIT}`,
           });
         }
         if (value.includes(";")) {
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             path: [field],
             message: `theme wall-label field "${field}" contains a semicolon`,
           });
         }
+      }
+      if (entry.shortTitle === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["shortTitle"],
+          message: 'a theme needs a shortTitle for "Read in … →" links',
+        });
+      }
+      if (entry.published !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["published"],
+          message: "a theme carries METHOD / SYSTEM / RESULT, never PUBLISHED",
+        });
       }
     }),
 });
@@ -117,10 +131,10 @@ const writing = defineCollection({
 
 // The publication record — restructure spec §3.4. One file feeds the Publications band
 // on /work/, each theme article's closing list, the Cite opener at the top of every
-// anchor-target section, and the block on /cv/. A `theme` reference is validated when the
-// collection is read, which `PubList.astro` and `Cite.astro` do on every build once they
-// exist; `scripts/check_links.py` also fails on a theme that is not in `src/content/work`.
-// Until those land, a dangling reference is silent.
+// anchor-target section, and the block on /cv/. Astro resolves a `theme` reference
+// lazily; `PubList.astro` resolves every entry's theme on each build and throws a
+// readable error on a bad one, and `scripts/check_links.py` fails on a theme that is not
+// in `src/content/work`.
 // Entries are keyed by `id`, which is the slug of the paper page the entry replaces.
 const publications = defineCollection({
   loader: file("./src/data/publications.yaml"),
@@ -133,9 +147,15 @@ const publications = defineCollection({
       // Absent on a manuscript; its kind marker reads IN PREPARATION instead.
       venue: z.string().optional(),
       year: z.number().int(),
-      doi: z.string().optional(),
+      doi: z
+        .string()
+        .regex(/^10\./, "a DOI starts with 10.; paste the bare DOI, not a URL")
+        .optional(),
       // Site-relative, for posters and the thesis: "/posters/abcellera-sitc-2023-tce-platform.pdf".
-      pdf: z.string().optional(),
+      pdf: z
+        .string()
+        .regex(/^\//, "a pdf is site-relative and starts with /")
+        .optional(),
       theme: reference("work"),
       // The id of the `##` heading in the theme article. Astro slugs heading text, so
       // this is lowercase ASCII words joined by hyphens. check_links.py confirms it exists.
@@ -147,7 +167,7 @@ const publications = defineCollection({
         .array(
           z.object({
             label: z.enum(["Preprint", "Data", "Code", "Docs"]),
-            url: z.string().url(),
+            url: z.url(),
           }),
         )
         .default([]),
@@ -155,6 +175,9 @@ const publications = defineCollection({
     .refine((entry) => !(entry.doi && entry.pdf), { message: "doi and pdf are exclusive" })
     .refine((entry) => (entry.kind === "manuscript") !== Boolean(entry.doi || entry.pdf), {
       message: "a manuscript has no doi or pdf; every other kind has exactly one",
+    })
+    .refine((entry) => entry.authors.includes("P. Rowe"), {
+      message: 'authors must include "P. Rowe" exactly, or the list cannot bold him',
     }),
 });
 

@@ -19,5 +19,5 @@ const external = externalLink(pub.data);
 
 <p class="authors cite">
   {citationAuthors(pub.data.authors)}, <em>{pub.data.title}</em>{pub.data.venue && `, ${pub.data.venue}`} ({pub.data.year}).
-  {external && <a href={external.href}>{external.label} &nearr;</a>}
+  {external && <a href={external.href}>{external.label} <span aria-hidden="true">&nearr;</span></a>}
 </p>
