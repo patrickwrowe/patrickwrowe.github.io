@@ -1,0 +1,5 @@
+# The publication record. Schema: src/content.config.ts (`publications`). Restructure
+# spec §3.4 for the field meanings and §4.4 for the blurb brief. Keyed by `id`, which is
+# the slug of the paper page each entry replaces; `anchor` is the heading id in the theme
+# article, from the table in spec §3.6.
+[]
