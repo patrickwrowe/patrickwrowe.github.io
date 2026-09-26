@@ -1,0 +1,23 @@
+---
+// The citation line that opens every anchor-target section of a theme article —
+// restructure spec §3.3 "Section openers". A reader who arrives from the Publications
+// band or a redirect lands on the name of the work and this line, so they know they have
+// found the paper they came for. Rendered from the publications collection so the
+// citation exists in one place.
+import { getEntry } from "astro:content";
+import { citationAuthors, externalLink } from "@/lib/publications";
+
+interface Props {
+  /** The publication id (the retired paper slug), e.g. "carbon-gap-20". */
+  id: string;
+}
+const { id } = Astro.props;
+const pub = await getEntry("publications", id);
+if (!pub) throw new Error(`Cite: no publication with id "${id}" in src/data/publications.yaml`);
+const external = externalLink(pub.data);
+---
+
+<p class="authors cite">
+  {citationAuthors(pub.data.authors)}, <em>{pub.data.title}</em>{pub.data.venue && `, ${pub.data.venue}`} ({pub.data.year}).
+  {external && <a href={external.href}>{external.label} &nearr;</a>}
+</p>
