@@ -77,9 +77,15 @@ Do not break these without asking first.
   add a JS BibTeX parser, a JS notebook converter, or a build plugin that does data work.
 - **`src/data/publications.yaml` is the publication record**, hand-maintained and validated
   by the `publications` collection in `src/content.config.ts`. It feeds the Publications
-  band on `/work/`, each theme article's closing list, the `Cite` opener and `/cv/`. An
-  entry's `theme` is a reference to a `work` entry and its `anchor` is a `##` heading id in
-  that article; `scripts/check_links.py` confirms every anchor exists after a build.
+  band on `/work/`, each theme article's closing list, the `Cite` opener and, from
+  session 7, `/cv/`. An entry's `theme` is a reference to a `work` entry and its `anchor`
+  is a `##` heading id in that article; `scripts/check_links.py` confirms every anchor
+  exists after a build.
+- **`draft` hides a page from production and `stub` marks placeholder prose on a live page.**
+  A theme article is `draft: true` until Patrick approves it, then `draft: false` with
+  `stub` and `stubNote` removed in the same commit. A theme also needs `shortTitle`, and its
+  METHOD / SYSTEM / RESULT are each one noun phrase of at most 90 characters with no
+  semicolon and no PUBLISHED; the schema enforces this.
 - **Content bends to the schema, not the reverse.** If a project won't fit the Zod schema in
   `src/content.config.ts`, fix the content. Loosening the schema needs a reason.
 - **Data figures are SVG produced by a committed script** in `scripts/figures/`: plots,
@@ -96,7 +102,7 @@ Do not break these without asking first.
   `scripts/figures/data/`, so every figure regenerates. Never a screenshot of a viewer.
 - **Prose is British English** (—ise, —isation). Identifiers and library APIs stay as the
   library spells them.
-- **Internal links carry trailing slashes**: `/work/carbon-gap-20/`.
+- **Internal links carry trailing slashes**: `/work/carbon/`.
 
 ## Commands
 
@@ -123,7 +129,8 @@ Inside a sandboxed session `uv` cannot write its cache; `.venv/bin/python` and
 - **Pin Astro to 6.x.** Astro 7 is not to be used here. Also pin the vendored
   `@rdkit/rdkit` version — upstream npm maintenance was in transition as of April 2026.
 - **COOP/COEP headers are scoped to `/demos/*` in `public/_headers`.** Applying them
-  site-wide breaks third-party embeds including Vimeo.
+  site-wide breaks third-party embeds including Vimeo. On GitHub Pages this file is inert
+  (restructure spec §11); a demo that needs COOP/COEP reopens the hosting question.
 - **Self-host WASM.** Never hotlink a CDN for `onnxruntime-web` or RDKit — it breaks the
   demo when someone else's CDN does and it conflicts with the COEP headers.
 - **Export the single forward pass to ONNX, not the sampling loop.** Control flow exports
