@@ -80,6 +80,18 @@ def test_anchor_fails_when_id_is_missing(tmp_path: Path) -> None:
     assert statuses(findings, "anchor") == ["FAIL"]
 
 
+def test_anchor_fails_when_theme_is_not_in_work(tmp_path: Path) -> None:
+    src, dist = make_site(tmp_path)
+    (src / "data" / "publications.yaml").write_text(
+        "- id: carbon-gap-20\n  kind: paper\n  title: T\n  authors: [P. Rowe]\n  year: 2020\n"
+        "  doi: 10.1/x\n  theme: carbn\n  anchor: gap-20\n  blurb: One. Two. Three.\n"
+    )
+    findings = check_links.run_all(src, dist)
+    anchor = next(finding for finding in findings if finding.check == "anchor")
+    assert anchor.status == "FAIL"
+    assert "not in src/content/work" in anchor.detail
+
+
 def test_anchor_is_skipped_for_a_draft_theme(tmp_path: Path) -> None:
     src, dist = make_site(tmp_path, draft=True)
     findings = check_links.run_all(src, dist)
@@ -112,6 +124,25 @@ def test_redirect_target_must_exist_and_old_page_must_be_built(tmp_path: Path) -
     }
     assert by_subject["/work/carbon-gap-20/ -> /work/carbon/#gap-20"] == "OK"
     assert by_subject["/work/old/ -> /work/carbon/#nope"] == "FAIL"
+
+
+def test_redirect_fails_when_old_page_is_built_but_target_is_missing(tmp_path: Path) -> None:
+    src, dist = make_site(
+        tmp_path,
+        redirects={"/work/old-a/": "/work/carbon/#nope", "/work/old-b/": "/work/gone/"},
+    )
+    for old_slug, target in (("old-a", "/work/carbon/#nope"), ("old-b", "/work/gone/")):
+        old = dist / "work" / old_slug
+        old.mkdir()
+        old.joinpath("index.html").write_text(
+            f'<meta http-equiv="refresh" content="0;url={target}">'
+        )
+    findings = check_links.run_all(src, dist)
+    by_subject = {finding.subject: finding for finding in findings if finding.check == "redirect"}
+    fragment_case = by_subject["/work/old-a/ -> /work/carbon/#nope"]
+    page_case = by_subject["/work/old-b/ -> /work/gone/"]
+    assert fragment_case.status == "FAIL" and "no id" in fragment_case.detail
+    assert page_case.status == "FAIL" and "no such page" in page_case.detail
 
 
 def test_internal_href_to_a_missing_page_fails_and_a_file_passes(tmp_path: Path) -> None:
@@ -158,3 +189,11 @@ def test_main_exit_code_reflects_failures(
     src, dist = make_site(tmp_path / "bad", page_ids=("contents",))
     assert check_links.main(["--src", str(src), "--dist", str(dist)]) == 1
     assert "FAIL" in capsys.readouterr().out
+
+
+def test_attribute_names_ending_in_id_are_not_ids(tmp_path: Path) -> None:
+    src, dist = make_site(
+        tmp_path, page_ids=("contents", "cho-gap"), extra_html='<div data-id="gap-20"></div>'
+    )
+    findings = check_links.run_all(src, dist)
+    assert statuses(findings, "anchor") == ["FAIL"]

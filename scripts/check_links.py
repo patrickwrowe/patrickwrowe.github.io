@@ -40,8 +40,8 @@ from pathlib import Path
 import yaml
 
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---", re.S)
-ID_ATTR = re.compile(r'\bid="([^"]+)"')
-HREF_ATTR = re.compile(r'\bhref="([^"]+)"')
+ID_ATTR = re.compile(r'(?<![\w-])id="([^"]+)"')
+HREF_ATTR = re.compile(r'(?<![\w-])href="([^"]+)"')
 FIGURE_MARK = re.compile(r'class="label plate__fig">Fig\.\s*(\d+)<')
 SECTION_START = re.compile(r"^## ", re.M)
 RETURN_LINE = "[Contents ↑](#contents)"
