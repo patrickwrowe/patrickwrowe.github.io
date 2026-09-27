@@ -16,9 +16,9 @@ STEM="$OUT_DIR/graphitisation-1.0gcc-3500K"
 
 mkdir -p "$OUT_DIR"
 "$FFMPEG" -hide_banner -loglevel error -y -i "$SRC" \
-  -vf "scale=720:-2" -c:v libx264 -crf 28 -preset slow -pix_fmt yuv420p -an -movflags +faststart \
+  -vf "scale=720:-2,hue=s=0" -c:v libx264 -crf 28 -preset slow -pix_fmt yuv420p -an -movflags +faststart \
   "$STEM.mp4"
-"$FFMPEG" -hide_banner -loglevel error -y -sseof -0.1 -i "$SRC" -frames:v 1 -vf "scale=720:-2" -q:v 3 "$STEM.jpg"
+"$FFMPEG" -hide_banner -loglevel error -y -sseof -0.1 -i "$SRC" -frames:v 1 -vf "scale=720:-2,hue=s=0" -q:v 3 "$STEM.jpg"
 
 SIZE=$(stat -c %s "$STEM.mp4")
 echo "clip: $SIZE bytes"

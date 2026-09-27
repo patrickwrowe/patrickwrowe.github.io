@@ -69,6 +69,24 @@ STEM_WIDTH = 0.6
 MARKER_STROKE = 0.7
 MARKER_RADIUS = 1.7
 
+MINUS_SIGN = "−"
+
+
+def _format_ev_per_atom(cohesive_energy_ev_per_atom: float) -> str:
+    """Format a cohesive energy to one decimal place with a true minus sign.
+
+    The mono face draws U+2212 as a real minus, matching the prose; Python's own
+    float formatting uses hyphen-minus, which reads shorter and sits high next to
+    a digit.
+
+    Args:
+        cohesive_energy_ev_per_atom: Cohesive energy of C60, in eV per atom.
+
+    Returns:
+        The value formatted to one decimal place, e.g. "−7.6" or "1.0".
+    """
+    return f"{cohesive_energy_ev_per_atom:.1f}".replace("-", MINUS_SIGN)
+
 
 def x_for_value(cohesive_energy_ev_per_atom: float) -> float:
     """Map a C₆₀ cohesive energy to an x position in viewBox units.
@@ -140,12 +158,15 @@ def build() -> str:
             f'stroke-width="{AXIS_WIDTH}"/>'
         )
         tick_label_y = baseline_y + TICK_LENGTH + LABEL_SIZE + 0.4
-        parts.append(svg_text(tick_x, tick_label_y, f"{tick_value:.1f}", LABEL_SIZE))
+        parts.append(svg_text(tick_x, tick_label_y, _format_ev_per_atom(tick_value), LABEL_SIZE))
     parts.append(
         svg_text(
             PLOT_LEFT + PLOT_WIDTH / 2,
             baseline_y + TICK_LENGTH + LABEL_SIZE * 2 + 3.2,
-            "Cohesive energy of C₆₀ (eV per atom)",
+            # Plain "C60": the mono face's loaded subset has no subscript digits, so
+            # "C₆₀" falls back glyph by glyph and reads "C 6 0" (design review C7).
+            # Mono data labels stay plain, like the grid labels ("C40", not "C₄₀").
+            "Cohesive energy of C60 (eV per atom)",
             AXIS_TITLE_SIZE,
         )
     )

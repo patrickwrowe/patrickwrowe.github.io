@@ -40,3 +40,19 @@ def test_gap20_is_filled_and_classical_potentials_are_open():
     ).group(0)
     assert 'fill="var(--plate)"' in reaxff_row
     assert 'stroke="var(--ink)"' in reaxff_row
+
+
+def test_negative_tick_labels_use_the_true_minus_sign_not_hyphen():
+    # A hyphen-minus immediately before a digit inside a <text> element would be the
+    # bug this guards against (design review C7): negatives should read "−7.6",
+    # not "-7.6". The lookbehind excludes a hyphen inside a name like "GAP-20", which
+    # is not a negative number.
+    svg = cluster_benchmark_c60.build()
+    for text_element in re.findall(r"<text [^>]*>([^<]*)</text>", svg):
+        assert not re.search(r"(?<![A-Za-z0-9])-\d", text_element)
+
+
+def test_c60_axis_label_is_plain_not_subscripted():
+    svg = cluster_benchmark_c60.build()
+    assert "C60" in svg
+    assert "C₆₀" not in svg

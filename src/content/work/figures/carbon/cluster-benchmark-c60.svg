@@ -3,18 +3,18 @@
   <line x1="55.129771" y1="6.00" x2="55.129771" y2="74.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="2 1.6" data-reference="DFT"/>
   <line x1="37.00" y1="74.00" x2="132.00" y2="74.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <line x1="45.70" y1="74.00" x2="45.70" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="45.70" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-7.6</text>
+  <text x="45.70" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.6</text>
   <line x1="60.21" y1="74.00" x2="60.21" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="60.21" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-7.4</text>
+  <text x="60.21" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.4</text>
   <line x1="74.71" y1="74.00" x2="74.71" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="74.71" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-7.2</text>
+  <text x="74.71" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.2</text>
   <line x1="89.21" y1="74.00" x2="89.21" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="89.21" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-7.0</text>
+  <text x="89.21" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.0</text>
   <line x1="103.72" y1="74.00" x2="103.72" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="103.72" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-6.8</text>
+  <text x="103.72" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−6.8</text>
   <line x1="118.22" y1="74.00" x2="118.22" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="118.22" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">-6.6</text>
-  <text x="84.50" y="84.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Cohesive energy of C₆₀ (eV per atom)</text>
+  <text x="118.22" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−6.6</text>
+  <text x="84.50" y="84.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Cohesive energy of C60 (eV per atom)</text>
   <g data-method="DFT" data-kind="reference">
     <circle cx="55.13" cy="10.25" r="1.7" fill="var(--ink)" stroke="none"/>
     <text x="34.00" y="11.25" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">DFT</text>
