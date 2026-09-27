@@ -5,12 +5,12 @@
 """sp3 fraction against temperature for the 48 GAP sphere runs, one line per cluster size.
 
 Reads `sp3_fraction` (atoms with exactly four neighbours within 1.824 A) from `census.csv`,
-written by cluster_census.py. The three largest clusters, the only ones that ever pass
-2.5%, are drawn in `var(--ink)` and labelled one by one at their 500 K end, where they are
-furthest apart; the five smaller are drawn in `var(--graphite)` and share one label, since
-their lines cross one another near zero. Labels are pushed apart vertically where they
-would overlap, keeping their order. No hue, unitless viewBox, house style of
-graphitisation_figure.py.
+written by cluster_census.py. Sizes whose sp3 fraction ever exceeds 2.5% are drawn in
+`var(--ink)` and labelled one by one at their 500 K end, where the lines are furthest
+apart; the rest (in these data, the five smallest) are drawn in `var(--graphite)` under
+one shared label naming their range, since their lines cross one another near zero. Both
+groups are derived from the data. Labels are pushed apart vertically where they would
+overlap, keeping their order. No hue, unitless viewBox, house style of figure_style.py.
 
 Usage:
     uv run scripts/figures/cluster_sp3.py \
@@ -22,20 +22,10 @@ from __future__ import annotations
 
 import argparse
 import math
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from cluster_outcomes import (  # noqa: E402
-    AXIS_TITLE_SIZE,
-    AXIS_WIDTH,
-    LABEL_SIZE,
-    SIZES,
-    TEMPERATURES_KELVIN,
-    TICK_LENGTH,
-    read_census_columns,
-    svg_text,
-)
+from cluster_census import SIZES, TEMPERATURES_KELVIN, read_census_columns
+from figure_style import AXIS_TITLE_SIZE, AXIS_WIDTH, LABEL_SIZE, TICK_LENGTH, svg_text
 
 PLOT_WIDTH = 100.0
 PLOT_HEIGHT = 56.0
@@ -49,22 +39,49 @@ LINE_WIDTH = 0.7
 MARKER_RADIUS = 0.9
 Y_MAX_PERCENT = 12.0
 Y_TICKS_PERCENT = (0, 4, 8, 12)
-# Sizes drawn in ink: the only ones whose sp3 fraction ever exceeds 2.5%.
-INK_SIZES = (373, 686, 1000)
+# A size is drawn in ink and labelled on its own if its sp3 fraction ever exceeds this.
+INK_ABOVE_PERCENT = 2.5
+BASELINE = MARGIN_TOP + PLOT_HEIGHT
 
 
-def build(data_dir: Path) -> str:
-    """The sp3-against-temperature plot as an SVG document.
+def temperature_to_x(kelvin: float) -> float:
+    """Horizontal position of a temperature on the linear axis.
+
+    Args:
+        kelvin: Temperature, in K.
+
+    Returns:
+        x, in viewBox units.
+    """
+    coldest, hottest = TEMPERATURES_KELVIN[0], TEMPERATURES_KELVIN[-1]
+    span = PLOT_WIDTH - LABEL_COLUMN - 3.0
+    return MARGIN_LEFT + LABEL_COLUMN + (kelvin - coldest) / (hottest - coldest) * span
+
+
+def percent_to_y(value_percent: float) -> float:
+    """Vertical position of an sp3 percentage, 0 on the axis and Y_MAX_PERCENT at the top.
+
+    Args:
+        value_percent: sp3 fraction, in per cent of atoms.
+
+    Returns:
+        y, in viewBox units (SVG y grows downwards).
+    """
+    return BASELINE - value_percent / Y_MAX_PERCENT * PLOT_HEIGHT
+
+
+def read_percentages(data_dir: Path) -> dict[tuple[int, int], float]:
+    """sp3 percentage per (size, temperature), checked complete, finite and in range.
 
     Args:
         data_dir: Directory holding census.csv.
 
     Returns:
-        The SVG document as a string.
+        {(atoms, kelvin): sp3 fraction in per cent}.
 
     Raises:
-        ValueError: If census.csv lacks a size-temperature pair, or a value exceeds the
-            plotted range (12%).
+        ValueError: If a size-temperature pair is missing, a value is NaN, or a value
+            exceeds the plotted range (Y_MAX_PERCENT).
     """
     table = read_census_columns(data_dir, ("n_atoms", "temperature_kelvin", "sp3_fraction"))
     percent = {
@@ -79,47 +96,82 @@ def build(data_dir: Path) -> str:
     ]
     if missing:
         raise ValueError(f"{data_dir / 'census.csv'}: no row for {missing}")
+    not_a_number = [key for key, value in percent.items() if math.isnan(value)]
+    if not_a_number:
+        raise ValueError(f"{data_dir / 'census.csv'}: sp3_fraction is NaN for {not_a_number}")
     if max(percent.values()) > Y_MAX_PERCENT:
         raise ValueError(f"an sp3 fraction exceeds the plotted {Y_MAX_PERCENT}%")
+    return percent
 
+
+def split_sizes(percent: dict[tuple[int, int], float]) -> tuple[list[int], list[int]]:
+    """Sizes drawn in ink (ever above INK_ABOVE_PERCENT) and the rest, from the data.
+
+    Args:
+        percent: From `read_percentages`.
+
+    Returns:
+        (ink sizes, grey sizes), each in increasing size.
+
+    Raises:
+        ValueError: If the grey sizes are not the smallest sizes in one unbroken run, since
+            their shared label names a range ("C40–C160").
+    """
+    ink = [
+        n_atoms
+        for n_atoms in SIZES
+        if max(percent[n_atoms, kelvin] for kelvin in TEMPERATURES_KELVIN) > INK_ABOVE_PERCENT
+    ]
+    grey = [n_atoms for n_atoms in SIZES if n_atoms not in ink]
+    if grey != list(SIZES[: len(grey)]):
+        raise ValueError(f"grey sizes {grey} are not the smallest sizes in one unbroken run")
+    return ink, grey
+
+
+def build(data_dir: Path) -> str:
+    """The sp3-against-temperature plot as an SVG document.
+
+    Args:
+        data_dir: Directory holding census.csv.
+
+    Returns:
+        The SVG document as a string.
+
+    Raises:
+        ValueError: From `read_percentages` or `split_sizes`.
+    """
+    percent = read_percentages(data_dir)
+    ink_sizes, grey_sizes = split_sizes(percent)
+    coldest = TEMPERATURES_KELVIN[0]
     left, top = MARGIN_LEFT, MARGIN_TOP
-    baseline = top + PLOT_HEIGHT
-    low, high = TEMPERATURES_KELVIN[0], TEMPERATURES_KELVIN[-1]
-
-    def x_of(kelvin: float) -> float:
-        span = PLOT_WIDTH - LABEL_COLUMN - 3.0
-        return left + LABEL_COLUMN + (kelvin - low) / (high - low) * span
-
-    def y_of(value_percent: float) -> float:
-        return baseline - value_percent / Y_MAX_PERCENT * PLOT_HEIGHT
 
     parts = [
-        f'<path d="M {left:.2f} {top:.2f} V {baseline:.2f} H {left + PLOT_WIDTH:.2f}" '
+        f'<path d="M {left:.2f} {top:.2f} V {BASELINE:.2f} H {left + PLOT_WIDTH:.2f}" '
         f'fill="none" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>'
     ]
     for value_percent in Y_TICKS_PERCENT:
-        y = y_of(value_percent)
+        tick_y = percent_to_y(value_percent)
         parts.append(
-            f'<line x1="{left - TICK_LENGTH:.2f}" y1="{y:.2f}" x2="{left:.2f}" y2="{y:.2f}" '
-            f'stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>'
+            f'<line x1="{left - TICK_LENGTH:.2f}" y1="{tick_y:.2f}" x2="{left:.2f}" '
+            f'y2="{tick_y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>'
         )
         parts.append(
-            svg_text(left - TICK_LENGTH - 1.2, y + 1.0, str(value_percent), LABEL_SIZE, "end")
+            svg_text(left - TICK_LENGTH - 1.2, tick_y + 1.0, str(value_percent), LABEL_SIZE, "end")
         )
     for kelvin in TEMPERATURES_KELVIN:
-        x = x_of(kelvin)
+        tick_x = temperature_to_x(kelvin)
         parts.append(
-            f'<line x1="{x:.2f}" y1="{baseline:.2f}" x2="{x:.2f}" '
-            f'y2="{baseline + TICK_LENGTH:.2f}" stroke="var(--graphite)" '
+            f'<line x1="{tick_x:.2f}" y1="{BASELINE:.2f}" x2="{tick_x:.2f}" '
+            f'y2="{BASELINE + TICK_LENGTH:.2f}" stroke="var(--graphite)" '
             f'stroke-width="{AXIS_WIDTH}"/>'
         )
         parts.append(
-            svg_text(x, baseline + TICK_LENGTH + LABEL_SIZE + 0.4, str(kelvin), LABEL_SIZE)
+            svg_text(tick_x, BASELINE + TICK_LENGTH + LABEL_SIZE + 0.4, str(kelvin), LABEL_SIZE)
         )
     parts.append(
         svg_text(
             left + LABEL_COLUMN + (PLOT_WIDTH - LABEL_COLUMN) / 2,
-            baseline + TICK_LENGTH + 2 * LABEL_SIZE + 3.2,
+            BASELINE + TICK_LENGTH + 2 * LABEL_SIZE + 3.2,
             "temperature / K",
             AXIS_TITLE_SIZE,
         )
@@ -132,41 +184,42 @@ def build(data_dir: Path) -> str:
 
     # Small clusters first, so the ink lines of the large ones sit on top.
     for n_atoms in SIZES:
-        tone = "var(--ink)" if n_atoms in INK_SIZES else "var(--graphite)"
-        points = [(x_of(kelvin), y_of(percent[n_atoms, kelvin])) for kelvin in TEMPERATURES_KELVIN]
-        path = " ".join(f"{x:.2f},{y:.2f}" for x, y in points)
+        tone = "var(--ink)" if n_atoms in ink_sizes else "var(--graphite)"
+        points = [
+            (kelvin, temperature_to_x(kelvin), percent_to_y(percent[n_atoms, kelvin]))
+            for kelvin in TEMPERATURES_KELVIN
+        ]
+        path = " ".join(f"{point_x:.2f},{point_y:.2f}" for _, point_x, point_y in points)
         parts.append(
             f'<polyline data-size="{n_atoms}" points="{path}" fill="none" stroke="{tone}" '
             f'stroke-width="{LINE_WIDTH}" stroke-linejoin="round" stroke-linecap="round"/>'
         )
         parts.extend(
-            f'<circle cx="{x:.2f}" cy="{y:.2f}" r="{MARKER_RADIUS}" fill="{tone}" stroke="none"/>'
-            for x, y in points
+            f'<circle data-run="C{n_atoms}-{kelvin}K" cx="{point_x:.2f}" cy="{point_y:.2f}" '
+            f'r="{MARKER_RADIUS}" fill="{tone}" stroke="none"/>'
+            for kelvin, point_x, point_y in points
         )
 
-    # Ink lines are labelled one by one at their 500 K end; the grey lines of the small
-    # clusters, which never pass 2.5% and cross one another near zero, share one label.
-    small = [n_atoms for n_atoms in SIZES if n_atoms not in INK_SIZES]
     labels = sorted(
-        [(y_of(percent[n_atoms, low]) + 1.0, f"C{n_atoms}") for n_atoms in INK_SIZES]
+        [(percent_to_y(percent[n_atoms, coldest]) + 1.0, f"C{n_atoms}") for n_atoms in ink_sizes]
         + [
             (
-                y_of(max(percent[n_atoms, low] for n_atoms in small)) + 1.0,
-                f"C{small[0]}–C{small[-1]}",
+                percent_to_y(max(percent[n_atoms, coldest] for n_atoms in grey_sizes)) + 1.0,
+                f"C{grey_sizes[0]}–C{grey_sizes[-1]}",
             )
         ]
     )
     minimum_gap = LABEL_SIZE * 1.25
     placed: list[tuple[float, str]] = []
-    for y, text in reversed(labels):  # bottom (largest y) first, then upwards
-        if placed and y > placed[-1][0] - minimum_gap:
-            y = placed[-1][0] - minimum_gap
-        placed.append((y, text))
-    label_x = x_of(low) - MARKER_RADIUS - 1.6
-    parts.extend(svg_text(label_x, y, text, LABEL_SIZE, "end") for y, text in placed)
+    for label_y, text in reversed(labels):  # bottom (largest y) first, then upwards
+        if placed and label_y > placed[-1][0] - minimum_gap:
+            label_y = placed[-1][0] - minimum_gap
+        placed.append((label_y, text))
+    label_x = temperature_to_x(coldest) - MARKER_RADIUS - 1.6
+    parts.extend(svg_text(label_x, label_y, text, LABEL_SIZE, "end") for label_y, text in placed)
 
     width = left + PLOT_WIDTH + MARGIN_RIGHT
-    height = baseline + MARGIN_BOTTOM
+    height = BASELINE + MARGIN_BOTTOM
     body = "\n    ".join(parts)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
@@ -175,13 +228,16 @@ def build(data_dir: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Write the sp3 plot and print the values it draws.
+    """Write the sp3 plot and print the highest value it draws.
+
+    The data are checked (complete, no NaN, in range) inside `build`, before anything is
+    written.
 
     Args:
         argv: Command-line arguments; None reads `sys.argv`.
 
     Raises:
-        ValueError: From `build`, if census.csv is incomplete or out of range.
+        ValueError: From `build`, if census.csv is incomplete, holds NaN or is out of range.
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--data-dir", type=Path, required=True)
@@ -190,13 +246,11 @@ def main(argv: list[str] | None = None) -> None:
     svg = build(args.data_dir)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(svg)
-    table = read_census_columns(args.data_dir, ("n_atoms", "temperature_kelvin", "sp3_fraction"))
-    peak = max(table, key=lambda row: row["sp3_fraction"])
-    print(
-        f"  highest sp3: C{int(peak['n_atoms'])}-{int(peak['temperature_kelvin'])}K "
-        f"{100 * peak['sp3_fraction']:.1f}%; any NaN: "
-        f"{any(math.isnan(float(row['sp3_fraction'])) for row in table)}"
-    )
+    percent = read_percentages(args.data_dir)
+    (peak_atoms, peak_kelvin), peak_percent = max(percent.items(), key=lambda item: item[1])
+    ink_sizes, grey_sizes = split_sizes(percent)
+    print(f"  highest sp3: C{peak_atoms}-{peak_kelvin}K {peak_percent:.1f}%")
+    print(f"  ink: {ink_sizes}; grey: {grey_sizes}")
     print(f"-> {args.output}")
 
 

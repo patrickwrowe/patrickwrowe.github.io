@@ -29,6 +29,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from figure_style import AXIS_TITLE_SIZE, AXIS_WIDTH, LABEL_SIZE, TICK_LENGTH, svg_text
+
 DENSITIES_GCC = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5]
 TEMPERATURES_K = [2000, 2500, 3000, 3500, 4000, 4500]
 
@@ -41,12 +43,8 @@ MARGIN_LEFT = 15.0
 MARGIN_TOP = 9.0
 MARGIN_BOTTOM = 22.0
 
-AXIS_WIDTH = 0.45
 LINE_WIDTH = 0.9
 MARKER_RADIUS = 1.5
-TICK_LENGTH = 1.6
-LABEL_SIZE = 3.0
-AXIS_TITLE_SIZE = 3.2
 PANEL_TITLE_SIZE = 3.4
 
 
@@ -59,14 +57,6 @@ def read_coordination(path: Path) -> dict[int, float]:
         coordination, percentage = line.split()
         fractions[int(float(coordination))] = float(percentage)
     return fractions
-
-
-def _text(x: float, y: float, content: str, size: float, anchor: str = "middle", rotate: float | None = None) -> str:
-    transform = f' transform="rotate({rotate} {x:.2f} {y:.2f})"' if rotate is not None else ""
-    return (
-        f'<text x="{x:.2f}" y="{y:.2f}" text-anchor="{anchor}" font-size="{size}" '
-        f'fill="var(--graphite)" stroke="none" font-family="var(--mono)"{transform}>{content}</text>'
-    )
 
 
 def _series(
@@ -133,7 +123,7 @@ def _panel(
             f'<line x1="{origin_x - TICK_LENGTH:.2f}" y1="{y:.2f}" x2="{origin_x:.2f}" '
             f'y2="{y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>'
         )
-        parts.append(_text(origin_x - TICK_LENGTH - 1.2, y + 1.0, str(percentage), LABEL_SIZE, "end"))
+        parts.append(svg_text(origin_x - TICK_LENGTH - 1.2, y + 1.0, str(percentage), LABEL_SIZE, "end"))
 
     for value, label in x_ticks:
         x = sx(value)
@@ -142,7 +132,7 @@ def _panel(
             f'y2="{baseline + TICK_LENGTH:.2f}" stroke="var(--graphite)" '
             f'stroke-width="{AXIS_WIDTH}"/>'
         )
-        parts.append(_text(x, baseline + TICK_LENGTH + LABEL_SIZE + 0.4, label, LABEL_SIZE))
+        parts.append(svg_text(x, baseline + TICK_LENGTH + LABEL_SIZE + 0.4, label, LABEL_SIZE))
 
     end_labels: list[tuple[float, float, str]] = []
     for index, (percentages, filled, label) in enumerate(series):
@@ -155,7 +145,7 @@ def _panel(
             sample_x = origin_x + PANEL_WIDTH * 0.62
             row_y = MARGIN_TOP + 4.0 + index * LABEL_SIZE * 1.7
             parts.append(_series([(sample_x, row_y), (sample_x + 7.0, row_y)], filled))
-            parts.append(_text(sample_x + 9.5, row_y + 1.0, label, LABEL_SIZE, "start"))
+            parts.append(svg_text(sample_x + 9.5, row_y + 1.0, label, LABEL_SIZE, "start"))
         else:
             # Otherwise label at the right-hand end, which needs no legend at all.
             end_x, end_y = points[-1]
@@ -171,15 +161,15 @@ def _panel(
         if y < floor:
             end_labels[i] = (x, floor, label)
     for x, y, label in end_labels:
-        parts.append(_text(x, y, label, LABEL_SIZE, "start"))
+        parts.append(svg_text(x, y, label, LABEL_SIZE, "start"))
 
     parts.append(
-        _text(origin_x + PANEL_WIDTH / 2, baseline + TICK_LENGTH + LABEL_SIZE * 2 + 3.2, x_title, AXIS_TITLE_SIZE)
+        svg_text(origin_x + PANEL_WIDTH / 2, baseline + TICK_LENGTH + LABEL_SIZE * 2 + 3.2, x_title, AXIS_TITLE_SIZE)
     )
-    parts.append(_text(origin_x, MARGIN_TOP - 3.4, panel_title, PANEL_TITLE_SIZE, "start"))
+    parts.append(svg_text(origin_x, MARGIN_TOP - 3.4, panel_title, PANEL_TITLE_SIZE, "start"))
     if show_y_title:
         parts.append(
-            _text(origin_x - 10.5, MARGIN_TOP + PANEL_HEIGHT / 2, y_title, AXIS_TITLE_SIZE, "middle", rotate=-90)
+            svg_text(origin_x - 10.5, MARGIN_TOP + PANEL_HEIGHT / 2, y_title, AXIS_TITLE_SIZE, "middle", rotate=-90)
         )
     return "\n    ".join(parts)
 

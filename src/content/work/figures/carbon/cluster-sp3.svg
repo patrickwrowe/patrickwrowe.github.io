@@ -24,61 +24,61 @@
     <text x="77.00" y="72.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">temperature / K</text>
     <text x="6.50" y="34.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 6.50 34.00)">sp³ / % of atoms</text>
     <polyline data-size="40" points="37.00,62.00 45.56,62.00 62.67,62.00 79.78,62.00 96.89,62.00 114.00,62.00" fill="none" stroke="var(--graphite)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-500K" cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-1000K" cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-2000K" cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-3000K" cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C40-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
     <polyline data-size="60" points="37.00,62.00 45.56,62.00 62.67,62.00 79.78,62.00 96.89,62.00 114.00,62.00" fill="none" stroke="var(--graphite)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-500K" cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-1000K" cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-2000K" cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-3000K" cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C60-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
     <polyline data-size="80" points="37.00,62.00 45.56,56.17 62.67,62.00 79.78,62.00 96.89,62.00 114.00,62.00" fill="none" stroke="var(--graphite)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="45.56" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-500K" cx="37.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-1000K" cx="45.56" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-2000K" cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-3000K" cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C80-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
     <polyline data-size="120" points="37.00,54.21 45.56,62.00 62.67,62.00 79.78,62.00 96.89,62.00 114.00,62.00" fill="none" stroke="var(--graphite)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="54.21" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-500K" cx="37.00" cy="54.21" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-1000K" cx="45.56" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-2000K" cx="62.67" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-3000K" cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C120-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
     <polyline data-size="160" points="37.00,56.17 45.56,50.33 62.67,56.17 79.78,62.00 96.89,62.00 114.00,62.00" fill="none" stroke="var(--graphite)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="45.56" cy="50.33" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="62.67" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-500K" cx="37.00" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-1000K" cx="45.56" cy="50.33" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-2000K" cx="62.67" cy="56.17" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-3000K" cx="79.78" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
+    <circle data-run="C160-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--graphite)" stroke="none"/>
     <polyline data-size="373" points="37.00,43.24 45.56,44.50 62.67,53.23 79.78,60.74 96.89,59.48 114.00,60.74" fill="none" stroke="var(--ink)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="43.24" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="45.56" cy="44.50" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="62.67" cy="53.23" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="79.78" cy="60.74" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="96.89" cy="59.48" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="114.00" cy="60.74" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-500K" cx="37.00" cy="43.24" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-1000K" cx="45.56" cy="44.50" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-2000K" cx="62.67" cy="53.23" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-3000K" cx="79.78" cy="60.74" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-4000K" cx="96.89" cy="59.48" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C373-5000K" cx="114.00" cy="60.74" r="0.9" fill="var(--ink)" stroke="none"/>
     <polyline data-size="686" points="37.00,45.01 45.56,40.25 62.67,51.78 79.78,60.65 96.89,62.00 114.00,61.30" fill="none" stroke="var(--ink)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="45.01" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="45.56" cy="40.25" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="62.67" cy="51.78" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="79.78" cy="60.65" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="114.00" cy="61.30" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-500K" cx="37.00" cy="45.01" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-1000K" cx="45.56" cy="40.25" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-2000K" cx="62.67" cy="51.78" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-3000K" cx="79.78" cy="60.65" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C686-5000K" cx="114.00" cy="61.30" r="0.9" fill="var(--ink)" stroke="none"/>
     <polyline data-size="1000" points="37.00,25.13 45.56,9.73 62.67,48.93 79.78,59.67 96.89,62.00 114.00,62.00" fill="none" stroke="var(--ink)" stroke-width="0.7" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="37.00" cy="25.13" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="45.56" cy="9.73" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="62.67" cy="48.93" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="79.78" cy="59.67" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="96.89" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
-    <circle cx="114.00" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-500K" cx="37.00" cy="25.13" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-1000K" cx="45.56" cy="9.73" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-2000K" cx="62.67" cy="48.93" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-3000K" cx="79.78" cy="59.67" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-4000K" cx="96.89" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
+    <circle data-run="C1000-5000K" cx="114.00" cy="62.00" r="0.9" fill="var(--ink)" stroke="none"/>
     <text x="34.50" y="55.21" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C40–C160</text>
     <text x="34.50" y="46.01" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C686</text>
     <text x="34.50" y="42.26" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C373</text>

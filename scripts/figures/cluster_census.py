@@ -76,6 +76,34 @@ SHELLED_BELOW_RADIAL_BOND_COSINE = 0.3
 CAGE_MAX_LOW_COORDINATION_FRACTION = 0.2
 
 
+def read_census_columns(data_dir: Path, columns: tuple[str, ...]) -> np.ndarray:
+    """Named columns of census.csv as a structured array, NaN kept as NaN.
+
+    `numpy.genfromtxt` with named `usecols`: whole-file type detection fails on the two
+    space-separated list columns (`fragment_sizes`, `shell_radii_angstrom`), not on the
+    literal `nan` values (`scripts/tests/test_cluster_census.py` pins this).
+
+    Args:
+        data_dir: Directory holding census.csv.
+        columns: Column names to read.
+
+    Returns:
+        Structured array with one field per requested column, one row per run.
+
+    Raises:
+        FileNotFoundError: If census.csv is missing.
+        ValueError: If a requested column is not in the file.
+    """
+    return np.genfromtxt(
+        data_dir / "census.csv",
+        delimiter=",",
+        names=True,
+        dtype=None,
+        encoding="utf-8",
+        usecols=columns,
+    )
+
+
 def load_frame(name: str) -> tuple[np.ndarray, float]:
     """One extracted frame and its run's cell edge.
 
