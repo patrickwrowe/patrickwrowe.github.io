@@ -23,13 +23,21 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-from render_cluster import Structure, find_bonds, read_xyz
+from render_cluster import (
+    BOND_TOLERANCE,
+    COVALENT_RADIUS_ANGSTROM,
+    Structure,
+    find_bonds,
+    read_xyz,
+)
 
 __all__ = [
     "Structure",
     "box_edge_from_density",
     "find_bonds",
+    "find_bonds_periodic",
     "make_compact",
+    "make_whole",
     "read_lammps_last_frame",
     "read_xyz",
     "slab_mask",
@@ -41,6 +49,8 @@ __all__ = [
 CARBON_MASS_G_PER_MOL = 12.011
 AVOGADRO_PER_MOL = 6.02214076e23
 CM_TO_ANGSTROM = 1.0e8
+# The flat carbon-carbon cutoff find_bonds applies: 1.2 x (0.76 + 0.76) = 1.824 A.
+CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 
 
 def box_edge_from_density(n_atoms: int, density_g_cm3: float) -> float:
@@ -129,6 +139,97 @@ def make_compact(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.nda
     delta = positions_angstrom - positions_angstrom[0]
     delta -= edge_angstrom * np.round(delta / edge_angstrom)
     return delta - delta.mean(axis=0)
+
+
+def find_bonds_periodic(
+    positions_angstrom: np.ndarray, edge_angstrom: float
+) -> list[tuple[int, int]]:
+    """All carbon-carbon pairs closer than the site's cutoff, by minimum-image distance.
+
+    The periodic counterpart of `find_bonds`: the same flat 1.824 A cutoff (strictly
+    less than), measured to the nearest periodic image in a cubic cell, so a bond that
+    crosses the cell boundary is found wherever the dump or a re-imaging put its two
+    atoms. Dense O(n^2) like `find_bonds`; fine to a few thousand atoms.
+
+    Args:
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom. Need not be
+            wrapped into the cell.
+        edge_angstrom: Cubic cell edge length, in angstrom. Must exceed twice the cutoff.
+
+    Returns:
+        Zero-based (first, second) atom index pairs with first < second, in row-major
+        order, as `find_bonds` returns them.
+
+    Raises:
+        ValueError: If the cell edge is not more than twice the bond cutoff, where the
+            minimum image would miss bonds to a second image.
+    """
+    if edge_angstrom <= 2 * CARBON_BOND_CUTOFF_ANGSTROM:
+        raise ValueError(
+            f"cell edge {edge_angstrom} A must exceed twice the "
+            f"{CARBON_BOND_CUTOFF_ANGSTROM:.3f} A bond cutoff"
+        )
+    delta_angstrom = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
+    delta_angstrom -= edge_angstrom * np.round(delta_angstrom / edge_angstrom)
+    distance_angstrom = np.linalg.norm(delta_angstrom, axis=-1)
+    upper = np.triu(np.ones_like(distance_angstrom, dtype=bool), k=1)
+    rows, cols = np.where(upper & (distance_angstrom < CARBON_BOND_CUTOFF_ANGSTROM))
+    return list(zip(rows.tolist(), cols.tolist(), strict=True))
+
+
+def make_whole(
+    positions_angstrom: np.ndarray, edge_angstrom: float, bonds: list[tuple[int, int]]
+) -> np.ndarray:
+    """Unwrap every bonded fragment so no bond crosses the periodic boundary.
+
+    Breadth-first over the bond graph, one fragment at a time: the fragment's
+    lowest-indexed atom stays where it is, and each newly reached atom is moved to its
+    minimum image relative to the atom it was reached from. Every bond then has its
+    true length in the returned Cartesian positions. Fragments are unwrapped
+    independently, so their placement relative to one another is whatever the input
+    gave (for a dissociated run, arbitrary). Each bond must be shorter than half the
+    cell, which `find_bonds_periodic` guarantees.
+
+    Args:
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        edge_angstrom: Cubic cell edge length, in angstrom.
+        bonds: Zero-based (first, second) atom index pairs, as from `find_bonds_periodic`.
+
+    Returns:
+        Positions of the same shape, in angstrom, each fragment contiguous in space; the
+        lowest-indexed atom of every fragment is unmoved.
+
+    Raises:
+        ValueError: If a bond index falls outside range(len(positions_angstrom)).
+    """
+    n_atoms = len(positions_angstrom)
+    bond_array = np.array(bonds, dtype=int).reshape(-1, 2)
+    if bond_array.size and (bond_array.min() < 0 or bond_array.max() >= n_atoms):
+        raise ValueError("a bond index falls outside range(len(positions_angstrom))")
+    source = np.concatenate([bond_array[:, 0], bond_array[:, 1]])
+    target = np.concatenate([bond_array[:, 1], bond_array[:, 0]])
+    whole_angstrom = np.array(positions_angstrom, dtype=float, copy=True)
+    placed = np.zeros(n_atoms, dtype=bool)
+    for root in range(n_atoms):
+        if placed[root]:
+            continue
+        placed[root] = True
+        frontier = np.zeros(n_atoms, dtype=bool)
+        frontier[root] = True
+        while True:
+            step = frontier[source] & ~placed[target]
+            if not step.any():
+                break
+            # One parent per newly reached atom: the first bond in array order.
+            reached, first = np.unique(target[step], return_index=True)
+            parent = source[step][first]
+            delta_angstrom = positions_angstrom[reached] - whole_angstrom[parent]
+            delta_angstrom -= edge_angstrom * np.round(delta_angstrom / edge_angstrom)
+            whole_angstrom[reached] = whole_angstrom[parent] + delta_angstrom
+            placed[reached] = True
+            frontier[:] = False
+            frontier[reached] = True
+    return whole_angstrom
 
 
 def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:

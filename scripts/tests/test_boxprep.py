@@ -148,3 +148,104 @@ def test_real_dense_slab_has_sensible_coordination():
     assert bulk_counts.mean() == pytest.approx(3.95, abs=0.03)
     assert np.mean(bulk_counts == 4) == pytest.approx(0.948, abs=0.01)
     assert bulk_counts.max() <= 5
+
+
+def fragment_of(atom: int, n_atoms: int, bonds: list[tuple[int, int]]) -> np.ndarray:
+    """Indices of the atoms bonded, directly or through others, to `atom`.
+
+    Args:
+        atom: Zero-based index of the atom whose fragment is wanted.
+        n_atoms: Number of atoms in the frame.
+        bonds: Zero-based (first, second) atom index pairs.
+
+    Returns:
+        Sorted zero-based indices of every atom in that fragment, `atom` included.
+    """
+    reached = np.zeros(n_atoms, dtype=bool)
+    reached[atom] = True
+    bond_array = np.array(bonds)
+    while True:
+        grown = reached.copy()
+        grown[bond_array[reached[bond_array[:, 0]], 1]] = True
+        grown[bond_array[reached[bond_array[:, 1]], 0]] = True
+        if np.array_equal(grown, reached):
+            return np.flatnonzero(reached)
+        reached = grown
+
+
+def straddle_first_bond(compact: np.ndarray, edge: float) -> tuple[np.ndarray, tuple[int, int]]:
+    """Translate a whole cluster so its first bond's midpoint sits on the x = 0 face, then wrap.
+
+    Args:
+        compact: Whole-cluster positions, shape (n_atoms, 3), in angstrom.
+        edge: Cubic cell edge, in angstrom.
+
+    Returns:
+        (wrapped positions in angstrom, the (first, second) pair that now straddles the face).
+    """
+    first, second = boxprep.find_bonds(compact)[0]
+    midpoint_x_angstrom = 0.5 * (compact[first, 0] + compact[second, 0])
+    shifted = boxprep.wrap(compact - np.array([midpoint_x_angstrom, 0.0, 0.0]), edge)
+    return shifted, (first, second)
+
+
+def test_periodic_bonds_and_make_whole_survive_a_bond_cut_by_the_boundary():
+    # Adversarial real data: translate the C40 fixture frame so the midpoint of a known bond
+    # sits exactly on the x = 0 face, then wrap. The bond's two atoms end up about one cell
+    # edge apart in Cartesian space, the case the non-periodic search cuts.
+    positions, edge = boxprep.read_lammps_last_frame(FIXTURES / "c40-500K-two-frames.lammpstrj")
+    compact = boxprep.make_compact(positions, edge)
+    original_bonds = boxprep.find_bonds(compact)
+    straddling, (first, second) = straddle_first_bond(compact, edge)
+    assert abs(straddling[first, 0] - straddling[second, 0]) > edge / 2
+    assert (first, second) not in boxprep.find_bonds(straddling)
+
+    periodic_bonds = boxprep.find_bonds_periodic(straddling, edge)
+    assert periodic_bonds == original_bonds
+
+    # This frame is three fragments (33, 4 and 3 atoms at the 1.824 A cutoff). make_whole
+    # restores every bond, and all distances within a fragment; where the fragments sit
+    # relative to one another is left as the wrap put them, by design.
+    whole = boxprep.make_whole(straddling, edge, periodic_bonds)
+    bond_array = np.array(original_bonds)
+    assert len(fragment_of(first, len(compact), original_bonds)) == 33
+    original_lengths = np.linalg.norm(compact[bond_array[:, 0]] - compact[bond_array[:, 1]], axis=1)
+    whole_lengths = np.linalg.norm(whole[bond_array[:, 0]] - whole[bond_array[:, 1]], axis=1)
+    assert whole_lengths == pytest.approx(original_lengths, abs=1e-6)
+
+
+def test_make_whole_restores_the_distance_matrix_of_a_real_fragment_cut_by_the_boundary():
+    # The same straddle on the fixture's 33-atom fragment alone: one fragment, so the whole
+    # pairwise distance matrix must come back, not just the bonds.
+    positions, edge = boxprep.read_lammps_last_frame(FIXTURES / "c40-500K-two-frames.lammpstrj")
+    compact = boxprep.make_compact(positions, edge)
+    fragment = compact[fragment_of(0, len(compact), boxprep.find_bonds(compact))]
+    assert len(fragment) == 33
+    straddling, (first, second) = straddle_first_bond(fragment, edge)
+    assert abs(straddling[first, 0] - straddling[second, 0]) > edge / 2
+    periodic_bonds = boxprep.find_bonds_periodic(straddling, edge)
+    assert periodic_bonds == boxprep.find_bonds(fragment)
+    whole = boxprep.make_whole(straddling, edge, periodic_bonds)
+    original_distances = np.linalg.norm(fragment[:, None, :] - fragment[None, :, :], axis=-1)
+    whole_distances = np.linalg.norm(whole[:, None, :] - whole[None, :, :], axis=-1)
+    assert whole_distances == pytest.approx(original_distances, abs=1e-6)
+
+
+def test_make_whole_keeps_each_fragment_root_and_joins_its_bonds():
+    # Two dimers in a 10 A cell, the second split across the x face. Each fragment's
+    # lowest-indexed atom stays put; its partner moves to the adjacent image.
+    edge = 10.0
+    positions = np.array([[5.0, 5.0, 5.0], [6.4, 5.0, 5.0], [0.3, 2.0, 2.0], [9.1, 2.0, 2.0]])
+    bonds = boxprep.find_bonds_periodic(positions, edge)
+    assert bonds == [(0, 1), (2, 3)]
+    whole = boxprep.make_whole(positions, edge, bonds)
+    assert whole[[0, 2]] == pytest.approx(positions[[0, 2]])
+    assert whole[3] == pytest.approx([-0.9, 2.0, 2.0])
+    assert whole[1] == pytest.approx(positions[1])
+
+
+def test_periodic_bonds_reject_a_cell_too_small_for_the_minimum_image():
+    with pytest.raises(ValueError, match="twice"):
+        boxprep.find_bonds_periodic(np.zeros((2, 3)), 3.0)
+    with pytest.raises(ValueError, match="bond index"):
+        boxprep.make_whole(np.zeros((2, 3)), 10.0, [(0, 2)])
