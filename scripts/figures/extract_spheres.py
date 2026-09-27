@@ -36,8 +36,7 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import boxprep  # noqa: E402
+import boxprep
 
 ARCHIVE_ROOT = Path(
     "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/"

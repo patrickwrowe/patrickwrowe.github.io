@@ -3,15 +3,12 @@
 from __future__ import annotations
 
 import itertools
-import sys
 from pathlib import Path
 
+import boxprep
+import cluster_census as census
 import numpy as np
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
-import boxprep  # noqa: E402
-import cluster_census as census  # noqa: E402
 
 CLUSTERS = Path(__file__).resolve().parents[1] / "figures" / "data" / "carbon-clusters"
 RUNS = [

@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import re
-import sys
 from pathlib import Path
 
+import cluster_outcomes
+import cluster_sp3
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
-import cluster_outcomes  # noqa: E402
-import cluster_sp3  # noqa: E402
 
 SPHERES = Path(__file__).resolve().parents[1] / "figures" / "data" / "carbon-clusters" / "spheres"
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b")

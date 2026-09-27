@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
+import crop_panel
 import numpy as np
 import pytest
 from PIL import Image
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
-import crop_panel  # noqa: E402
 
 IMAGE_SIZE = 40
 MARK_BOX = (10, 10, 20, 20)  # left, top, right, bottom: a 10 x 10 marked region.
@@ -19,6 +16,7 @@ MARK_RGB = (10, 20, 30)
 
 
 def _make_marked_image() -> Image.Image:
+    """A BACKGROUND_RGB square with a MARK_RGB block pasted at MARK_BOX."""
     image = Image.new("RGB", (IMAGE_SIZE, IMAGE_SIZE), BACKGROUND_RGB)
     marked_region = Image.new(
         "RGB", (MARK_BOX[2] - MARK_BOX[0], MARK_BOX[3] - MARK_BOX[1]), MARK_RGB

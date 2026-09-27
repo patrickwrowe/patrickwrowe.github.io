@@ -10,7 +10,7 @@ Definition of done item 2: visual changes are checked in a browser at 1280px and
 import pathlib
 import sys
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import Page, sync_playwright
 
 BASE = "http://localhost:4321"
 WIDTHS = {"desktop": 1280, "mobile": 390}
@@ -29,7 +29,7 @@ ROUTES = {
 SCROLL_STEP_WAIT_MS = 250  # pause per viewport-height step, long enough to start a lazy fetch
 
 
-def _scroll_through_lazy_figures(page) -> None:
+def _scroll_through_lazy_figures(page: Page) -> None:
     """Walk the page top to bottom so `loading="lazy"` figures come into view and load.
 
     Steps in viewport-sized increments with a short wait at each, then scrolls back to

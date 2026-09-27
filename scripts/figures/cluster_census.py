@@ -33,18 +33,14 @@ from __future__ import annotations
 
 import csv
 import json
-import sys
 from pathlib import Path
 
+import boxprep
 import numpy as np
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import boxprep  # noqa: E402
+from extract_spheres import SIZES, TEMPERATURES_KELVIN
 
 SITE_BOND_CUTOFF_ANGSTROM = boxprep.CARBON_BOND_CUTOFF_ANGSTROM
 SPHERES_DIR = Path(__file__).resolve().parent / "data" / "carbon-clusters" / "spheres"
-SIZES = (40, 60, 80, 120, 160, 373, 686, 1000)
-TEMPERATURES_KELVIN = (500, 1000, 2000, 3000, 4000, 5000)
 MAX_RING_SIZE = 10
 
 # Shell counting (see `shells`). Graphene holds 0.382 atoms per square angstrom; the

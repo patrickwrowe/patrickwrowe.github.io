@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import re
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
-import cluster_benchmark_c60  # noqa: E402
+import cluster_benchmark_c60
 
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 

@@ -24,5 +24,6 @@ SIZE=$(stat -c %s "$STEM.mp4")
 echo "clip: $SIZE bytes"
 if [ "$SIZE" -ge 15000000 ]; then
   echo "clip is over the 15 MB target; raise -crf or shorten with -ss/-t" >&2
+  rm -f "$STEM.mp4"
   exit 1
 fi
