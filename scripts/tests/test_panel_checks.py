@@ -1,0 +1,194 @@
+"""Tests for scripts/figures/panel_checks.py: manifest, cage and pixel checks."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+import pytest
+from PIL import Image
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "figures"))
+import panel_checks  # noqa: E402
+
+IMAGE_SIZE = 32
+GREY_RGB = (200, 200, 200)
+
+
+def _write_image(path: Path, pixels: np.ndarray) -> None:
+    """Save an (height, width, 3) uint8 array as an RGB PNG."""
+    Image.fromarray(pixels, mode="RGB").save(path)
+
+
+def _white_pixels(size: int = IMAGE_SIZE) -> np.ndarray:
+    """A size x size x 3 array of pure white pixels."""
+    return np.full((size, size, 3), 255, dtype=np.uint8)
+
+
+def _manifest(tmp_path: Path, panels: list[dict], **plate_overrides: object) -> Path:
+    """Write a minimal manifest.json and return its path."""
+    plate: dict[str, object] = {
+        "output_dir": "out",
+        "direction": [0.0, 0.0, 1.0],
+        "resolution": [100, 100],
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.2,
+        "grey": 0.35,
+    }
+    plate.update(plate_overrides)
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(json.dumps({**plate, "panels": panels}))
+    return manifest_path
+
+
+# ---------------------------------------------------------------------------
+# load_panels: manifest validation
+# ---------------------------------------------------------------------------
+
+
+def test_load_panels_merges_plate_defaults_into_each_panel(tmp_path):
+    manifest_path = _manifest(
+        tmp_path,
+        [
+            {"id": "a", "source": "a.xyz"},
+            {"id": "b", "source": "b.xyz", "grey": 0.5},
+        ],
+    )
+    panels = panel_checks.load_panels(manifest_path)
+    assert [panel["id"] for panel in panels] == ["a", "b"]
+    assert panels[0]["grey"] == 0.35
+    assert panels[1]["grey"] == 0.5
+
+
+def test_load_panels_rejects_a_panel_missing_a_required_key(tmp_path):
+    manifest_path = _manifest(tmp_path, [{"id": "a"}])  # no "source"
+    with pytest.raises(ValueError, match="lacks"):
+        panel_checks.load_panels(manifest_path)
+
+
+def test_load_panels_rejects_duplicate_ids(tmp_path):
+    manifest_path = _manifest(
+        tmp_path, [{"id": "a", "source": "a.xyz"}, {"id": "a", "source": "b.xyz"}]
+    )
+    with pytest.raises(ValueError, match="appears twice"):
+        panel_checks.load_panels(manifest_path)
+
+
+def test_load_panels_rejects_a_bad_id(tmp_path):
+    manifest_path = _manifest(tmp_path, [{"id": "a b", "source": "a.xyz"}])
+    with pytest.raises(ValueError, match="does not match"):
+        panel_checks.load_panels(manifest_path)
+
+
+def test_load_panels_rejects_an_unknown_key(tmp_path):
+    # A typo such as "slab_angstorm" for "slab_angstrom" must not silently fall back to
+    # the default and render the whole panel wrong.
+    manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", "slab_angstorm": 9.0}])
+    with pytest.raises(ValueError, match="slab_angstorm"):
+        panel_checks.load_panels(manifest_path)
+
+
+# ---------------------------------------------------------------------------
+# assert_fits_cage: containment guard
+# ---------------------------------------------------------------------------
+
+
+def test_assert_fits_cage_passes_when_the_subject_fits_with_its_spheres():
+    positions_angstrom = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [-5.0, 0.0, 0.0]])
+    panel_checks.assert_fits_cage(
+        positions_angstrom, np.zeros(3), [12.0, 12.0, 12.0], 0.5, "fits-panel"
+    )
+
+
+def test_assert_fits_cage_raises_naming_the_panel_when_it_does_not_fit():
+    positions_angstrom = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [-5.0, 0.0, 0.0]])
+    with pytest.raises(ValueError, match="too-small-panel"):
+        panel_checks.assert_fits_cage(
+            positions_angstrom, np.zeros(3), [9.0, 9.0, 9.0], 0.5, "too-small-panel"
+        )
+
+
+# ---------------------------------------------------------------------------
+# check_and_flatten: rendered-PNG whiteness and chroma checks
+# ---------------------------------------------------------------------------
+
+
+def test_a_clean_white_image_passes(tmp_path):
+    png = tmp_path / "clean.png"
+    _write_image(png, _white_pixels())
+    strays = panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+    assert strays == []
+    assert Image.open(png).mode == "L"
+
+
+def test_one_isolated_corner_stray_passes_and_is_reported(tmp_path):
+    pixels = _white_pixels()
+    pixels[0, 0] = GREY_RGB
+    png = tmp_path / "stray.png"
+    _write_image(png, pixels)
+    strays = panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+    assert strays == [(0, 0, list(GREY_RGB))]
+
+
+def test_a_three_pixel_run_on_the_border_fails(tmp_path):
+    pixels = _white_pixels()
+    pixels[0, 0:3] = GREY_RGB
+    png = tmp_path / "run.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="non-white border pixels"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_two_adjacent_border_pixels_fail(tmp_path):
+    pixels = _white_pixels()
+    pixels[0, 0] = GREY_RGB
+    pixels[0, 1] = GREY_RGB
+    png = tmp_path / "adjacent.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="non-white neighbour"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_a_border_pixel_with_an_interior_neighbour_fails(tmp_path):
+    pixels = _white_pixels()
+    pixels[0, 5] = GREY_RGB  # on the border
+    pixels[1, 5] = GREY_RGB  # one row in, but still touches the border pixel
+    png = tmp_path / "interior-neighbour.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="non-white neighbour"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_three_isolated_strays_fail(tmp_path):
+    pixels = _white_pixels()
+    for column in (2, 14, 26):  # far enough apart that none is another's neighbour
+        pixels[0, column] = GREY_RGB
+    png = tmp_path / "three-strays.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="non-white border pixels"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_a_subject_clipped_at_an_edge_fails(tmp_path):
+    # A subject rendered too large for its cage runs off the frame: a solid run of
+    # colour along the middle of one edge (away from the corner blocks), not a stray
+    # pixel or two.
+    pixels = _white_pixels()
+    pixels[12:20, 0] = GREY_RGB
+    png = tmp_path / "clipped.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="non-white border pixels"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_an_agx_grey_world_fails(tmp_path):
+    # The AgX view transform maps a linear-white world to a mid grey (measured 207/255,
+    # render_box_grid.py's module docstring); the corner-block median must catch this
+    # even though no single border pixel looks like a defect.
+    pixels = np.full((IMAGE_SIZE, IMAGE_SIZE, 3), 207, dtype=np.uint8)
+    png = tmp_path / "agx.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="corner block medians are not white"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))

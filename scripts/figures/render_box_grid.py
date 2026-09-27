@@ -1,14 +1,16 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["numpy", "pillow", "molrender"]
-# ///
 """Render periodic carbon boxes and free clusters as greyscale PNG panels through molrender.
 
 One PNG per panel. The page lays panels out with `src/components/Grid.astro`, so labels
 are real text in the site's mono face rather than pixels, and the grid reflows to three
 columns at phone width without a second render (restructure spec section 6.2, 7).
 
-Runs in the molrender environment, which is not the project venv:
+This module imports `molrender` at the top, which lives only in the environment named
+below, not the project `.venv` — there is no PEP 723 header to run it with `uv run`,
+because molrender is not on PyPI and `uv` would fetch an unrelated package of that name.
+The command below, with the molrender Python, is the only way to run this script. The
+checks that do not need molrender (manifest loading, the cage containment guard, the
+rendered-PNG whiteness check) live in `panel_checks.py` instead, so they can still be
+imported and tested from `.venv`.
 
     MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
     $MOLRENDER_PYTHON scripts/figures/render_box_grid.py \
@@ -51,15 +53,19 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            frame is wrapped; absent for a free cluster
     panels[].tile          [nx, ny, nz] periodic images (boxes only), default [1, 1, 1]
 
-Every panel must end up with each key in REQUIRED_KEYS, from the plate or its own entry;
-ids are unique and use only letters, digits, "_", "." and "-", because each names a file.
+Every panel must end up with each key in panel_checks.REQUIRED_KEYS, from the plate or its
+own entry, and no key outside panel_checks.ALLOWED_KEYS (a typo such as "slab_angstorm"
+would otherwise fall back to a default rather than failing); ids are unique and use only
+letters, digits, "_", "." and "-", because each names a file. `panel_checks.load_panels`
+enforces all of this.
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
-corner white (the median of each CORNER_BLOCK_PX square corner block is 255 on every
-channel); at most MAX_BORDER_STRAYS non-white pixels on the outer one-pixel border, each
-isolated, and reported in the summary line; residual chroma at most MAX_CHROMA; output
-saved as 8-bit greyscale.
+corner white (the median of each panel_checks.CORNER_BLOCK_PX square corner block is 255 on
+every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the outer
+one-pixel border, each isolated, and reported in the summary line; residual chroma at most
+panel_checks.MAX_CHROMA; output saved as 8-bit greyscale; every subject is carbon only,
+since `boxprep.write_pdb` writes carbon.
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -78,9 +84,7 @@ panel with `--force` then.
 from __future__ import annotations
 
 import argparse
-import json
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -90,6 +94,7 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
+import panel_checks
 from molrender import (
     DRAFT,
     PRODUCTION,
@@ -101,61 +106,10 @@ from molrender import (
     View,
     render,
 )
-from PIL import Image
 
-WHITE = 255
-CORNER_BLOCK_PX = 8
-MAX_BORDER_STRAYS = 2  # compositor artefacts, see the module docstring
-# Guards against a coloured material, which lands far above 100/255. (AgX keeps a neutral
-# grey neutral, so this does not catch it; scene_for's view_transform="Standard" enforces
-# that.) The residual is HDRI specular on sphere highlights, measured 14-16/255 on
-# 2026-09-27; the output is saved as 8-bit grey anyway.
-MAX_CHROMA = 32
 RENDER_TIMEOUT_S = 3600
 # Molecular Nodes assets/data.py; its BallAndStick sphere_radius scales this, bond_radius does not
 CARBON_VDW_RADIUS_ANGSTROM = 1.70
-REQUIRED_KEYS = (
-    "id",
-    "source",
-    "output_dir",
-    "direction",
-    "resolution",
-    "sphere_radius_angstrom",
-    "bond_radius_angstrom",
-    "grey",
-)
-PANEL_ID = re.compile(r"[\w.-]+")
-
-
-def load_panels(manifest_path: Path) -> list[dict]:
-    """Panels with the plate-level defaults folded in, later keys winning.
-
-    Args:
-        manifest_path: Path to the JSON manifest described in the module docstring.
-
-    Returns:
-        One dict per panel, each holding every plate-level key (lengths in angstrom,
-        resolution in pixels) overridden by the panel's own keys.
-
-    Raises:
-        ValueError: If a panel lacks a key in REQUIRED_KEYS, an id does not match
-            PANEL_ID (letters, digits, "_", "." and "-"), or two panels share an id.
-    """
-    manifest = json.loads(manifest_path.read_text())
-    plate = {key: value for key, value in manifest.items() if key != "panels"}
-    panels = [{**plate, **panel} for panel in manifest["panels"]]
-    seen_ids: set[str] = set()
-    for index, panel in enumerate(panels):
-        name = panel.get("id", f"panels[{index}]")
-        missing = [key for key in REQUIRED_KEYS if key not in panel]
-        if missing:
-            raise ValueError(f"{manifest_path}: panel {name} lacks {missing}")
-        if not PANEL_ID.fullmatch(str(name)):
-            raise ValueError(f"{manifest_path}: panel id {name!r} does not match [\\w.-]+")
-        if name in seen_ids:
-            raise ValueError(f"{manifest_path}: panel id {name} appears twice")
-        seen_ids.add(name)
-    return panels
 
 
 def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
@@ -167,7 +121,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
     of `cage_angstrom`.
 
     Args:
-        spec: One panel from `load_panels`.
+        spec: One panel from `panel_checks.load_panels`.
         work_dir: Scratch directory for the PDB files.
 
     Returns:
@@ -175,10 +129,15 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
         the number of atoms drawn.
 
     Raises:
-        ValueError: If the cage does not hold the subject with its spheres on every axis,
-            which would let the subject frame itself and break the plate's shared scale.
+        ValueError: If the frame's species are not all carbon (`boxprep.write_pdb` writes
+            carbon only), or the cage does not hold the subject with its spheres on every
+            axis, which would let the subject frame itself and break the plate's shared
+            scale (`panel_checks.assert_fits_cage`).
     """
     structure = boxprep.read_xyz(Path(spec["source"]))
+    non_carbon = sorted(set(structure.species) - {"C"})
+    if non_carbon:
+        raise ValueError(f"panel {spec['id']}: source has non-carbon species {non_carbon}")
     positions_angstrom = structure.positions_angstrom
     if "density_g_cm3" in spec:
         edge_angstrom = boxprep.box_edge_from_density(
@@ -202,15 +161,14 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
     extent_angstrom = spec.get("cage_angstrom")
     if not extent_angstrom:
         return subject, None, len(positions_angstrom)
+    panel_checks.assert_fits_cage(
+        positions_angstrom,
+        centre_angstrom,
+        extent_angstrom,
+        float(spec["sphere_radius_angstrom"]),
+        str(spec["id"]),
+    )
     half_extent_angstrom = np.asarray(extent_angstrom, dtype=float) / 2.0
-    reach_angstrom = np.abs(positions_angstrom - centre_angstrom).max(axis=0)
-    needed_angstrom = 2.0 * (reach_angstrom + float(spec["sphere_radius_angstrom"]))
-    if (needed_angstrom > 2.0 * half_extent_angstrom).any():
-        raise ValueError(
-            f"panel {spec['id']}: subject with spheres needs a cage of "
-            f"{np.round(needed_angstrom, 2).tolist()} A about its centre, "
-            f"cage_angstrom is {list(extent_angstrom)}"
-        )
     signs = np.array([(sx, sy, sz) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)])
     cage = work_dir / f"{spec['id']}-cage.pdb"
     boxprep.write_pdb(cage, centre_angstrom + half_extent_angstrom * signs, [])
@@ -221,7 +179,7 @@ def scene_for(spec: dict, subject: Path, cage: Path | None, draft: bool) -> Scen
     """The molrender scene for one panel under the section 6.2 constraints.
 
     Args:
-        spec: One panel from `load_panels`; radii in angstrom, grey linear RGB in 0-1.
+        spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
         subject: PDB of the atoms to draw.
         cage: PDB of the hidden cage that fixes the scale, or None to fit the subject.
         draft: Use the DRAFT tier (EEVEE, half resolution) instead of PRODUCTION.
@@ -254,84 +212,19 @@ def scene_for(spec: dict, subject: Path, cage: Path | None, draft: bool) -> Scen
     )
 
 
-def check_and_flatten(
-    png: Path, expected_size: tuple[int, int]
-) -> list[tuple[int, int, list[int]]]:
-    """Assert size, a white world and near-zero chroma, then save as 8-bit grey.
-
-    The world is judged by blocks, not single pixels, because the Molecular Nodes
-    compositor can leave a stray pixel on the border (module docstring): the median of
-    each CORNER_BLOCK_PX square corner block must be 255 on every channel, and at most
-    MAX_BORDER_STRAYS pixels on the outer one-pixel border may be non-white, each with no
-    non-white pixel among its eight neighbours. A sphere reaching the border is a run of
-    non-white pixels and still fails.
-
-    Args:
-        png: The rendered PNG, overwritten in place as mode L.
-        expected_size: (width, height) in pixels the file on disk must have.
-
-    Returns:
-        The tolerated border strays as (row, column, [r, g, b]) in pixels, 0-255.
-
-    Raises:
-        RuntimeError: If the size differs, a corner block's median is not white, the
-            border has more than MAX_BORDER_STRAYS non-white pixels or one that is not
-            isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA.
-    """
-    image = Image.open(png).convert("RGB")
-    if image.size != expected_size:
-        raise RuntimeError(f"{png}: rendered {image.size}, expected {expected_size}")
-    pixels = np.asarray(image, dtype=np.int16)
-    block = CORNER_BLOCK_PX
-    corner_blocks = [
-        pixels[:block, :block],
-        pixels[:block, -block:],
-        pixels[-block:, :block],
-        pixels[-block:, -block:],
-    ]
-    medians = [np.median(corner.reshape(-1, 3), axis=0) for corner in corner_blocks]
-    if any((median != WHITE).any() for median in medians):
-        raise RuntimeError(
-            f"{png}: corner block medians are not white: {[median.tolist() for median in medians]}"
-        )
-    non_white = (pixels < WHITE).any(axis=2)
-    on_border = np.ones_like(non_white)
-    on_border[1:-1, 1:-1] = False
-    rows, columns = np.nonzero(non_white & on_border)
-    strays = [
-        (int(row), int(column), pixels[row, column].tolist())
-        for row, column in zip(rows, columns, strict=True)
-    ]
-    if len(strays) > MAX_BORDER_STRAYS:
-        raise RuntimeError(
-            f"{png}: {len(strays)} non-white border pixels, at most {MAX_BORDER_STRAYS}: "
-            f"{strays[:8]}"
-        )
-    padded = np.pad(non_white, 1)
-    for row, column, value in strays:
-        if padded[row : row + 3, column : column + 3].sum() > 1:
-            raise RuntimeError(
-                f"{png}: non-white border pixel ({row}, {column}) {value} has a non-white neighbour"
-            )
-    chroma = int((pixels.max(axis=2) - pixels.min(axis=2)).max())
-    if chroma > MAX_CHROMA:
-        raise RuntimeError(f"{png}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
-    image.convert("L").save(png, optimize=True)
-    return strays
-
-
 def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     """Render one panel to `<output_dir>/<id>.png` and print one summary line.
 
     Args:
-        spec: One panel from `load_panels`.
+        spec: One panel from `panel_checks.load_panels`.
         work_dir: Scratch directory for the PDB files.
         draft: Use the DRAFT tier; the expected size is then half the resolution.
 
     Raises:
-        ValueError: From `prepare` when the cage does not hold the subject.
-        RuntimeError: From `check_and_flatten` when the PNG breaks a section 6.2 rule;
-            nothing is then written to `<output_dir>/<id>.png`.
+        ValueError: From `prepare` when the source is not all carbon or the cage does
+            not hold the subject.
+        RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
+            section 6.2 rule; nothing is then written to `<output_dir>/<id>.png`.
         molrender.RenderError: If Blender fails, times out or writes nothing.
     """
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
@@ -341,7 +234,9 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     result = render(scene_for(spec, subject, cage, draft), rendered, timeout=RENDER_TIMEOUT_S)
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
-    strays = check_and_flatten(rendered, (int(width_px * scale), int(height_px * scale)))
+    strays = panel_checks.check_and_flatten(
+        rendered, (int(width_px * scale), int(height_px * scale))
+    )
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(rendered, output)
     elapsed_s = time.perf_counter() - started_s
@@ -370,7 +265,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--force", action="store_true", help="Re-render panels whose PNG exists")
     args = parser.parse_args(argv)
 
-    panels = load_panels(args.manifest)
+    panels = panel_checks.load_panels(args.manifest)
     if args.only:
         unknown = set(args.only) - {panel["id"] for panel in panels}
         if unknown:
