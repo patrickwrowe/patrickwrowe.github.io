@@ -5,15 +5,20 @@
 """Geometry for rendering periodic carbon boxes and free carbon clusters.
 
 The archive's final frames are plain XYZ with no cell line and the cluster dumps are
-LAMMPS `atom`-style with scaled coordinates. This module recovers the cell, folds and
-tiles the box, cuts the slab a camera can see into, re-images a cluster the periodic
-dump has split, and writes a PDB with explicit CONECT records, because Molecular Nodes
-reads bonds from CONECT and infers none for a residue it does not know
-(docs/dossiers/carbon/molrender-api.md section 10).
+LAMMPS `atom`-style with scaled coordinates. This module reads structures, recovers
+the cell, folds and tiles the box, cuts the slab a camera can see into, re-images a
+cluster the periodic dump has split, and writes a PDB with explicit CONECT records,
+because Molecular Nodes reads bonds from CONECT and infers none for a residue it does
+not know (docs/dossiers/carbon/molrender-api.md section 10).
 
-Pure numpy. The dense bond search is inherited from render_cluster.py and is fine for
-the largest thing rendered here, a two-thousand-atom slab; a whole 5,832-atom box is
-never bonded, it is sliced first.
+`Structure`, `read_xyz` and `find_bonds` are the shared geometry primitives: this
+module uses them to prepare boxes for the Blender driver (`render_box_grid.py`), and
+`render_cluster.py` imports them back for its own SVG drawing, so both renderers read
+and bond structures the same way.
+
+Pure numpy. The dense bond search (`find_bonds`) is fine for the largest thing
+rendered here, a two-thousand-atom slab; a whole 5,832-atom box is never bonded, it is
+sliced first.
 
 Units: every length is in angstrom, every density in g cm^-3.
 """
@@ -21,15 +26,9 @@ Units: every length is in angstrom, every density in g cm^-3.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
-from render_cluster import (
-    BOND_TOLERANCE,
-    COVALENT_RADIUS_ANGSTROM,
-    Structure,
-    find_bonds,
-    read_xyz,
-)
 
 __all__ = [
     "Structure",
@@ -49,8 +48,111 @@ __all__ = [
 CARBON_MASS_G_PER_MOL = 12.011
 AVOGADRO_PER_MOL = 6.02214076e23
 CM_TO_ANGSTROM = 1.0e8
+
+# Covalent radii in Angstrom (Cordero et al., Dalton Trans. 2008). A pair is bonded
+# within BOND_TOLERANCE times the sum of its two radii, which puts C-C at 1.82 A:
+# above the 1.55 A single bond, below the 2.4 A second neighbour in every phase these
+# searches produce. This is the 1.8 A cutoff render_cluster.py used before it was
+# generalised beyond carbon, so its published cage figures are unchanged by it.
+COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
+BOND_TOLERANCE = 1.2
 # The flat carbon-carbon cutoff find_bonds applies: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
+
+
+class Structure(NamedTuple):
+    """One atomic configuration. Positions are (n, 3) in Angstrom."""
+
+    species: list[str]
+    positions_angstrom: np.ndarray
+
+    def __len__(self) -> int:
+        return len(self.species)
+
+
+def read_xyz(path: Path, frame: int = -1) -> Structure:
+    """Read one frame of an XYZ or extended-XYZ file.
+
+    The search output carries trailing bookkeeping columns (index, neighbour list)
+    after the coordinates, so only fields 0-3 are read. Trajectories are concatenated
+    frames; `frame` indexes them and defaults to the last, which is the relaxed or
+    equilibrated structure in everything this renders.
+
+    Args:
+        path: Path to the XYZ file.
+        frame: Zero-based frame index; negative indexes from the end. Defaults to the
+            last frame.
+
+    Returns:
+        The structure at that frame.
+
+    Raises:
+        ValueError: If the file holds no frames, a frame's atom count does not match
+            its header, or an atom's species has no entry in COVALENT_RADIUS_ANGSTROM.
+    """
+    lines = path.read_text().splitlines()
+
+    frames: list[tuple[int, int]] = []  # (first atom line, atom count)
+    cursor = 0
+    while cursor < len(lines):
+        header = lines[cursor].split()
+        if not header:  # trailing blank lines
+            break
+        n_atoms = int(header[0])
+        frames.append((cursor + 2, n_atoms))
+        cursor += 2 + n_atoms
+    if not frames:
+        raise ValueError(f"{path}: no frames found")
+
+    start, n_atoms = frames[frame]
+    species: list[str] = []
+    coords: list[list[float]] = []
+    for line in lines[start : start + n_atoms]:
+        fields = line.split()
+        species.append(fields[0])
+        coords.append([float(fields[1]), float(fields[2]), float(fields[3])])
+
+    positions_angstrom = np.asarray(coords, dtype=float)
+    if positions_angstrom.shape != (n_atoms, 3):
+        raise ValueError(f"{path}: expected {n_atoms} atoms, parsed {positions_angstrom.shape[0]}")
+
+    unknown = set(species) - COVALENT_RADIUS_ANGSTROM.keys()
+    if unknown:
+        raise ValueError(
+            f"{path}: no covalent radius for {sorted(unknown)}. Add it to "
+            f"COVALENT_RADIUS_ANGSTROM here, and to DRAW_RADIUS_FACTOR in "
+            f"render_cluster.py if it will be drawn."
+        )
+    return Structure(species, positions_angstrom)
+
+
+def find_bonds(
+    positions_angstrom: np.ndarray, species: list[str] | None = None
+) -> list[tuple[int, int]]:
+    """All atom pairs closer than BOND_TOLERANCE times their summed covalent radii.
+
+    O(n^2) on the distance matrix. The largest cluster this renders is 720 atoms, so
+    this is well under a second and a neighbour list would be premature.
+
+    Args:
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        species: Element symbol per atom, or None for all-carbon, which keeps the
+            cutoff at the flat 1.82 A the carbon-only figures were drawn with.
+
+    Returns:
+        Zero-based (first, second) atom index pairs with first < second, in row-major
+        order.
+    """
+    if species is None:
+        species = ["C"] * len(positions_angstrom)
+    radii = np.array([COVALENT_RADIUS_ANGSTROM[s] for s in species])
+    cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
+
+    deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
+    distances = np.linalg.norm(deltas, axis=-1)
+    upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
+    rows, cols = np.where(upper & (distances < cutoffs))
+    return list(zip(rows.tolist(), cols.tolist(), strict=True))
 
 
 def box_edge_from_density(n_atoms: int, density_g_cm3: float) -> float:

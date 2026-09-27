@@ -29,17 +29,9 @@ import math
 import re
 from collections import Counter
 from pathlib import Path
-from typing import NamedTuple
 
+import boxprep
 import numpy as np
-
-# Covalent radii in Angstrom (Cordero et al., Dalton Trans. 2008). A pair is
-# bonded within BOND_TOLERANCE times the sum of its two radii, which puts C-C at
-# 1.82 A: above the 1.55 A single bond, below the 2.4 A second neighbour in every
-# phase these searches produce. That is the 1.8 A this script used when it was
-# carbon-only, so the published cage figures are unchanged by the generalisation.
-COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
-BOND_TOLERANCE = 1.2
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
 # nested front-to-back, so anything approaching space-filling collapses into a
@@ -80,59 +72,6 @@ OPACITY_FAR = 0.07
 OPACITY_NEAR = 0.95
 
 
-class Structure(NamedTuple):
-    """One atomic configuration. Positions are (n, 3) in Angstrom."""
-
-    species: list[str]
-    positions_angstrom: np.ndarray
-
-    def __len__(self) -> int:
-        return len(self.species)
-
-
-def read_xyz(path: Path, frame: int = -1) -> Structure:
-    """Read one frame of an XYZ or extended-XYZ file.
-
-    The search output carries trailing bookkeeping columns (index, neighbour
-    list) after the coordinates, so only fields 0-3 are read. Trajectories are
-    concatenated frames; `frame` indexes them and defaults to the last, which is
-    the relaxed or equilibrated structure in everything this renders.
-    """
-    lines = path.read_text().splitlines()
-
-    frames: list[tuple[int, int]] = []  # (first atom line, atom count)
-    cursor = 0
-    while cursor < len(lines):
-        header = lines[cursor].split()
-        if not header:  # trailing blank lines
-            break
-        n_atoms = int(header[0])
-        frames.append((cursor + 2, n_atoms))
-        cursor += 2 + n_atoms
-    if not frames:
-        raise ValueError(f"{path}: no frames found")
-
-    start, n_atoms = frames[frame]
-    species: list[str] = []
-    coords: list[list[float]] = []
-    for line in lines[start : start + n_atoms]:
-        fields = line.split()
-        species.append(fields[0])
-        coords.append([float(fields[1]), float(fields[2]), float(fields[3])])
-
-    positions_angstrom = np.asarray(coords, dtype=float)
-    if positions_angstrom.shape != (n_atoms, 3):
-        raise ValueError(f"{path}: expected {n_atoms} atoms, parsed {positions_angstrom.shape[0]}")
-
-    unknown = set(species) - COVALENT_RADIUS_ANGSTROM.keys()
-    if unknown:
-        raise ValueError(
-            f"{path}: no covalent radius for {sorted(unknown)}. "
-            f"Add it to COVALENT_RADIUS_ANGSTROM and pick a DRAW_RADIUS_FACTOR."
-        )
-    return Structure(species, positions_angstrom)
-
-
 def rotation_matrix(degrees_xyz: tuple[float, float, float]) -> np.ndarray:
     """Extrinsic X-then-Y-then-Z rotation."""
     rx, ry, rz = (math.radians(d) for d in degrees_xyz)
@@ -143,44 +82,6 @@ def rotation_matrix(degrees_xyz: tuple[float, float, float]) -> np.ndarray:
     mat_y = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
     mat_z = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
     return mat_z @ mat_y @ mat_x
-
-
-def find_bonds(positions_angstrom: np.ndarray, species: list[str] | None = None) -> list[tuple[int, int]]:
-    """All atom pairs closer than BOND_TOLERANCE times their summed covalent radii.
-
-    O(n^2) on the distance matrix. The largest cluster here is 720 atoms, so
-    this is well under a second and a neighbour list would be premature.
-
-    `species` defaults to all-carbon, which keeps the cutoff at the flat 1.82 A
-    the carbon-only figures were drawn with.
-    """
-    if species is None:
-        species = ["C"] * len(positions_angstrom)
-    radii = np.array([COVALENT_RADIUS_ANGSTROM[s] for s in species])
-    cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
-
-    deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
-    distances = np.linalg.norm(deltas, axis=-1)
-    upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
-    rows, cols = np.where(upper & (distances < cutoffs))
-    return list(zip(rows.tolist(), cols.tolist()))
-
-
-def slab_mask(rotated: np.ndarray, thickness_angstrom: float) -> np.ndarray:
-    """Atoms within a slab of the given thickness, centred on the view axis.
-
-    A periodic cell of a few thousand atoms projects to a solid black square: the
-    front face hides everything and there is no structure to read. Cutting a slab
-    perpendicular to the view gives the cross-section an electron micrograph of
-    the same material would show.
-
-    It is also what makes the bond search affordable. That search is O(n^2) on a
-    dense (n, n, 3) array, which for 5,832 atoms is some 800 MB; a slab an order
-    of magnitude smaller brings it back to nothing.
-    """
-    depth = rotated[:, 2]
-    centre = float(np.median(depth))
-    return np.abs(depth - centre) <= thickness_angstrom / 2.0
 
 
 def depth_opacity(depth: float, near: float, far: float) -> float:
@@ -209,7 +110,7 @@ def _draw(
     # nearer atom so it never floats in front of the atom it joins.
     drawables: list[tuple[float, str]] = []
 
-    for i, j in find_bonds(rotated, species):
+    for i, j in boxprep.find_bonds(rotated, species):
         opacity = depth_opacity(max(zs[i], zs[j]), near, far)
         width = BOND_WIDTH * radius_scale
         if DRAW_COLOUR[species[i]] == DRAW_COLOUR[species[j]]:
@@ -266,7 +167,7 @@ def _draw(
 
 
 def render(
-    structure: Structure,
+    structure: boxprep.Structure,
     rotate_degrees: tuple[float, float, float],
     radius_scale: float = 1.0,
     slab_angstrom: float | None = None,
@@ -275,7 +176,12 @@ def render(
     rotated = centred @ rotation_matrix(rotate_degrees).T
     species = structure.species
     if slab_angstrom is not None:
-        keep = slab_mask(rotated, slab_angstrom)
+        # A periodic cell of a few thousand atoms projects to a solid black square: the
+        # front face hides everything and there is no structure to read. Cutting a slab
+        # perpendicular to the view gives the cross-section an electron micrograph of the
+        # same material would show. It is also what keeps the bond search affordable: an
+        # order of magnitude fewer atoms keeps the O(n^2) distance matrix small.
+        keep = boxprep.slab_mask(rotated[:, 2], float(np.median(rotated[:, 2])), slab_angstrom)
         rotated = rotated[keep]
         species = [s for s, k in zip(species, keep) if k]
 
@@ -331,7 +237,7 @@ def _formula_markup(label: str, label_size: float = 1.6) -> str:
 
 
 def render_series(
-    clusters: list[tuple[str, Structure]],
+    clusters: list[tuple[str, boxprep.Structure]],
     rotate_degrees: tuple[float, float, float],
     radius_scale: float = 1.0,
     columns: int | None = None,
@@ -364,7 +270,9 @@ def render_series(
         rotated = centred @ rot.T
         species = structure.species
         if slab_angstrom is not None:
-            keep = slab_mask(rotated, slab_angstrom)
+            # See render(): a slab perpendicular to the view, centred on its own median
+            # depth, keeps the cross-section legible and the bond search affordable.
+            keep = boxprep.slab_mask(rotated[:, 2], float(np.median(rotated[:, 2])), slab_angstrom)
             rotated = rotated[keep]
             species = [s for s, k in zip(species, keep) if k]
         rotated_all.append(rotated)
@@ -483,19 +391,22 @@ def main() -> None:
     if len(rotate) != 3:
         parser.error("--rotate needs exactly three comma-separated degrees")
 
-    def describe(structure: Structure) -> str:
+    def describe(structure: boxprep.Structure) -> str:
         counts = Counter(structure.species)
         return " ".join(f"{s}{counts[s]}" for s in sorted(counts))
 
     if len(args.inputs) == 1 and not args.labels:
-        structure = read_xyz(args.inputs[0], args.frame)
+        structure = boxprep.read_xyz(args.inputs[0], args.frame)
         svg = render(structure, rotate, args.radius_scale, args.slab)  # type: ignore[arg-type]
         print(f"{args.inputs[0].name}: {len(structure)} atoms, {describe(structure)}")
     else:
         labels = args.labels.split(",") if args.labels else [p.stem for p in args.inputs]
         if len(labels) != len(args.inputs):
             parser.error(f"{len(labels)} labels for {len(args.inputs)} inputs")
-        clusters = [(label, read_xyz(path, args.frame)) for label, path in zip(labels, args.inputs)]
+        clusters = [
+            (label, boxprep.read_xyz(path, args.frame))
+            for label, path in zip(labels, args.inputs, strict=True)
+        ]
         svg = render_series(  # type: ignore[arg-type]
             clusters, rotate, args.radius_scale, args.columns, args.slab
         )
@@ -512,27 +423,27 @@ def _self_check() -> None:
     # Four carbons in a 1.4 A square: four bonds around the edge, and the
     # 1.98 A diagonals correctly excluded.
     square = np.array([[0.0, 0.0, 0.0], [1.4, 0.0, 0.0], [1.4, 1.4, 0.0], [0.0, 1.4, 0.0]])
-    assert len(find_bonds(square)) == 4, find_bonds(square)
+    assert len(boxprep.find_bonds(square)) == 4, boxprep.find_bonds(square)
 
     # Cutoff boundary: 1.7 A bonded, 1.9 A not. This is the carbon-only cutoff
     # the cage figures were drawn with, and the covalent-radius rule must not
     # have moved it.
-    assert len(find_bonds(np.array([[0.0, 0, 0], [1.7, 0, 0]]))) == 1
-    assert len(find_bonds(np.array([[0.0, 0, 0], [1.9, 0, 0]]))) == 0
+    assert len(boxprep.find_bonds(np.array([[0.0, 0, 0], [1.7, 0, 0]]))) == 1
+    assert len(boxprep.find_bonds(np.array([[0.0, 0, 0], [1.9, 0, 0]]))) == 0
 
     # Per-species cutoffs. A 1.1 A C-H bond is real; the same separation between
     # two carbons would be far too short, but the flat 1.8 A rule accepted it and
     # a flat rule tight enough for C-H would have broken every C-C bond.
     pair = np.array([[0.0, 0, 0], [1.1, 0, 0]])
-    assert len(find_bonds(pair, ["C", "H"])) == 1
+    assert len(boxprep.find_bonds(pair, ["C", "H"])) == 1
     # ... and 1.6 A is a C-O bond but not an O-H one.
     pair = np.array([[0.0, 0, 0], [1.6, 0, 0]])
-    assert len(find_bonds(pair, ["C", "O"])) == 1
-    assert len(find_bonds(pair, ["O", "H"])) == 0
+    assert len(boxprep.find_bonds(pair, ["C", "O"])) == 1
+    assert len(boxprep.find_bonds(pair, ["O", "H"])) == 0
 
     # Two hydrogens at a typical non-bonded contact must not be joined: the
     # summed radii are small enough that the flat carbon cutoff would have.
-    assert len(find_bonds(np.array([[0.0, 0, 0], [1.5, 0, 0]]), ["H", "H"])) == 0
+    assert len(boxprep.find_bonds(np.array([[0.0, 0, 0], [1.5, 0, 0]]), ["H", "H"])) == 0
 
     # Every element must be distinguishable from every other. A regression here is
     # silent in the SVG and only visible once the figure is on the page.
@@ -560,7 +471,7 @@ def _self_check() -> None:
 
     # Wrapping onto a grid. Four identical single atoms on two columns must give
     # two rows: a taller, narrower figure than the same four in one row.
-    one = Structure(["C"], np.zeros((1, 3)))
+    one = boxprep.Structure(["C"], np.zeros((1, 3)))
     four = [(f"C{i}", one) for i in range(4)]
     row = render_series(four, (0, 0, 0))
     grid = render_series(four, (0, 0, 0), columns=2)
