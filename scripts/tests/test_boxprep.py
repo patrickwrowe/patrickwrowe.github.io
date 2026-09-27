@@ -249,3 +249,15 @@ def test_periodic_bonds_reject_a_cell_too_small_for_the_minimum_image():
         boxprep.find_bonds_periodic(np.zeros((2, 3)), 3.0)
     with pytest.raises(ValueError, match="bond index"):
         boxprep.make_whole(np.zeros((2, 3)), 10.0, [(0, 2)])
+
+
+def test_make_whole_rejects_a_chain_bonded_to_its_own_image():
+    # Seven atoms 1.42 A apart along x in a 10 A cell: the last is 1.48 A from the first's
+    # periodic image, so the chain closes on itself through the boundary and one bond
+    # would have to stretch across the cell. make_whole must refuse, not return it.
+    edge = 10.0
+    chain = np.column_stack([np.arange(7) * 1.42, np.full(7, 5.0), np.full(7, 5.0)])
+    bonds = boxprep.find_bonds_periodic(chain, edge)
+    assert (0, 6) in bonds and len(bonds) == 7
+    with pytest.raises(ValueError, match="own periodic image"):
+        boxprep.make_whole(chain, edge, bonds)

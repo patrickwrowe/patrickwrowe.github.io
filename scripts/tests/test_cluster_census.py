@@ -270,9 +270,48 @@ def test_c686_at_4000k_is_molten():
         )
 
 
+def test_c160_at_2000k_is_an_onion_by_its_off_centre_inner_cage():
+    # A 20-atom fragment sits about 1.3 A off the outer cage's centre, so in the profile
+    # about that centre it smears into the outer peak; about its own centre its bonds are
+    # tangential (radial cosine 0.22), so it counts as a second, enclosed shell.
+    positions_angstrom, edge_angstrom = census.load_frame("C160-2000K")
+    record = census.census(positions_angstrom, edge_angstrom)
+    assert census.classify(record) == "graphitic onion"
+    assert (record["n_shells"], record["n_enclosed_shells"]) == (2, 1)
+    radii = [float(radius) for radius in str(record["shell_radii_angstrom"]).split()]
+    assert radii == pytest.approx([2.16, 5.51], abs=RADIUS_MARGIN_ANGSTROM), radii
+    for key, value in {"sp2_fraction": 0.844, "mean_radial_bond_cosine": 0.284}.items():
+        assert measured(record, key) == pytest.approx(value, abs=FRACTION_MARGIN), (
+            f"{key} measured {record[key]}"
+        )
+    bonds = census.bonds_at_cutoff(positions_angstrom, edge_angstrom)
+    labels = census.fragment_labels(census.adjacency_matrix(160, bonds))
+    assert census.enclosed_shells(positions_angstrom, bonds, labels) == [
+        (pytest.approx(2.16, abs=RADIUS_MARGIN_ANGSTROM), 20)
+    ]
+
+
 def test_c60_at_5000k_is_dissociated():
     record = census.census(*census.load_frame("C60-5000K"))
     assert census.classify(record) == "dissociated"
+    # Where make_compact put the fragments is arbitrary, so no radius of gyration.
+    assert np.isnan(measured(record, "radius_of_gyration_angstrom"))
     assert record["n_fragments"] == 7, f"fragments measured {record['n_fragments']}"
     largest = measured(record, "largest_fragment_fraction")
     assert largest == pytest.approx(0.367, abs=FRACTION_MARGIN), f"largest measured {largest}"
+
+
+def test_census_csv_numeric_columns_parse_with_their_nan_values():
+    # The pattern a figure script should use: name the columns. Whole-file type detection
+    # (dtype=None without usecols) fails on the space-separated list columns
+    # fragment_sizes and shell_radii_angstrom, not on the literal nan values.
+    table = np.genfromtxt(
+        census.SPHERES_DIR / "census.csv",
+        delimiter=",",
+        names=True,
+        dtype=float,
+        usecols=("n_atoms", "radius_of_gyration_angstrom", "sp3_fraction", "core_atoms"),
+    )
+    assert len(table) == 48
+    assert np.isnan(table["radius_of_gyration_angstrom"]).sum() == 19
+    assert not np.isnan(table["sp3_fraction"]).any()

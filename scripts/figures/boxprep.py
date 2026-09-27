@@ -200,7 +200,9 @@ def make_whole(
         lowest-indexed atom of every fragment is unmoved.
 
     Raises:
-        ValueError: If a bond index falls outside range(len(positions_angstrom)).
+        ValueError: If a bond index falls outside range(len(positions_angstrom)), or if a
+            fragment is bonded to its own periodic image (it spans the whole cell, so no
+            placement gives every bond its true length).
     """
     n_atoms = len(positions_angstrom)
     bond_array = np.array(bonds, dtype=int).reshape(-1, 2)
@@ -229,6 +231,9 @@ def make_whole(
             placed[reached] = True
             frontier[:] = False
             frontier[reached] = True
+    bond_vectors = whole_angstrom[bond_array[:, 1]] - whole_angstrom[bond_array[:, 0]]
+    if np.any(np.abs(bond_vectors) > edge_angstrom / 2):
+        raise ValueError("a fragment is bonded to its own periodic image: it spans the cell")
     return whole_angstrom
 
 

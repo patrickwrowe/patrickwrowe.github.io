@@ -54,6 +54,11 @@ SHELL_MIN_DIP_FRACTION = 0.2
 SHELL_MIN_ATOMS = 20
 SHELL_MIN_RADIUS_ANGSTROM = 2.0
 SHELL_MIN_COVERAGE_PER_ANGSTROM2 = 0.19
+# An enclosed fragment is a shell if its own bonds are tangential about its own centre.
+ENCLOSED_SHELL_BELOW_RADIAL_BOND_COSINE = 0.3
+# Core atoms: more than half a graphite interlayer spacing (3.4 A) inside the innermost
+# shell, i.e. nearer the next shell in than to this one.
+CORE_DEPTH_ANGSTROM = 1.7
 # Interior sp3: atoms deeper than one graphite interlayer spacing inside the
 # 98th-percentile radius, so the edge-rich surface does not dilute the core.
 INTERIOR_DEPTH_ANGSTROM = 3.4
@@ -262,7 +267,9 @@ def shells(
            graphene (0.382 A^-2). Chains trailing off the surface and central lumps fail.
 
     A compact, disordered sphere can also show density ripples that pass; shell-like
-    bonding is judged separately by `mean_radial_bond_cosine`.
+    bonding is judged separately by `mean_radial_bond_cosine`. `all_shells` applies this
+    to the largest fragment's atoms and adds enclosed fragments that are shells of their
+    own, which a profile about the outer centre misses when they sit off-centre.
 
     Args:
         positions_angstrom: Whole-fragment positions, shape (n_atoms, 3), in angstrom.
@@ -310,6 +317,129 @@ def shells(
         if mean_radius_angstrom >= min_radius_angstrom and coverage >= min_coverage_per_angstrom2:
             found.append((mean_radius_angstrom, len(members)))
     return found
+
+
+def enclosed_shells(
+    positions_angstrom: np.ndarray,
+    bonds: np.ndarray,
+    labels: np.ndarray,
+    min_atoms: int = SHELL_MIN_ATOMS,
+    max_cosine: float = ENCLOSED_SHELL_BELOW_RADIAL_BOND_COSINE,
+) -> list[tuple[float, int]]:
+    """Bonded fragments nested inside the largest one that are shells in their own right.
+
+    A fragment other than the largest counts if (a) it is enclosed: every one of its atoms
+    lies closer to the largest fragment's centre of mass than that fragment's median
+    atom; (b) it holds at least `min_atoms` atoms; and (c) its own bonds lie tangentially
+    about its own centre of mass: mean radial bond cosine below `max_cosine`. Such a
+    fragment is a small cage inside the outer one; if it sits off-centre its atoms smear
+    across the outer shell's radii in a profile about the outer centre, so the profile
+    alone cannot see it.
+
+    Args:
+        positions_angstrom: Whole-fragment positions, shape (n_atoms, 3), in angstrom.
+        bonds: Integer array, shape (n_bonds, 2), of zero-based atom index pairs.
+        labels: Fragment label per atom, from `fragment_labels`.
+        min_atoms: Fewest atoms an enclosed shell may hold.
+        max_cosine: Mean radial bond cosine, about the fragment's own centre, below which
+            its bonds count as tangential.
+
+    Returns:
+        One (mean radius about the fragment's own centre in angstrom, atom count) per
+        enclosed shell, smallest first.
+    """
+    fragment_ids, counts = np.unique(labels, return_counts=True)
+    largest = labels == fragment_ids[np.argmax(counts)]
+    outer_centre_angstrom = positions_angstrom[largest].mean(axis=0)
+    outer_median_angstrom = np.median(
+        np.linalg.norm(positions_angstrom[largest] - outer_centre_angstrom, axis=1)
+    )
+    found: list[tuple[float, int]] = []
+    for fragment_id, count in zip(fragment_ids, counts, strict=True):
+        members = labels == fragment_id
+        if count < min_atoms or np.array_equal(members, largest):
+            continue
+        distance_from_outer = np.linalg.norm(
+            positions_angstrom[members] - outer_centre_angstrom, axis=1
+        )
+        if distance_from_outer.max() >= outer_median_angstrom:
+            continue
+        own_centre_angstrom = positions_angstrom[members].mean(axis=0)
+        own_bonds = bonds[members[bonds[:, 0]] & members[bonds[:, 1]]]
+        cosine = mean_radial_bond_cosine(positions_angstrom, own_bonds, own_centre_angstrom)
+        if cosine < max_cosine:
+            own_radius_angstrom = np.linalg.norm(
+                positions_angstrom[members] - own_centre_angstrom, axis=1
+            ).mean()
+            found.append((float(own_radius_angstrom), int(count)))
+    return sorted(found)
+
+
+def all_shells(
+    positions_angstrom: np.ndarray, bonds: np.ndarray, labels: np.ndarray
+) -> tuple[list[tuple[float, int]], list[tuple[float, int]]]:
+    """Every shell of a cluster: density-profile shells of its body plus enclosed shells.
+
+    The profile (`shells`) is taken over the largest fragment's atoms only, about their
+    centre of mass, so no atom can count towards both a profile shell and an enclosed
+    shell (`enclosed_shells`). Detached chains and small cores are in neither.
+
+    Args:
+        positions_angstrom: Whole-fragment positions, shape (n_atoms, 3), in angstrom.
+        bonds: Integer array, shape (n_bonds, 2), of zero-based atom index pairs.
+        labels: Fragment label per atom, from `fragment_labels`.
+
+    Returns:
+        (profile shells, enclosed shells), each a list of (mean radius in angstrom, atom
+        count). Profile radii are about the largest fragment's centre; enclosed radii
+        about each enclosed fragment's own centre.
+    """
+    fragment_ids, counts = np.unique(labels, return_counts=True)
+    largest = labels == fragment_ids[np.argmax(counts)]
+    body_angstrom = positions_angstrom[largest]
+    profile = shells(body_angstrom, body_angstrom.mean(axis=0))
+    return profile, enclosed_shells(positions_angstrom, bonds, labels)
+
+
+def core_atom_count(
+    positions_angstrom: np.ndarray,
+    centre_angstrom: np.ndarray,
+    shell_radius_angstrom: float,
+    depth_angstrom: float = CORE_DEPTH_ANGSTROM,
+) -> int:
+    """Atoms more than `depth_angstrom` inside a shell's mean radius, bonded or not.
+
+    For a cage, the number of atoms inside it; the default depth is half a graphite
+    interlayer spacing.
+
+    Args:
+        positions_angstrom: Whole-fragment positions, shape (n_atoms, 3), in angstrom.
+        centre_angstrom: The shell's centre, shape (3,), in angstrom.
+        shell_radius_angstrom: The shell's mean radius, in angstrom.
+        depth_angstrom: How far inside the shell an atom must be to count, in angstrom.
+
+    Returns:
+        The atom count.
+    """
+    radius_angstrom = np.linalg.norm(positions_angstrom - centre_angstrom, axis=1)
+    return int(np.sum(radius_angstrom < shell_radius_angstrom - depth_angstrom))
+
+
+def is_dissociated(largest_fragment_fraction: float, low_coordination_fraction: float) -> bool:
+    """Rule 1 of `classify`: the cluster has come apart or unravelled into chains.
+
+    Args:
+        largest_fragment_fraction: Share of atoms in the largest fragment.
+        low_coordination_fraction: Share of atoms with two or fewer neighbours.
+
+    Returns:
+        True if the largest fragment holds under half the atoms, or at least 80% of atoms
+        are low-coordination.
+    """
+    return (
+        largest_fragment_fraction < DISSOCIATED_BELOW_LARGEST_FRAGMENT_FRACTION
+        or low_coordination_fraction >= DISSOCIATED_ABOVE_LOW_COORDINATION_FRACTION
+    )
 
 
 def mean_radial_bond_cosine(
@@ -488,15 +618,23 @@ def census(positions_angstrom: np.ndarray, edge_angstrom: float) -> dict[str, fl
     Returns:
         Flat dict: coordination fractions, low-coordination (closure) fraction, sp2, sp3
         and interior sp3 fractions, bond and fragment counts, fragment sizes, radius of
-        gyration, mean radial bond cosine, shell count and radii, and ring counts by size.
+        gyration, mean radial bond cosine, shell counts and radii, core atom count and
+        ring counts by size. Some values are NaN, written to CSV as the literal `nan`
+        (`numpy.genfromtxt` and `float()` read it back):
+        `radius_of_gyration_angstrom` for a dissociated frame with more than one fragment,
+        where it would measure only where make_compact happened to place the fragments;
+        `core_atoms` when there is no profile shell; `interior_sp3_fraction` when no atom
+        is interior; `mean_radial_bond_cosine` when there are no bonds. For an intact frame
+        with a detached chain (C120-3000K), the radius of gyration still includes it.
     """
     bonds = bonds_at_cutoff(positions_angstrom, edge_angstrom)
     adjacency = adjacency_matrix(len(positions_angstrom), bonds)
     fractions = coordination_fractions(adjacency)
     fragments = fragment_sizes(adjacency)
+    labels = fragment_labels(adjacency)
     rings = ring_counts(adjacency)
     centre_angstrom = largest_fragment_centre(positions_angstrom, adjacency)
-    found_shells = shells(positions_angstrom, centre_angstrom)
+    profile_shells, nested_shells = all_shells(positions_angstrom, bonds, labels)
     spread = positions_angstrom - positions_angstrom.mean(axis=0)
     record: dict[str, float | int | str] = {
         f"fraction_coordination_{neighbours}": round(float(fractions[neighbours]), 4)
@@ -513,12 +651,27 @@ def census(positions_angstrom: np.ndarray, edge_angstrom: float) -> dict[str, fl
     record["n_fragments"] = len(fragments)
     record["largest_fragment_fraction"] = round(float(fragments[0] / len(positions_angstrom)), 4)
     record["fragment_sizes"] = " ".join(str(size) for size in fragments)
-    record["radius_of_gyration_angstrom"] = round(float(np.sqrt((spread**2).sum(axis=1).mean())), 3)
+    dissociated = is_dissociated(
+        float(record["largest_fragment_fraction"]), float(record["low_coordination_fraction"])
+    )
+    record["radius_of_gyration_angstrom"] = (
+        float("nan")
+        if dissociated and len(fragments) > 1
+        else round(float(np.sqrt((spread**2).sum(axis=1).mean())), 3)
+    )
     record["mean_radial_bond_cosine"] = round(
         mean_radial_bond_cosine(positions_angstrom, bonds, centre_angstrom), 4
     )
-    record["n_shells"] = len(found_shells)
-    record["shell_radii_angstrom"] = " ".join(f"{radius:.2f}" for radius, _ in found_shells)
+    record["n_shells"] = len(profile_shells) + len(nested_shells)
+    record["n_enclosed_shells"] = len(nested_shells)
+    record["shell_radii_angstrom"] = " ".join(
+        f"{radius:.2f}" for radius, _ in sorted(profile_shells + nested_shells)
+    )
+    record["core_atoms"] = (
+        core_atom_count(positions_angstrom, centre_angstrom, profile_shells[0][0])
+        if profile_shells
+        else float("nan")
+    )
     record.update({f"rings_{size}": int(rings[size]) for size in range(3, MAX_RING_SIZE + 1)})
     return record
 
@@ -536,9 +689,10 @@ def classify(record: dict[str, float | int | str]) -> str:
         3. diamond-like: at least 40% of atoms four-coordinated.
         4. graphitic onion: at least 80% three-coordinated, bonds lying in shells (mean
            radial bond cosine below 0.3, against 0.5 for an isotropic network), and two
-           or more shells (`shells`).
+           or more shells (`all_shells`: profile shells plus enclosed shells).
         5. cage: as rule 4 but exactly one shell, and closed: at most 20% of atoms
-           low-coordination.
+           low-coordination. Hollowness is not tested: interior atoms that form no shell
+           (fewer than `SHELL_MIN_ATOMS`, or not tangentially bonded) are allowed.
         6. disordered: anything else.
     One frame cannot tell a liquid from a frozen network by its dynamics, so rule 2 uses
     the only frame-level sign of melting in vacuum: a connected body losing chains.
@@ -553,10 +707,7 @@ def classify(record: dict[str, float | int | str]) -> str:
     """
     low_coordination = float(record["low_coordination_fraction"])
     largest = float(record["largest_fragment_fraction"])
-    if (
-        largest < DISSOCIATED_BELOW_LARGEST_FRAGMENT_FRACTION
-        or low_coordination >= DISSOCIATED_ABOVE_LOW_COORDINATION_FRACTION
-    ):
+    if is_dissociated(largest, low_coordination):
         return "dissociated"
     if (
         largest < MOLTEN_BELOW_LARGEST_FRAGMENT_FRACTION
