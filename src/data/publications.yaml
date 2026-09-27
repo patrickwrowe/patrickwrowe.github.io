@@ -147,7 +147,7 @@
     - { label: Data, url: "https://doi.org/10.6084/m9.figshare.c.3784874.v1" }
 
 - id: cd3-binder-selection
-  kind: paper
+  kind: poster
   title: A rational approach for selecting CD3-binding antibodies for T-cell engager development
   authors: [V. de Puyraimond, P. Rowe, J. Mai, P. Pouliot, K. Caldwell, L. Clifford, A. Goodman, P. Farber, H. Dhupar, D. Tortora, P. Bergqvist, J. Reimer, K. Herve, V. Li, I. Yu, J. Marwick, S. Carrarra, N. Blamey, M. Cid, C.-L. Crichlow, L. M. Bolten, T. Pinsky, G. Volkers, J. Fernandes Scortecci, G. Bodhankar, C. De Jong, S. Cullen, P. Xiang, C. Lai, A. Lee, G. Conaghan, A. Samiotakis, S. Hannie, R. Chappell, E. Lathouwers, L. Chong, K. Gibson, S. K. Masterman, K. Brown, K. Bullock, R. Tonikian, L. DeVorkin, S. Duncan, A. Yamniuk, K. Dalal, T. M. Jacobs, B. C. Barnhart]
   venue: J. Immunother. Cancer 11 (Suppl 1), A1523
@@ -157,7 +157,7 @@
   anchor: cd3-binder-selection
 
 - id: tce-pmhc
-  kind: paper
+  kind: poster
   title: Discovery and development of functional and specific T-cell engagers against a MAGE-A4 pMHC
   authors: [D. Tortora, P. Bergqvist, T. Jacobs, P. Farber, R. Blackler, A. Samiotakis, H. Dhupar, A. Goodman, C.-L. Crichlow, M. Cid, J. Fernandes Scortecci, R. Goya, L. Chong, K. Gibson, E. Solano Salgado, P. Xiang, A. Lee, I. Yu, N. Blamey, G. Conaghan, V. de Puyraimond, C. Robb, F. Li, C. Briercliffe, P. Rowe, K. Dalal, S. Masterman, T. Fernandez, K. Bullock, R. Tonikian, B. C. Barnhart]
   venue: J. Immunother. Cancer 11 (Suppl 1), A1550
