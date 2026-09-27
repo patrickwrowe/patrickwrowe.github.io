@@ -14,6 +14,7 @@
   doi: 10.1103/PhysRevB.97.054303
   theme: carbon
   anchor: graphene-potential
+  blurb: "A Gaussian approximation potential for graphene with in-plane force errors of 0.028 eV Å⁻¹ against DFT, twenty times below the best empirical potential, and phonons within a millielectronvolt of experiment. The catch was announced in the paper itself: it knew one form of carbon and could not describe diamond. First author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/1710.04187" }
     - { label: Code, url: "https://github.com/libAtoms/QUIP" }
@@ -27,6 +28,7 @@
   doi: 10.1063/5.0005084
   theme: carbon
   anchor: gap-20
+  blurb: "One potential for diamond, graphite, graphene, nanotubes, fullerenes, the liquid and amorphous carbon, fitted to a database of about 17,000 DFT configurations, with lattice parameters within 0.2% and graphene phonons within 4 meV. Breadth cost a factor of four in phonon accuracy against the graphene-only model, and a 1,000-structure random search said the price was right. First author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2006.13655" }
     - { label: Data, url: "https://doi.org/10.17863/CAM.54529" }
@@ -42,6 +44,7 @@
   doi: 10.1021/acs.nanolett.1c02585
   theme: carbon
   anchor: defect-corrugation
+  blurb: "Point defects corrugate free-standing graphene from about 0.2% concentration, and the type matters: at 3% a population of divacancies roughens the sheet almost five times over pristine, of Stone–Wales defects almost three. Only the machine-learned potential found the divacancy reconstruction unprompted; the classical potentials had to be told. Second author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2107.01128" }
 
@@ -54,6 +57,7 @@
   doi: 10.1016/j.carbon.2022.01.031
   theme: carbon
   anchor: cluster-benchmark
+  blurb: "Seven carbon potentials against DFT on random-structure searches of clusters of 4 to 200 atoms: GAP-20 matched the DFT minima, energies, rings and coordination best, over-binding C₆₀ by 0.10 eV per atom where the classical potentials under-bound it by 0.30 to 0.91. It then searched beyond DFT's reach, to 720 atoms. Third author."
   links:
     - { label: Preprint, url: "https://hal.science/hal-03832937v1" }
     - { label: Data, url: "https://github.com/bkarasulu/Carbon-PP-Benchmark-Paper-SI" }

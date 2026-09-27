@@ -2,28 +2,71 @@
 title: Machine learning potentials for carbon
 shortTitle: Carbon potentials
 kind: theme
-year: "2016–26"
+year: "2017–22"
 order: 1
 featured: true
 draft: true
 stub: true
-stubNote: Scaffold for the theme article. The headings are the anchor contract from the restructure spec; the prose is written in session 2.
-summary: GAP-20 and the potentials before and after it, and what running them at scale found about carbon.
-method: Gaussian approximation potentials trained on dispersion-corrected DFT, then run at scale
-system: Carbon from graphene to diamond, amorphous networks, clusters and hard carbon
-result: Density, not temperature, decides whether amorphous carbon graphitises
+stubNote: Draft article awaiting the stylist, audit and design review.
+summary: One Gaussian approximation potential for the whole of carbon, what it cost in graphene accuracy, and what running it at scale found about graphitisation.
+method: Gaussian approximation potentials fitted to dispersion-corrected DFT and run in LAMMPS
+system: Carbon from graphene and diamond to the liquid, amorphous networks and free clusters
+result: Density, not temperature, decides whether an annealed carbon network graphitises
 tags: [interatomic-potentials, carbon, materials, machine-learning]
 hero: ./figures/carbon/hero.png
-heroAlt: A 10 Å slab through amorphous carbon annealed at 3500 K and 1.0 g cm⁻³, two periodic cells wide, rendered in greyscale. Provisional caption; the draft rewrites it.
+heroAlt: A 10 Å slab through 5,832 atoms of amorphous carbon at 1.0 g cm⁻³ after a 200 ps anneal at 3500 K, shown two periodic cells wide, with curved graphitic sheets of hexagons wrapped around voids, drawn as grey spheres and rods on white.
+heroCredit: Own work, not published elsewhere. Made with scripts/figures/render_box_grid.py.
 ---
 
 import Cite from "@/components/Cite.astro";
 import Plate from "@/components/Plate.astro";
 import Grid from "@/components/Grid.astro";
+import { Image } from "astro:assets";
+import PhononDispersion from "./figures/graphene-potential/fig3-phonon-dispersion.png";
+import ThermalExpansion from "./figures/graphene-potential/fig2-thermal-expansion.png";
+import ConfigurationSpace from "./figures/carbon/gap20-fig1-configuration-space.png";
+import Gap20Phonons from "./figures/carbon-gap-20/fig05-phonon-dispersion.png";
+import DefectStructures from "./figures/carbon/gap20-fig6-defect-structures.png";
+import c60Energies from "./figures/carbon/cluster-benchmark-c60.svg?raw";
+import clusterOutcomes from "./figures/carbon/cluster-outcomes.svg?raw";
+import clusterSp3 from "./figures/carbon/cluster-sp3.svg?raw";
+import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
+
+Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes, fullerenes, amorphous films and the hot liquid differ enough in their bonding that a model fitted to any one of them is usually wrong about the rest, and for thirty years the standard models were fitted to a few of them by hand. If you have ever wanted to simulate a carbon material with more than a few hundred atoms for longer than a few picoseconds, you have used one of those models, and you have inherited its opinions. Some of the opinions are odd. Ask the classical carbon potentials of 2017 whether a free graphene sheet expands or contracts when you warm it and they disagree on the sign: two of them switch sign somewhere between 500 and 1000 K, one tears the sheet apart above 1500 K, and none of them agrees with the quantum-mechanical answer across the whole range. Thermal expansion is about as basic as a property gets.
+
+This article is about the six years I spent replacing those opinions with a fitted one, first for graphene alone and then for every form of carbon at once, and about what happened when the resulting potential was run at scale, by other people and by me. The short version: one machine-learned model can cover the whole element while keeping graphene's vibrations within 4 meV of density functional theory (DFT), an independent benchmark later ranked it first of seven potentials on clusters it had never seen, and 5,832 atoms of hot carbon told me that whether a network graphitises is decided by its density and hardly at all by its temperature. The long version follows, in the order the work was done: build the potentials, then use them.
 
 ## Graphene potential
 
 <Cite id="graphene-potential" />
+
+Graphene is the form of carbon everyone has heard of, so it is a slightly perverse choice for a first potential: a single sheet of hexagons with one bond length and one angle, which the empirical models were all fitted to reproduce. The trouble is that reproducing the structure at 0 K is the easy part. The properties people measure, the thermal expansion, the phonon spectrum, the Raman shift with temperature, come from how the energy changes as the sheet bends and stretches, and that is where a model fitted by hand to a handful of numbers has nothing to say. So the question I set out to answer in 2017, with Gábor Csányi at the Engineering Laboratory in Cambridge, who wrote the method, and Dario Alfè and Angelos Michaelides at University College London (UCL), who supervised the PhD, was narrower than it sounds. Can a potential fitted to DFT forces, with no physics put in by hand beyond the choice of descriptors, stand in for ab initio molecular dynamics (AIMD) on graphene, and how far behind are the potentials people use every day? {/* Q: 3 */}
+
+The method was the Gaussian approximation potential (GAP): the energy of an atom is written as a sum of a two-body term, a three-body term and a many-body term built on the smooth overlap of atomic positions (SOAP) descriptor, each term a Gaussian-process fit to a set of reference environments, all with a 4.0 Å cutoff. The reference data came from VASP with the optB88-vdW functional, converged tightly enough that the noise in the forces sat below what the model could learn. What mattered more than any hyperparameter was where the training configurations came from. Three molecular dynamics (MD) runs under an existing empirical potential, LCBOP, seeded the first 300, at 1000, 2000 and 3000 K. From there the model bootstrapped itself: each new GAP drove its own dynamics, the configurations it visited were computed with DFT and added, and the fit was repeated, until the final training set held 1,083 sheets of 200 atoms spanning 300–4000 K and a small range of lattice parameters. A potential trained this way has seen the places it will go, which is the whole trick.
+
+The benchmark was the crowded field: DFTB, ReaxFF, Tersoff, REBO, AIREBO, AIREBO-Morse, LCBOP and the amorphous-carbon GAP of Deringer and Csányi, all run on the same tests. On forces the gap was not close. Against a sample of 15,000 DFT reference forces the graphene GAP made a root-mean-square error (RMSE) of 0.028 eV Å⁻¹ in the plane of the sheet and 0.019 eV Å⁻¹ out of it; the best empirical potential in the plane, AIREBO, sat at 0.548 eV Å⁻¹, twenty times higher, and Tersoff at 3.122 eV Å⁻¹ with individual errors above 11 eV Å⁻¹. Out of the plane the best of the rest, DFTB at 0.162 eV Å⁻¹, was about eight times worse than the GAP. For scale, the difference between two reasonable exchange–correlation functionals on the same forces is 0.026 eV Å⁻¹ in the plane, so the GAP was as close to its own reference as one flavour of DFT is to another. The 0 K lattice parameter came out at 2.467 Å against 2.464 Å from DFT and 2.462 Å for graphite at room temperature, a 0.1% miss shared only by ReaxFF.
+
+<Plate n={2}>
+  <Image src={PhononDispersion} alt="Eight panels of phonon dispersion curves for graphene along the high-symmetry path, each comparing one potential against the reference dispersion derived from X-ray diffraction. The Gaussian approximation potential lies on the reference across all branches; the empirical potentials depart most on the highest, longitudinal optical branch." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    Phonon dispersion of graphene from each potential (lines) against the dispersion derived from X-ray diffraction on graphite (points), computed from the finite-temperature force constants of each model. The machine-learned potential sits within a millielectronvolt of the reference at almost every high-symmetry point; every empirical potential misses the longitudinal optical branch, Tersoff by 110 meV at the Γ point.
+    <span class="credit">Reproduced from Rowe et al., Phys. Rev. B 97, 054303 (2018), figure 3. Copyright 2018 American Physical Society; used under the authors' right to reuse on their own website.</span>
+  </Fragment>
+</Plate>
+
+Forces are the currency a potential is fitted in, so a good force error is the least you should expect. The properties are the test. The phonon dispersion is the one I would show anyone who doubts that a fitted model can carry real physics: against the dispersion derived from X-ray diffraction on graphite, the GAP is within a millielectronvolt at almost all of the high-symmetry points, where REBO, AIREBO, AIREBO-Morse and Tersoff make mean absolute errors of 10, 20, 20 and 40 meV, and every empirical model, without exception, gets the highest branch wrong. That branch is the longitudinal optical one, the stiffest vibration in the sheet, and the classical models either soften it or stiffen it by tens of millielectronvolts because nothing in their fitting ever asked about it. The Raman G band, which is that vibration seen at the zone centre, softens with temperature in the experiments once the strain from the substrate is corrected out, and the GAP follows the measurements across the 150–900 K they cover.
+
+<Plate n={3}>
+  <Image src={ThermalExpansion} alt="Three stacked panels for graphene between 60 and 2500 K: the absolute in-plane lattice parameter from eight models and ab initio molecular dynamics, the same normalised to each model's own 60 K value, and the derived coefficient of thermal expansion. The ab initio curve is nearly flat; the Gaussian approximation potential follows it, while the empirical potentials fan out and several cross zero." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" />
+  <Fragment slot="caption">
+    In-plane thermal expansion of a free graphene sheet from 60 to 2500 K: the lattice parameter (top), the same relative to each model's 60 K value (middle) and the coefficient of thermal expansion (bottom), from constant-pressure ab initio molecular dynamics and from each potential. The ab initio lattice parameter changes by 0.1% across the whole range; only the machine-learned potential tracks it in both absolute and relative terms.
+    <span class="credit">Reproduced from Rowe et al., Phys. Rev. B 97, 054303 (2018), figure 2. Copyright 2018 American Physical Society; used under the authors' right to reuse on their own website.</span>
+  </Fragment>
+</Plate>
+
+Thermal expansion is where the empirical potentials fall over in public. Constant-pressure AIMD on the free sheet, three runs per temperature from 60 to 2500 K, changes the in-plane lattice parameter by 0.1% over the whole range, which is to say it barely moves, and the GAP follows it in absolute and in relative terms. LCBOP, AIREBO and AIREBO-Morse have the expansion coefficient change sign between 500 and 1000 K; ReaxFF fragments the sheet above 1500 K. No empirical potential in the set predicts both the 0 K lattice parameter and the finite-temperature expansion, and the paper says so. REBO is the best of them overall, and that is a fair thing to record, because REBO is also the cheapest model that is any good. {/* Q: 11 */}
+
+The price of the GAP is compute. Per MD step on 200 atoms it costs 340 times what Tersoff costs and 950 times less than DFTB, which puts it about four orders of magnitude below AIMD for the same system. And the paper says one more thing plainly that I want to repeat, because the next section depends on it: the model is not transferable to other phases of carbon. It was never shown diamond, so it cannot describe diamond. That is not a bug in a specialist model. It is the reason a specialist model is not enough.
 
 [Contents ↑](#contents)
 
@@ -31,11 +74,57 @@ import Grid from "@/components/Grid.astro";
 
 <Cite id="carbon-gap-20" />
 
+Two carbon potentials existed in the GAP family by 2018 and they were opposites. The graphene model above was accurate and narrow. GAP-17, Volker Deringer and Gábor Csányi's model for amorphous carbon, was broad enough to grow a disordered network from the melt and, being fitted for that, loose on the crystalline details. The question for GAP-20 was whether one model could have both: the flexibility of the amorphous potential and the numerical accuracy of the graphene one, for every form of carbon at once, and what that would cost. The work was mine as first author, with Volker Deringer, then at Oxford, Piero Gasparotto at UCL, Gábor Csányi in Cambridge and Angelos Michaelides at UCL, and it is the centrepiece of my PhD. {/* Q: 3 */}
+
+<Plate n={4}>
+  <Image src={ConfigurationSpace} alt="A two-dimensional sketch-map of the GAP-20 training database, in which each point is an atomic environment coloured by its structure class, with crystalline phases, surfaces, defects, fullerenes, nanotubes, the liquid and amorphous networks occupying distinct regions, surrounded by small renderings of representative structures." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" loading="lazy" />
+  <Fragment slot="caption">
+    The GAP-20 database as a sketch-map: a two-dimensional projection of the SOAP similarity between atomic environments, one point per environment, with representative structures drawn around it. Crystals, surfaces, defects, fullerenes, nanotubes, the liquid and amorphous carbon occupy their own regions, and the model is fitted to all of them at one level of theory.
+    <span class="credit">Reproduced from Rowe et al., J. Chem. Phys. 153, 034702 (2020), figure 1, with the permission of AIP Publishing.</span>
+  </Fragment>
+</Plate>
+
+The database is the model, so most of the paper is about the database. It started from the GAP-17 and graphene sets, added every crystalline phase, every fullerene under 240 atoms, nanotubes with chiral indices from 3 to 10 in cells under 240 atoms, the SACADA catalogue of hypothetical allotropes, the structures GAP-17 had found by random search, low-index surfaces and a set of defects, sampled each of them with ab initio and GAP-driven MD, and recomputed everything, about 17,000 configurations of 1 to 240 atoms and almost 2.5 million atomic environments, with one functional at one cutoff: spin-polarised optB88-vdW at 600 eV. Then it threw most of it away. The training set is the union of 4,000 configurations chosen by farthest-point sampling in SOAP space, so that the set is spread rather than piled up where the dynamics happened to linger, the whole GAP-17 set, and about 1,000 configurations added by hand for properties the sampling had missed. A two-body GAP term below 4.0 Å hands over to a semi-analytical r⁻⁶ spline from 4.0 to 10 Å, fitted to the DFT binding curve of a graphene bilayer, so the model has a long-range dispersion tail without asking the Gaussian process to learn one. The SOAP cutoff was scanned against the force error on a held-out set, and the scan is a small lesson in not trusting the minimum: the error was lowest at 2.9 Å, and the cutoff was set to 4.5 Å anyway, because graphite's layers sit 3.3 Å apart and a model that cannot see the next layer cannot bind it. Sparse points were scanned the same way; the errors level off at about 1,500 and the model uses 9,000.
+
+<Plate n={5}>
+  <Image src={Gap20Phonons} alt="Phonon dispersions for diamond, graphene and two carbon nanotubes, each comparing GAP-20 against DFT reference data; the graphene panel also shows the 2018 graphene-only model as a dashed line lying closer to the reference than GAP-20 does." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" loading="lazy" />
+  <Fragment slot="caption">
+    Phonon dispersions of diamond, graphene, a (9,9) armchair nanotube and a (9,0) zigzag nanotube from GAP-20 (lines) against DFT (points). The dashed line in the graphene panel is the graphene-only potential of 2018: within 1 meV of DFT at the high-symmetry points, where GAP-20 is within 4 meV, the price of covering every other form of carbon on the same footing.
+    <span class="credit">Reproduced from Rowe et al., J. Chem. Phys. 153, 034702 (2020), figure 5, with the permission of AIP Publishing.</span>
+  </Fragment>
+</Plate>
+
+So what did breadth cost? Across the crystalline allotropes GAP-20 gets lattice parameters and bond lengths to 0.2% on average, formation energies to 0.5% and atomisation energies to 1%; Tersoff, REBO-II and AIREBO make lattice errors of 5%, 4% and 1%, and Tersoff and REBO-II have no interlayer binding in graphite at all, so their graphite is a stack of sheets that do not know about each other, where GAP-20 puts the c axis at 6.71 Å against 6.65 Å from DFT. Graphene phonons stay within 4 meV of DFT at the high-symmetry points. The graphene-only model was within 1 meV. That factor of four is the honest number for what one general model gives up against a specialist, and I would pay it every time, because on the same footing GAP-20 does diamond to within 7 meV in its stiffest modes and nanotube band splittings to 2–3 meV, and the graphene model does none of those at all.
+
+Defects and surfaces are the harder test, and they should be, since these are exactly the local environments a database drawn from bulk phases under-samples. Most defect formation energies land within 10% of DFT, and the relaxed geometries agree to better than 10⁻² Å in all but a handful of cases. A Stone–Wales defect in graphene, one bond rotated to make two pentagons and two heptagons, costs 4.9 eV in DFT and 4.8 eV in GAP-20; Tersoff says 1.9 eV. A single vacancy in a (9,9) armchair nanotube costs 6.4 eV in DFT and 5.8 eV in GAP-20; Tersoff, REBO-II and AIREBO give −5.1, −1.6 and −2.5 eV, which is to say they would rather have the hole. Diamond is the clear weak spot, with defect energies 25–35% low, and the model misses the Jahn–Teller distortion of the graphene monovacancy, a 350 meV effect that lowers the symmetry of the relaxed hole. Diamond surface energies are typically within 7%. The graphite basal surface, which is the weakest surface carbon has at 0.015 eV Å⁻², comes out 3 meV Å⁻² high, a 20% error; LCBOP and AIREBO miss the same number by 67% and 27%.
+
+The test I trust most is the one the model was not built for. A random structure search generated 1,000 small periodic cells, eight atoms in a 3 Å box, relaxed every one of them with GAP-20 to a tolerance of 10⁻¹⁰ eV and then recomputed them with DFT. None of them was in the training set. All of them agreed well with DFT, and the search recovered the things carbon actually does: AB-stacked graphite lowest, then AA and ABC stacking, diamond and lonsdaleite, the haeckelites, crosslinked graphite and a distinct family of sp¹-rich chains, all in the right order. The liquid was checked against AIMD at 5000 K across 1.5–3.5 g cm⁻³ and at 2.5 g cm⁻³ from 5000 to 9500 K; below about 3500 K the GAP-20 liquid forms a glass that slowly graphitises, a remark in the paper that turned into the graphitisation series further down this page. The model, its training data and the 17,000-configuration database are on the Cambridge repository under CC BY 4.0. {/* Q: 6 */}
+
+### The thesis, and the lesson hand-picking taught
+
+My PhD thesis, examined at UCL in 2021, holds both papers and one lesson the papers state too politely. The first attempts at GAP-20 used hand-picked training data, an isolated Stone–Wales defect here, a single vacancy there, and a model trained that way performs well at exactly those state points and extremely poorly at a vacancy next to a Stone–Wales defect, which is the kind of thing a real material is full of. The fix was to stop choosing. Generate many varied structures stochastically, by GAP-driven random search and by MD, compute all of them, and let farthest-point sampling thin the pile, allowing the computer to decide which environments are new. The thesis also claims two methodological firsts as far as we could find, the radially biased SOAP basis and the r⁻⁶ spline as a long-range term in a machine-learned potential, both reused since for hexagonal boron nitride and phosphorus, and it lists the stability tests that never made a paper: liquid quenches, anneals of amorphous structures and surfaces, C₆₀ molecules threaded into nanotubes, nudged-elastic-band paths for defect formation and cluster searches. Its cost benchmark ran diamond cells from 8 to 5,832 atoms on 72 cores; DFT gave out at 2,744 atoms, and GAP-20 will do tens of thousands of atoms for nanoseconds. The last thing the thesis says about the future is that carbon is never found alone, which is where the last section of this page picks up. {/* thesis publication entry: plan 04 */}
+
 [Contents ↑](#contents)
 
 ## Defect corrugation
 
 <Cite id="graphene-corrugation" />
+
+The first test of a potential is whether it agrees with the calculations it was fitted to. The second is whether someone else can find something with it. Fabian Thiemann, then a PhD student at UCL, Cambridge and Imperial, wanted to know how much a point defect changes the shape of a free graphene sheet, and whether the answer depends on which defect and how many. Free-standing graphene is never flat; it ripples, and the ripples matter for how it conducts and how it sticks to things. The obvious way to study defect ripples is a sheet of several thousand atoms at room temperature for a few hundred picoseconds, which is out of reach for DFT and, as it turned out, out of reach for the classical potentials in a way that is worth spelling out. I was second author, with Andrea Zen, Erich A. Müller at Imperial and Angelos Michaelides. {/* Q: 3 */}
+
+<Plate n={6}>
+  <Image src={DefectStructures} alt="Relaxed structures of several point defects in graphene, graphite, diamond and nanotubes computed with GAP-20 and with DFT, drawn as ball-and-stick fragments; the graphene monovacancy, the 5-8-5 divacancy and the Stone–Wales defect appear among them." widths={[640, 1180]} sizes="(max-width: 1000px) 100vw, 1100px" loading="lazy" />
+  <Fragment slot="caption">
+    The defects GAP-20 was tested on, as relaxed by the potential and by DFT. The two that matter here are the graphene divacancy, two missing atoms that reconstruct into one eight-membered and two five-membered rings, and the Stone–Wales defect, one bond rotated by 90° into two pentagons and two heptagons.
+    <span class="credit">Reproduced from Rowe et al., J. Chem. Phys. 153, 034702 (2020), figure 6, with the permission of AIP Publishing.</span>
+  </Fragment>
+</Plate>
+
+The simulations were LAMMPS runs under GAP-20 at 300 K and zero stress on sheets of 6,984 to 7,200 atoms, with divacancies or Stone–Wales defects at concentrations from about 0.03%, an isolated defect, to 3%, where the defects sit about a nanometre apart. Defects were placed at random at least 10 Å from each other, three placements per type and concentration, and every run started from a flat sheet with unreconstructed defects, so that whatever the vacancies did to close themselves up, they did on their own. Corrugation was measured as the standard deviation of atomic heights relative to a pristine sheet under the same conditions, a ratio called the corrugation amplification factor (CAF), because absolute heights scale with the size of the sheet and the ratio does not. Around each defect a fitted height function gave its tilt and its Gaussian curvature.
+
+Defects roughen the sheet, and they do it early: the CAF is already well above 1 at about 0.2% and levels off above about 1.5%. What decides the size of the effect is the kind of defect. At 3%, divacancies make the sheet almost five times more corrugated than pristine graphene and Stone–Wales defects almost three times, and across concentrations the divacancy is roughly twice as effective. The local geometry says why. A Stone–Wales defect imposes a tilt, an inclination of about 0.270 against 0.066 for three pristine hexagons, with zero Gaussian curvature; it is a bump, and its tilt grows by less than 20% as more defects arrive. A divacancy is a saddle, and its Gaussian curvature grows about tenfold from the isolated defect to 3%, which means the divacancies feel each other and the sheet's shape is a collective response. For comparison, a pristine sheet squeezed by 2% corrugates about as much as a sheet with 1% defects, so the defects are doing what a modest compression would.
+
+Now the part about potentials. LCBOP and REBO II, run at 1% as a check, agree with GAP-20 on the trend, but only if you start them from divacancies that have already reconstructed. Started flat, they never get there, because both overestimate the barrier to the reconstruction and the vacancy stays an open hole, which corrugates the sheet quite differently. The paper's own phrasing is that using those potentials without prior knowledge is unlikely to have revealed the insights obtained here, and that is the point of a fitted model in one sentence: it found the reconstruction because the DFT it was trained on knows about the reconstruction, and nobody had to tell it.
 
 [Contents ↑](#contents)
 
@@ -43,17 +132,35 @@ import Grid from "@/components/Grid.astro";
 
 <Cite id="carbon-clusters" />
 
+Benchmarks written by a model's authors have a credibility problem, whatever the authors' intentions, so the one I value most for GAP-20 is one I did not design. Bora Karasulu and Carla de Tomas at Happy Electron, where I worked from 2020, with Jean-Marc Leyssale in Bordeaux and Cedric Weber at King's College London, wanted a potential that could replace DFT in the relaxation step of a random structure search for carbon clusters, the nanoparticles that carbon black, soot and hard carbons are made of, and they put seven potentials through the same search to find out which one could. I was third author. {/* Q: 3 */}
+
+The search was AIRSS, the Pickard–Needs method: random clusters of 4 to 200 atoms inside a sphere, no two atoms closer than 1.4 Å, either with no symmetry or with up to 24 symmetry operations imposed, and the same random inputs handed to each method to relax. The reference was VASP with the PBE functional. The potentials were GAP-20 and six classical ones, Tersoff, C-EDIP, LCBOP-I, ReaxFF, REBO-II and AIREBO, all in LAMMPS, and the first finding was about the relaxation itself: the default conjugate-gradient protocol left structures with residual pressures above 100 MPa, so a FIRE stage and a truncated-Newton stage were added until the pressure was effectively zero. After duplicates, dissociated and unconverged structures were removed, DFT had 3,500 disordered and 10,500 symmetric minima to compare against, and GAP-20 had 22,200 and 20,300 of its own. The comparison was on everything a search produces: which structure is lowest at each size and what symmetry it has, the distribution of cohesive energies, the Boltzmann-weighted coordination and ring statistics at 293 K, and the radial distribution function of C₆₀.
+
+<Plate n={7}>
+  <Fragment set:html={c60Energies} />
+  <Fragment slot="caption">
+    Cohesive energy per atom of icosahedral C₆₀ from DFT and from each of the seven potentials in the benchmark, from table II of Karasulu et al. GAP-20 over-binds the molecule by 0.10 eV per atom; the six classical potentials under-bind it by between 0.30 and 0.91 eV per atom.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/cluster_benchmark_c60.py</code>, from table II of Karasulu et al., Carbon 191, 255–266 (2022).</span>
+  </Fragment>
+</Plate>
+
+GAP-20 gave the closest match to DFT on all of it: the minimum-energy structures and their point groups, the energy distributions, the coordination, the rings and the C₆₀ radial distribution function. The cohesive energies say it most simply. DFT and GAP-20 put the clusters between −7.5 and −6.0 eV per atom, the classical potentials between −6.5 and −4.5, and for C₆₀ itself DFT gives −7.47 eV per atom, GAP-20 −7.57, an over-binding of 0.10 eV per atom, while the classical models under-bind by 0.30 to 0.91 eV per atom. The classical potentials also failed in characteristic ways. Tersoff and LCBOP-I built surface shells of sp carbon, about 35% of atoms in chains between 30 and 200 atoms; REBO-II and AIREBO stayed trapped in the dense sp³ starting structures they were given. GAP-20's misses are on the record too, because that is what a benchmark is for: it puts the transition from chains to rings at C₁₀ where DFT has it at C₈, and it gets the point groups of the second- and third-lowest C₆₀ isomers wrong.
+
+Then the authors did what the benchmark was for and searched beyond DFT's reach, with GAP-20 alone, up to 720 atoms. The clusters stay hollow sp² cages up to about C₃₂₀, and above that the minima grow sp³ cores under faceted shells. In a search at low density around C₂₄₀ the canonical icosahedral fullerene was the minimum eight times over at −7.81 eV per atom, with octahedral pseudo-fullerenes close behind at −7.77 to −7.57, and at C₅₄₀ a fullerene-like tetrahedral cage at −7.47 eV per atom had a dense isomer within 10 meV per atom of it, which is the size at which the two kinds of carbon start to compete. The paper is candid that the fixed-radius generation makes large clusters denser than fullerenes and that these searches are not exhaustive, and it names ReaxFF as the cheaper option with moderate accuracy if you cannot afford the GAP. Fair enough. {/* Q: 10 */}
+
 [Contents ↑](#contents)
 
 ## Graphitisation
 
-Provisional placement of the two grids; the prose is written in the draft.
+The GAP-20 paper remarks, almost in passing, that below about 3500 K its liquid carbon forms a glass that slowly graphitises. At Happy Electron in 2021 I had the compute to stop remarking and look, and the question was the one every hard-carbon process engineer would like answered: starting from a melt, what decides whether the annealed network turns graphitic, the density you hold it at or the temperature you anneal it at? This is unpublished work of my own, presented here for the first time, and it is the source of the hero image at the top of the page. {/* Q: 1 */}
 
-<Plate n={2}>
+The runs were 5,832 atoms of carbon, a 216-atom cell replicated 3 × 3 × 3, at fixed volume in LAMMPS with a 2 fs step and a Nosé–Hoover thermostat, driven by the carbon GAP file that the cluster series below also used. The file's name says it was a low-density iteration of the model; the identifier written inside it is that of the released GAP-20 potential, and until I have checked the two against each other this page calls it a carbon GAP and not GAP-20. The protocol, from the input files and logs rather than from my slides of the time, was: a short minimisation, velocities at 6000 K, a 6000 K liquid stage, a 20 ps thermostat ramp down towards 300 K during which the system temperature bottoms out near 1,100 K, an anneal at the target temperature for 200 ps, and a 20 ps ramp back towards 300 K that ends with the system near 710 K, where the frame was written with no final minimisation. So the structures below are hot snapshots, not minima. The density set held the anneal at 3500 K and varied the density from 0.5 to 3.5 g cm⁻³ in steps of 0.5; two temperature sets held the density at 1.5 and at 3.0 g cm⁻³ and varied the anneal from 2000 to 4500 K in steps of 500 K, sharing their 3500 K member with the density set, which makes 17 conditions. Each condition was run three times, and the three replicas share a velocity seed and differ only in the length of the liquid stage, 20, 40 and 30 ps, so they are three cuts through one melt rather than three independent draws. LAMMPS also logged some thousands of dangerous neighbour-list rebuilds during the liquid and anneal stages, which I have not chased. {/* Q: 7 */}
+
+<Plate n={8}>
   <Grid
     dir="carbon"
     columns={7}
-    alt="Seven slabs of amorphous carbon annealed at 3500 K, from 0.5 to 3.5 g cm⁻³: open, curved graphitic sheets around large voids at low density give way to a dense, mostly four-coordinated network at high density."
+    alt="Seven slabs of amorphous carbon annealed at 3500 K, from 0.5 to 3.5 g cm⁻³, drawn at one scale so the low-density cells are larger: open, curved graphitic sheets around large voids at low density give way, between 2.5 and 3.0 g cm⁻³, to a dense network in which most atoms have four neighbours."
     panels={[
       { file: "density-0.5gcc-3500K.png", label: "0.5 g cm⁻³" },
       { file: "density-1.0gcc-3500K.png", label: "1.0 g cm⁻³" },
@@ -65,15 +172,18 @@ Provisional placement of the two grids; the prose is written in the draft.
     ]}
   />
   <Fragment slot="caption">
-    Provisional caption: 10 Å slabs of replica one after the 3500 K anneal, one scale for every panel.
+    The annealed network at each density, 0.5 to 3.5 g cm⁻³, after 200 ps at 3500 K: a 10 Å slab through the final frame of replica one, every panel at the same scale, so the 61.5 Å cell at 0.5 g cm⁻³ is drawn larger than the 32.2 Å cell at 3.5. Frames are taken at the end of the cooling ramp, near 710 K.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
 
-<Plate n={3}>
+Density sets the regime, and it does so with a switch rather than a slope. At 3500 K every density from 0.5 to 2.5 g cm⁻³ anneals to a network in which 95.8–98.6% of atoms have three neighbours: curved sheets of hexagons, wrapped round voids that get smaller as the density rises, which is the sp² carbon of a char or a hard carbon. At 3.0 g cm⁻³ the same anneal leaves 65.1% of atoms with four neighbours, and at 3.5 g cm⁻³, 94.8%: a dense sp³ network, tetrahedral amorphous carbon by another name. The ring statistics say the same thing in a second language. Up to 2.5 g cm⁻³, six-membered rings are 66–78% of all rings and the cell holds about 2,800 of them; at 3.0 and 3.5 g cm⁻³ hexagons are 34.5% and 44.0% of a ring count three to four times larger, with five-, seven- and eight-membered rings taking up the difference, which is what a network looks like when it has been forced to bond in three dimensions. Somewhere between 2.5 and 3.0 g cm⁻³ the material changes its mind about what it is.
+
+<Plate n={9}>
   <Grid
     dir="carbon"
     columns={6}
-    alt="Twelve slabs, six anneal temperatures from 2000 to 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row: each row looks alike from end to end, while the two rows differ."
+    alt="Twelve slabs of annealed amorphous carbon, six anneal temperatures from 2000 to 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row, at one scale: the top row is open graphitic sheets at every temperature, the bottom row a dense four-coordinated network at every temperature, and neither row changes character from end to end."
     panels={[
       { file: "temp-1.5gcc-2000K.png", label: "1.5 g cm⁻³ · 2000 K" },
       { file: "temp-1.5gcc-2500K.png", label: "1.5 g cm⁻³ · 2500 K" },
@@ -90,12 +200,175 @@ Provisional placement of the two grids; the prose is written in the draft.
     ]}
   />
   <Fragment slot="caption">
-    Provisional caption: 10 Å slabs of replica one after a 200 ps anneal at each temperature; the 3500 K panels are the density-set runs.
+    The annealed network against anneal temperature, 2000 to 4500 K, at 1.5 g cm⁻³ (top row) and 3.0 g cm⁻³ (bottom row): 10 Å slabs through the final frame of replica one after a 200 ps anneal, every panel at one scale. The 3500 K panels are the density-set runs. Frames are taken at the end of the cooling ramp, near 710 K.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
+
+Temperature moves the numbers without changing the answer. At 1.5 g cm⁻³ the three-coordinated share runs from 86.0% at 4500 K, where 11.8% of atoms have been shaken loose to two neighbours, up to a peak of 98.1% at 3500 K and 89.7% at 2000 K, where the anneal is too cold to finish the job in 200 ps; at every one of the six temperatures the material is graphitic. At 3.0 g cm⁻³ the four-coordinated share stays between 59.1% and 67.5% across 2000–4500 K; at every temperature it is a dense sp³ network. The full numbers, averaged over the three replicas, are in the table below, and the thing to notice is that no column of the temperature sets ever crosses the line that separates the 2.5 and 3.0 g cm⁻³ columns of the density set. A twelve-point swing in coordination is not nothing. But it is a change of degree inside a regime that density chose.
+
+| Condition | Two neighbours (%) | Three neighbours (%) | Four neighbours (%) |
+|---|---|---|---|
+| 0.5 g cm⁻³, 3500 K | 3.7 | 95.8 | — |
+| 1.0 g cm⁻³, 3500 K | — | 97.2 | — |
+| 1.5 g cm⁻³, 3500 K | — | 98.1 | — |
+| 2.0 g cm⁻³, 3500 K | — | 98.6 | — |
+| 2.5 g cm⁻³, 3500 K | — | 97.8 | — |
+| 3.0 g cm⁻³, 3500 K | — | 34.9 | 65.1 |
+| 3.5 g cm⁻³, 3500 K | — | 5.1 | 94.8 |
+| 1.5 g cm⁻³, 2000 K | — | 89.7 | — |
+| 1.5 g cm⁻³, 2500 K | — | 94.2 | — |
+| 1.5 g cm⁻³, 3000 K | — | 97.1 | — |
+| 1.5 g cm⁻³, 4000 K | — | 98.0 | — |
+| 1.5 g cm⁻³, 4500 K | 11.8 | 86.0 | — |
+| 3.0 g cm⁻³, 2000 K | — | — | 67.5 |
+| 3.0 g cm⁻³, 2500 K | — | — | 66.2 |
+| 3.0 g cm⁻³, 3000 K | — | — | 59.1 |
+| 3.0 g cm⁻³, 4000 K | — | — | 64.1 |
+| 3.0 g cm⁻³, 4500 K | — | — | 63.9 |
+
+{/* Table: the dossier's DAT rows; a dash means the value is not among the numbers the dossier records for that condition, not that it is zero. Audit: fill or keep the dashes. */}
+
+<Plate n={10}>
+  <video controls preload="none" poster="/video/graphitisation-1.0gcc-3500K.jpg" width="720" height="702">
+    <source src="/video/graphitisation-1.0gcc-3500K.mp4" type="video/mp4" />
+  </video>
+  <Fragment slot="caption">
+    The 1.0 g cm⁻³ run from liquid to annealed network, 45 seconds cut from a render I made in 2021: the 6000 K melt, the ramp towards 300 K, the 200 ps anneal at 3500 K in which the sheets form and straighten, and the final cooling ramp.
+    <span class="credit">Own work, not published elsewhere. Cut with <code>scripts/figures/cut_graphitisation_clip.sh</code>.</span>
+  </Fragment>
+</Plate>
+
+What I take from this is a rule for anyone making hard carbon in a simulation, and possibly in a furnace: pick the density and the material will pick its bonding, and the anneal temperature, within the range that anneals at all, is a knob for how well-formed the sheets are and not for whether there are sheets. The caveats belong next to the rule. These are single hot frames, not averages over the anneal; the three replicas are not independent; the coordination cutoff and ring-counting method behind the table are those of my 2021 analysis notebook, which I have not yet re-run; and 200 ps is a long time for a potential and a short one for a kiln. {/* Q: 7 */}
+
+[Contents ↑](#contents)
+
+## Spherical clusters
+
+The graphitisation runs are periodic cells, carbon with no surface. The other question that came up at Happy Electron was about the opposite object: a free carbon nanoparticle, of the kind that hard carbons and carbon blacks are built from, and which structure it settles into as a function of its size and its temperature. In early 2021 I ran 48 MD simulations of free carbon spheres to find out, eight sizes from 40 to 1,000 atoms at six temperatures from 500 to 5000 K, and this is their first appearance in public. The analysis below was redone for this page in 2026 from the archived trajectories, with a written classification rule, and it disagrees with my slides of the time in one place that I will come to.
+
+Every run started from a random sphere: atoms dropped one at a time at random inside a sphere at 2.49 g cm⁻³, no two closer than 2.0 Å, with the limit relaxed slightly where placement stalled. Each size had one starting sphere, shared by all six temperatures. The sphere was relaxed briefly with the FIRE minimiser, given velocities at the target temperature and held there for 50 ps, 25,000 steps of 2 fs, under a Nosé–Hoover thermostat in LAMMPS, driven by the same carbon GAP file as the graphitisation series. I analysed the last frame of every run: two atoms are bonded if they sit closer than 1.82 Å, the cutoff the renderings on this site use, counted across the periodic boundary of the simulation cell, and from that bond graph come the fraction of atoms with each number of neighbours, the connected fragments, the shortest-path rings of 3 to 10 atoms, the shells, counted as peaks in the radial density about the cluster's centre plus any tangentially bonded fragment nested inside, and one more measure that separates layered from disordered clusters, the mean cosine of the angle between each bond and the radius through its midpoint, near 0 for bonds lying in shells and 0.5 for bonds with no preferred direction. Run at that program's own 1.85 Å cutoff, the ring census reproduces, ring size for ring size, the counts that a Fortran program in the archive wrote for C1000 at 500, 1000 and 3000 K in 2021. {/* Q: 1 */}
+
+<Plate n={11}>
+  <Grid
+    dir="carbon/spheres"
+    columns={8}
+    alt="Forty-eight carbon clusters from 40 to 1,000 atoms after 50 ps at 500 to 5000 K, size across and temperature down: at 500 K every cluster is a compact, disordered ball; at 2000 and 3000 K the larger ones become round, closed cages and onions while the smallest break into chains; at 4000 and 5000 K almost every cluster has come apart into scattered chains."
+    panels={[
+      { file: "C40-500K.png", label: "C40 · 500 K" },
+      { file: "C60-500K.png", label: "C60 · 500 K" },
+      { file: "C80-500K.png", label: "C80 · 500 K" },
+      { file: "C120-500K.png", label: "C120 · 500 K" },
+      { file: "C160-500K.png", label: "C160 · 500 K" },
+      { file: "C373-500K.png", label: "C373 · 500 K" },
+      { file: "C686-500K.png", label: "C686 · 500 K" },
+      { file: "C1000-500K.png", label: "C1000 · 500 K" },
+      { file: "C40-1000K.png", label: "C40 · 1000 K" },
+      { file: "C60-1000K.png", label: "C60 · 1000 K" },
+      { file: "C80-1000K.png", label: "C80 · 1000 K" },
+      { file: "C120-1000K.png", label: "C120 · 1000 K" },
+      { file: "C160-1000K.png", label: "C160 · 1000 K" },
+      { file: "C373-1000K.png", label: "C373 · 1000 K" },
+      { file: "C686-1000K.png", label: "C686 · 1000 K" },
+      { file: "C1000-1000K.png", label: "C1000 · 1000 K" },
+      { file: "C40-2000K.png", label: "C40 · 2000 K" },
+      { file: "C60-2000K.png", label: "C60 · 2000 K" },
+      { file: "C80-2000K.png", label: "C80 · 2000 K" },
+      { file: "C120-2000K.png", label: "C120 · 2000 K" },
+      { file: "C160-2000K.png", label: "C160 · 2000 K" },
+      { file: "C373-2000K.png", label: "C373 · 2000 K" },
+      { file: "C686-2000K.png", label: "C686 · 2000 K" },
+      { file: "C1000-2000K.png", label: "C1000 · 2000 K" },
+      { file: "C40-3000K.png", label: "C40 · 3000 K" },
+      { file: "C60-3000K.png", label: "C60 · 3000 K" },
+      { file: "C80-3000K.png", label: "C80 · 3000 K" },
+      { file: "C120-3000K.png", label: "C120 · 3000 K" },
+      { file: "C160-3000K.png", label: "C160 · 3000 K" },
+      { file: "C373-3000K.png", label: "C373 · 3000 K" },
+      { file: "C686-3000K.png", label: "C686 · 3000 K" },
+      { file: "C1000-3000K.png", label: "C1000 · 3000 K" },
+      { file: "C40-4000K.png", label: "C40 · 4000 K" },
+      { file: "C60-4000K.png", label: "C60 · 4000 K" },
+      { file: "C80-4000K.png", label: "C80 · 4000 K" },
+      { file: "C120-4000K.png", label: "C120 · 4000 K" },
+      { file: "C160-4000K.png", label: "C160 · 4000 K" },
+      { file: "C373-4000K.png", label: "C373 · 4000 K" },
+      { file: "C686-4000K.png", label: "C686 · 4000 K" },
+      { file: "C1000-4000K.png", label: "C1000 · 4000 K" },
+      { file: "C40-5000K.png", label: "C40 · 5000 K" },
+      { file: "C60-5000K.png", label: "C60 · 5000 K" },
+      { file: "C80-5000K.png", label: "C80 · 5000 K" },
+      { file: "C120-5000K.png", label: "C120 · 5000 K" },
+      { file: "C160-5000K.png", label: "C160 · 5000 K" },
+      { file: "C373-5000K.png", label: "C373 · 5000 K" },
+      { file: "C686-5000K.png", label: "C686 · 5000 K" },
+      { file: "C1000-5000K.png", label: "C1000 · 5000 K" },
+    ]}
+  />
+  <Fragment slot="caption">
+    The last frame of each of 48 runs: carbon spheres of 40 to 1,000 atoms held for 50 ps at 500 to 5000 K, size across and temperature down. Most panels share one scale, a 43.2 Å field set by the widest intact cluster, so a small cluster is drawn small. Twenty panels whose atoms spread further are each framed to their own extent, 44.7 to 92.6 Å across, and so are drawn smaller than the rest and than one another: C40, C60, C80, C120 and C373 at 3000 K, and every size at 4000 and 5000 K except C40 at 4000 K. Ten runs stopped before 50 ps (all six C1000 runs; C686 at 1000, 3000 and 4000 K; C80 at 500 K), and the C80 and C686 panels at 500 K are byte-identical copies of two earlier test runs that were relaxed with a different minimiser from the rest.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
+  </Fragment>
+</Plate>
+
+The outcome depends on both variables, and the pattern is simple. At 500 K every cluster holds together and none is ordered: the largest, C1000, is 81.3% three-coordinated with the least layered bonding of any intact run and no graphitic layers, a glassy ball. At 1000 K the first order appears, and only in the middle sizes: C120 closes into a cage and C160 into an onion. At 2000 and 3000 K the clusters that survive close up into sp² shells, 84–94% of atoms three-coordinated. The small ones become single closed cages, C60 to C120 at 2000 K and C120 and C160 at 3000 K, and the large ones become graphitic onions of two or three nested shells, C160 to C1000 at 2000 K and C373 to C1000 at 3000 K. C1000 at 3000 K has three shells, at mean radii of 4.0, 8.1 and 11.7 Å, and 247 of its 467 rings of 3 to 10 atoms are hexagons. Heat further and the clusters come apart into carbon chains, the smallest first: C40 already by 2000 K, C60 and C80 by 3000 K, every size but one by 4000 K and all of them at 5000 K. The one exception, C686 at 4000 K, still held 63.8% of its atoms in one piece when its run stopped at 32.9 ps, molten rather than dissociated. Of the 48 runs, 19 dissociated, 1 was molten, 8 formed onions, 6 formed cages and 14 stayed disordered.
+
+<Plate n={12}>
+  <Grid
+    dir="carbon/spheres"
+    columns={2}
+    alt="Two 6 Å slices through the middle of the 1,000-atom cluster: at 500 K a compact network of rings filling the whole disc; at 3000 K nested curved sheets seen edge-on as arcs with open space between them, the innermost closed and the outer two joined like a spiral."
+    panels={[
+      { file: "C1000-500K-section.png", label: "C1000 · 500 K" },
+      { file: "C1000-3000K-section.png", label: "C1000 · 3000 K" },
+    ]}
+  />
+  <Fragment slot="caption">
+    Slices 6 Å thick through the centre of the 1,000-atom cluster, at the 43.2 Å scale of the grid above. At 500 K the network fills the sphere with no layers; at 3000 K it has separated into three density shells, at mean radii of 4.0, 8.1 and 11.7 Å, which the slice cuts as arcs: the innermost closes, and the outer two join at one side and open at the other, so the cluster may be a scroll rather than an onion. Both runs stopped early, at 37.9 and 33.1 ps.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
+  </Fragment>
+</Plate>
+
+Four-coordinated, diamond-like carbon never amounts to much, and this is where the analysis and my slides part company. The largest sp³ fraction in any run is 11.2%, in C1000 at 1000 K; at 500 K C1000 has 7.9%, and the smaller clusters less. Deep inside the cluster, more than 3.4 Å below the surface, C1000 reaches 13.9% at 500 K and 21.8% at 1000 K, and above 2000 K sp³ carbon all but disappears. In 2021 I called the 500 K C1000 cluster a diamond-like sphere with high sp³ content, impermeable to lithium, and contrasted it with the 3000 K onion, which was lithium-permeable. The census supports the contrast in layering and not the word diamond-like, and it turns out the archive's own ring program had printed the same 7.9% for that frame in 2021. I had the number and read the picture instead. {/* Q: 1 */}
+
+<Plate n={13}>
+  <div role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
+    <Fragment set:html={clusterOutcomes} />
+  </div>
+  <Fragment slot="caption">
+    One symbol per run: the structure of the last frame after up to 50 ps, classified by a written rule from its coordination, fragments, shells and bond directions. No run meets the rule for diamond-like carbon, at least 40% four-coordinated atoms. Several cages and onions sit close to a class boundary; the classification notes list them.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/cluster_outcomes.py</code>.</span>
+  </Fragment>
+</Plate>
+
+<Plate n={14}>
+  <div role="img" aria-label="Percentage of four-coordinated atoms against temperature, one line per cluster size: never above 11.2%, highest in the 373-, 686- and 1,000-atom clusters at 500 and 1000 K, at most 2.5% for every smaller cluster, and near zero for all sizes above 2000 K.">
+    <Fragment set:html={clusterSp3} />
+  </div>
+  <Fragment slot="caption">
+    Share of atoms with four neighbours within 1.82 Å in the last frame of each run. Dark lines are the three largest clusters, labelled; the grey lines are the five of 40 to 160 atoms. Ten of the 48 points come from runs that stopped before 50 ps.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/cluster_sp3.py</code>.</span>
+  </Fragment>
+</Plate>
+
+The map has limits, and they are the same kind as the graphitisation series has. Each cell is one frame of one trajectory, not an average and not a converged phase: there are no replicas, one starting structure per size and 50 ps at most. Ten runs stopped early, between 29.9 and 49.8 ps, including all six C1000 runs, and two of the 500 K runs, C80 and C686, were relaxed with a different minimiser from the rest. Several of the cages and onions sit near a class boundary, C160 at 2000 K most of all, with a 20-atom cage nested inside a 140-atom one, and a count of density shells cannot tell an onion from a scroll. {/* Q: onion or scroll at 3000 K */} What survives all of that is the shape of the map. Cold clusters are glass, warm ones are cages and onions, hot ones are chains, and the temperature at which a cluster stops being a cluster rises with its size.
 
 [Contents ↑](#contents)
 
 ## CHO-GAP
+
+The last thing my thesis says about the future is that carbon is never found alone. Every real carbon material, the char in a furnace, the hard carbon in a sodium-ion battery, the soot in a flame, is carbon with hydrogen and oxygen, and the GAP-20 paper lists hydrogenation and oxidation as the two things it cannot do. So the last carbon potential I worked on was CHO-GAP: the same method, three elements. This section is shorter than the work was, because the project ended without a paper and the numbers I would like to give you are in a draft and a set of status notes that I have not yet put beside this page, so they stay off it. What I can show is what the data files on this site show. {/* Q: 2 */}
+
+<Plate n={15}>
+  <Fragment set:html={combustionSeries} />
+  <Fragment slot="caption">
+    Eight methane and sixteen oxygen molecules in a 10 Å periodic box at 3000 K under CHO-GAP, at the start of the run and at 50 ps, drawn as ball-and-stick monochrome with carbon filled, oxygen open and hydrogen small. At 50 ps the box holds 7 CO₂, 1 CO, 12 H₂O, 3 OH, 3 H and 1 H₂O₂: methane has burned, with the radicals a flame is supposed to have.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/combustion_frames.py</code> and <code>scripts/figures/render_cluster.py</code>.</span>
+  </Fragment>
+</Plate>
+
+The model was built the way GAP-20 taught me to build one, with the choosing left to the sampling, and one demonstration of it is worth the space. Put 8 CH₄ and 16 O₂ in a 10 Å box at 3000 K and run 50 ps. At the end the box holds 7 CO₂, 1 CO, 12 H₂O, 3 OH, 3 H and 1 H₂O₂. That is combustion, complete with the radicals, from a potential that was fitted to energies and forces and was never told what a reaction is. It is a sanity check rather than a validation, since no one measured the reaction rates in the box against anything, but a potential that gets combustion qualitatively wrong would show it here, and this one does not. {/* Q: 2 */}
+
+The project ran with Carla de Tomas and Cedric Weber at Happy Electron and King's, Jean-Marc Leyssale in Bordeaux, who analysed lignin-pyrolysis frames with it, and Gábor Csányi, and it stopped when a later version of the model regressed against an earlier one and the cause was never isolated. I would rather write that sentence than leave the section out. A potential that works is a model; finished work is a model, its failures understood, and a paper that says both, and CHO-GAP got two of the three. The lesson of the whole page, if it has one, is that the second of those is the part you cannot let the computer decide. {/* Q: 2 */}
 
 [Contents ↑](#contents)
