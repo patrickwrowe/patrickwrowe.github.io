@@ -1,63 +1,222 @@
 {
   "output_dir": "src/content/work/figures/carbon/spheres",
-  "direction": [0.0, -0.32, 0.95],
-  "margin": 1.02,
-  "cage_angstrom": [43.2, 43.2, 43.2],
+  "direction": [
+    0.0,
+    -0.32,
+    0.95
+  ],
+  "margin": 1.15,
+  "cage_angstrom": null,
   "slab_angstrom": null,
-  "resolution": [800, 800],
+  "resolution": [
+    800,
+    800
+  ],
   "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
   "grey": 0.35,
   "panels": [
-    {"id": "C40-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-500K.xyz"},
-    {"id": "C60-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-500K.xyz"},
-    {"id": "C80-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-500K.xyz"},
-    {"id": "C120-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-500K.xyz"},
-    {"id": "C160-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-500K.xyz"},
-    {"id": "C373-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-500K.xyz"},
-    {"id": "C686-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-500K.xyz"},
-    {"id": "C1000-500K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-500K.xyz"},
-    {"id": "C40-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-1000K.xyz"},
-    {"id": "C60-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-1000K.xyz"},
-    {"id": "C80-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-1000K.xyz"},
-    {"id": "C120-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-1000K.xyz"},
-    {"id": "C160-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-1000K.xyz"},
-    {"id": "C373-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-1000K.xyz"},
-    {"id": "C686-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-1000K.xyz"},
-    {"id": "C1000-1000K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-1000K.xyz"},
-    {"id": "C40-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-2000K.xyz"},
-    {"id": "C60-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-2000K.xyz"},
-    {"id": "C80-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-2000K.xyz"},
-    {"id": "C120-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-2000K.xyz"},
-    {"id": "C160-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-2000K.xyz"},
-    {"id": "C373-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-2000K.xyz"},
-    {"id": "C686-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-2000K.xyz"},
-    {"id": "C1000-2000K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-2000K.xyz"},
-    {"id": "C40-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-3000K.xyz", "cage_angstrom": [52.3, 52.3, 52.3]},
-    {"id": "C60-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-3000K.xyz", "cage_angstrom": [47.1, 47.1, 47.1]},
-    {"id": "C80-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-3000K.xyz", "cage_angstrom": [73.5, 73.5, 73.5]},
-    {"id": "C120-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-3000K.xyz", "cage_angstrom": [57.0, 57.0, 57.0]},
-    {"id": "C160-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-3000K.xyz"},
-    {"id": "C373-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-3000K.xyz", "cage_angstrom": [44.7, 44.7, 44.7]},
-    {"id": "C686-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-3000K.xyz"},
-    {"id": "C1000-3000K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz"},
-    {"id": "C40-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-4000K.xyz"},
-    {"id": "C60-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-4000K.xyz", "cage_angstrom": [68.8, 68.8, 68.8]},
-    {"id": "C80-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-4000K.xyz", "cage_angstrom": [56.8, 56.8, 56.8]},
-    {"id": "C120-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-4000K.xyz", "cage_angstrom": [68.0, 68.0, 68.0]},
-    {"id": "C160-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-4000K.xyz", "cage_angstrom": [62.0, 62.0, 62.0]},
-    {"id": "C373-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-4000K.xyz", "cage_angstrom": [91.2, 91.2, 91.2]},
-    {"id": "C686-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-4000K.xyz", "cage_angstrom": [76.8, 76.8, 76.8]},
-    {"id": "C1000-4000K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-4000K.xyz", "cage_angstrom": [92.6, 92.6, 92.6]},
-    {"id": "C40-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C40-5000K.xyz", "cage_angstrom": [49.9, 49.9, 49.9]},
-    {"id": "C60-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C60-5000K.xyz", "cage_angstrom": null},
-    {"id": "C80-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C80-5000K.xyz", "cage_angstrom": [56.5, 56.5, 56.5]},
-    {"id": "C120-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C120-5000K.xyz", "cage_angstrom": [59.8, 59.8, 59.8]},
-    {"id": "C160-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C160-5000K.xyz", "cage_angstrom": [65.6, 65.6, 65.6]},
-    {"id": "C373-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C373-5000K.xyz", "cage_angstrom": [70.4, 70.4, 70.4]},
-    {"id": "C686-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C686-5000K.xyz", "cage_angstrom": [81.7, 81.7, 81.7]},
-    {"id": "C1000-5000K", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-5000K.xyz", "cage_angstrom": [77.5, 77.5, 77.5]},
-    {"id": "C1000-500K-section", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-500K.xyz", "slab_angstrom": 6.0},
-    {"id": "C1000-3000K-section", "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz", "slab_angstrom": 6.0}
+    {
+      "id": "C40-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-500K.xyz"
+    },
+    {
+      "id": "C60-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-500K.xyz"
+    },
+    {
+      "id": "C80-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-500K.xyz"
+    },
+    {
+      "id": "C120-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-500K.xyz"
+    },
+    {
+      "id": "C160-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-500K.xyz"
+    },
+    {
+      "id": "C373-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-500K.xyz"
+    },
+    {
+      "id": "C686-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-500K.xyz"
+    },
+    {
+      "id": "C1000-500K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-500K.xyz"
+    },
+    {
+      "id": "C40-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-1000K.xyz"
+    },
+    {
+      "id": "C60-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-1000K.xyz"
+    },
+    {
+      "id": "C80-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-1000K.xyz"
+    },
+    {
+      "id": "C120-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-1000K.xyz"
+    },
+    {
+      "id": "C160-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-1000K.xyz"
+    },
+    {
+      "id": "C373-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-1000K.xyz"
+    },
+    {
+      "id": "C686-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-1000K.xyz"
+    },
+    {
+      "id": "C1000-1000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-1000K.xyz"
+    },
+    {
+      "id": "C40-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-2000K.xyz"
+    },
+    {
+      "id": "C60-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-2000K.xyz"
+    },
+    {
+      "id": "C80-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-2000K.xyz"
+    },
+    {
+      "id": "C120-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-2000K.xyz"
+    },
+    {
+      "id": "C160-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-2000K.xyz"
+    },
+    {
+      "id": "C373-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-2000K.xyz"
+    },
+    {
+      "id": "C686-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-2000K.xyz"
+    },
+    {
+      "id": "C1000-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-2000K.xyz"
+    },
+    {
+      "id": "C40-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-3000K.xyz"
+    },
+    {
+      "id": "C60-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-3000K.xyz"
+    },
+    {
+      "id": "C80-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-3000K.xyz"
+    },
+    {
+      "id": "C120-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-3000K.xyz"
+    },
+    {
+      "id": "C160-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-3000K.xyz"
+    },
+    {
+      "id": "C373-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-3000K.xyz"
+    },
+    {
+      "id": "C686-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-3000K.xyz"
+    },
+    {
+      "id": "C1000-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz"
+    },
+    {
+      "id": "C40-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-4000K.xyz"
+    },
+    {
+      "id": "C60-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-4000K.xyz"
+    },
+    {
+      "id": "C80-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-4000K.xyz"
+    },
+    {
+      "id": "C120-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-4000K.xyz"
+    },
+    {
+      "id": "C160-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-4000K.xyz"
+    },
+    {
+      "id": "C373-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-4000K.xyz"
+    },
+    {
+      "id": "C686-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-4000K.xyz"
+    },
+    {
+      "id": "C1000-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-4000K.xyz"
+    },
+    {
+      "id": "C40-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C40-5000K.xyz"
+    },
+    {
+      "id": "C60-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-5000K.xyz"
+    },
+    {
+      "id": "C80-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C80-5000K.xyz"
+    },
+    {
+      "id": "C120-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-5000K.xyz"
+    },
+    {
+      "id": "C160-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C160-5000K.xyz"
+    },
+    {
+      "id": "C373-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C373-5000K.xyz"
+    },
+    {
+      "id": "C686-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-5000K.xyz"
+    },
+    {
+      "id": "C1000-5000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-5000K.xyz"
+    },
+    {
+      "id": "C1000-500K-section",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-500K.xyz",
+      "slab_angstrom": 6.0
+    },
+    {
+      "id": "C1000-3000K-section",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz",
+      "slab_angstrom": 6.0
+    }
   ]
 }

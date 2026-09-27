@@ -165,16 +165,16 @@ The protocol, from the input files and logs rather than from my slides of the ti
 <Plate n={8}>
   <Grid
     dir="carbon"
-    columns={7}
     alt="Seven slabs of amorphous carbon annealed at 3500 K, from 0.5 to 3.5 g cm⁻³, drawn at one scale so the low-density cells are larger: open, curved graphitic sheets around large voids at low density give way, between 2.5 and 3.0 g cm⁻³, to a dense network in which most atoms have four neighbours."
+    columnLabels={["0.5 g cm⁻³", "1.0 g cm⁻³", "1.5 g cm⁻³", "2.0 g cm⁻³", "2.5 g cm⁻³", "3.0 g cm⁻³", "3.5 g cm⁻³"]}
     panels={[
-      { file: "density-0.5gcc-3500K.png", label: "0.5 g cm⁻³" },
-      { file: "density-1.0gcc-3500K.png", label: "1.0 g cm⁻³" },
-      { file: "density-1.5gcc-3500K.png", label: "1.5 g cm⁻³" },
-      { file: "density-2.0gcc-3500K.png", label: "2.0 g cm⁻³" },
-      { file: "density-2.5gcc-3500K.png", label: "2.5 g cm⁻³" },
-      { file: "density-3.0gcc-3500K.png", label: "3.0 g cm⁻³" },
-      { file: "density-3.5gcc-3500K.png", label: "3.5 g cm⁻³" },
+      "density-0.5gcc-3500K.png",
+      "density-1.0gcc-3500K.png",
+      "density-1.5gcc-3500K.png",
+      "density-2.0gcc-3500K.png",
+      "density-2.5gcc-3500K.png",
+      "density-3.0gcc-3500K.png",
+      "density-3.5gcc-3500K.png",
     ]}
   />
   <Fragment slot="caption">
@@ -188,21 +188,22 @@ Density sets the regime, and it does so with a switch rather than a slope. At 35
 <Plate n={9}>
   <Grid
     dir="carbon"
-    columns={6}
     alt="Twelve slabs of annealed amorphous carbon, six anneal temperatures from 2000 to 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row, at one scale: the top row is open graphitic sheets at every temperature, the bottom row a dense four-coordinated network at every temperature, and neither row changes character from end to end."
+    columnLabels={["2000 K", "2500 K", "3000 K", "3500 K", "4000 K", "4500 K"]}
+    rowLabels={["1.5 g cm⁻³", "3.0 g cm⁻³"]}
     panels={[
-      { file: "temp-1.5gcc-2000K.png", label: "1.5 g cm⁻³ · 2000 K" },
-      { file: "temp-1.5gcc-2500K.png", label: "1.5 g cm⁻³ · 2500 K" },
-      { file: "temp-1.5gcc-3000K.png", label: "1.5 g cm⁻³ · 3000 K" },
-      { file: "temp-1.5gcc-3500K.png", label: "1.5 g cm⁻³ · 3500 K" },
-      { file: "temp-1.5gcc-4000K.png", label: "1.5 g cm⁻³ · 4000 K" },
-      { file: "temp-1.5gcc-4500K.png", label: "1.5 g cm⁻³ · 4500 K" },
-      { file: "temp-3.0gcc-2000K.png", label: "3.0 g cm⁻³ · 2000 K" },
-      { file: "temp-3.0gcc-2500K.png", label: "3.0 g cm⁻³ · 2500 K" },
-      { file: "temp-3.0gcc-3000K.png", label: "3.0 g cm⁻³ · 3000 K" },
-      { file: "temp-3.0gcc-3500K.png", label: "3.0 g cm⁻³ · 3500 K" },
-      { file: "temp-3.0gcc-4000K.png", label: "3.0 g cm⁻³ · 4000 K" },
-      { file: "temp-3.0gcc-4500K.png", label: "3.0 g cm⁻³ · 4500 K" },
+      "temp-1.5gcc-2000K.png",
+      "temp-1.5gcc-2500K.png",
+      "temp-1.5gcc-3000K.png",
+      "temp-1.5gcc-3500K.png",
+      "temp-1.5gcc-4000K.png",
+      "temp-1.5gcc-4500K.png",
+      "temp-3.0gcc-2000K.png",
+      "temp-3.0gcc-2500K.png",
+      "temp-3.0gcc-3000K.png",
+      "temp-3.0gcc-3500K.png",
+      "temp-3.0gcc-4000K.png",
+      "temp-3.0gcc-4500K.png",
     ]}
   />
   <Fragment slot="caption">
@@ -260,61 +261,62 @@ I analysed the last frame of every run. Two atoms are bonded if they sit closer 
 <Plate n={11}>
   <Grid
     dir="carbon/spheres"
-    columns={8}
     alt="Forty-eight carbon clusters from 40 to 1,000 atoms after up to 50 ps at 500 to 5000 K, size across and temperature down: at 500 K every cluster is a compact, disordered ball; at 2000 and 3000 K the larger ones become round, closed cages and onions while the smallest break into chains; at 4000 and 5000 K almost every cluster has come apart into scattered chains."
+    columnLabels={["C40", "C60", "C80", "C120", "C160", "C373", "C686", "C1000"]}
+    rowLabels={["500 K", "1000 K", "2000 K", "3000 K", "4000 K", "5000 K"]}
     panels={[
-      { file: "C40-500K.png", label: "C40 · 500 K" },
-      { file: "C60-500K.png", label: "C60 · 500 K" },
-      { file: "C80-500K.png", label: "C80 · 500 K" },
-      { file: "C120-500K.png", label: "C120 · 500 K" },
-      { file: "C160-500K.png", label: "C160 · 500 K" },
-      { file: "C373-500K.png", label: "C373 · 500 K" },
-      { file: "C686-500K.png", label: "C686 · 500 K" },
-      { file: "C1000-500K.png", label: "C1000 · 500 K" },
-      { file: "C40-1000K.png", label: "C40 · 1000 K" },
-      { file: "C60-1000K.png", label: "C60 · 1000 K" },
-      { file: "C80-1000K.png", label: "C80 · 1000 K" },
-      { file: "C120-1000K.png", label: "C120 · 1000 K" },
-      { file: "C160-1000K.png", label: "C160 · 1000 K" },
-      { file: "C373-1000K.png", label: "C373 · 1000 K" },
-      { file: "C686-1000K.png", label: "C686 · 1000 K" },
-      { file: "C1000-1000K.png", label: "C1000 · 1000 K" },
-      { file: "C40-2000K.png", label: "C40 · 2000 K" },
-      { file: "C60-2000K.png", label: "C60 · 2000 K" },
-      { file: "C80-2000K.png", label: "C80 · 2000 K" },
-      { file: "C120-2000K.png", label: "C120 · 2000 K" },
-      { file: "C160-2000K.png", label: "C160 · 2000 K" },
-      { file: "C373-2000K.png", label: "C373 · 2000 K" },
-      { file: "C686-2000K.png", label: "C686 · 2000 K" },
-      { file: "C1000-2000K.png", label: "C1000 · 2000 K" },
-      { file: "C40-3000K.png", label: "C40 · 3000 K" },
-      { file: "C60-3000K.png", label: "C60 · 3000 K" },
-      { file: "C80-3000K.png", label: "C80 · 3000 K" },
-      { file: "C120-3000K.png", label: "C120 · 3000 K" },
-      { file: "C160-3000K.png", label: "C160 · 3000 K" },
-      { file: "C373-3000K.png", label: "C373 · 3000 K" },
-      { file: "C686-3000K.png", label: "C686 · 3000 K" },
-      { file: "C1000-3000K.png", label: "C1000 · 3000 K" },
-      { file: "C40-4000K.png", label: "C40 · 4000 K" },
-      { file: "C60-4000K.png", label: "C60 · 4000 K" },
-      { file: "C80-4000K.png", label: "C80 · 4000 K" },
-      { file: "C120-4000K.png", label: "C120 · 4000 K" },
-      { file: "C160-4000K.png", label: "C160 · 4000 K" },
-      { file: "C373-4000K.png", label: "C373 · 4000 K" },
-      { file: "C686-4000K.png", label: "C686 · 4000 K" },
-      { file: "C1000-4000K.png", label: "C1000 · 4000 K" },
-      { file: "C40-5000K.png", label: "C40 · 5000 K" },
-      { file: "C60-5000K.png", label: "C60 · 5000 K" },
-      { file: "C80-5000K.png", label: "C80 · 5000 K" },
-      { file: "C120-5000K.png", label: "C120 · 5000 K" },
-      { file: "C160-5000K.png", label: "C160 · 5000 K" },
-      { file: "C373-5000K.png", label: "C373 · 5000 K" },
-      { file: "C686-5000K.png", label: "C686 · 5000 K" },
-      { file: "C1000-5000K.png", label: "C1000 · 5000 K" },
+      "C40-500K.png",
+      "C60-500K.png",
+      "C80-500K.png",
+      "C120-500K.png",
+      "C160-500K.png",
+      "C373-500K.png",
+      "C686-500K.png",
+      "C1000-500K.png",
+      "C40-1000K.png",
+      "C60-1000K.png",
+      "C80-1000K.png",
+      "C120-1000K.png",
+      "C160-1000K.png",
+      "C373-1000K.png",
+      "C686-1000K.png",
+      "C1000-1000K.png",
+      "C40-2000K.png",
+      "C60-2000K.png",
+      "C80-2000K.png",
+      "C120-2000K.png",
+      "C160-2000K.png",
+      "C373-2000K.png",
+      "C686-2000K.png",
+      "C1000-2000K.png",
+      "C40-3000K.png",
+      "C60-3000K.png",
+      "C80-3000K.png",
+      "C120-3000K.png",
+      "C160-3000K.png",
+      "C373-3000K.png",
+      "C686-3000K.png",
+      "C1000-3000K.png",
+      "C40-4000K.png",
+      "C60-4000K.png",
+      "C80-4000K.png",
+      "C120-4000K.png",
+      "C160-4000K.png",
+      "C373-4000K.png",
+      "C686-4000K.png",
+      "C1000-4000K.png",
+      "C40-5000K.png",
+      "C60-5000K.png",
+      "C80-5000K.png",
+      "C120-5000K.png",
+      "C160-5000K.png",
+      "C373-5000K.png",
+      "C686-5000K.png",
+      "C1000-5000K.png",
     ]}
   />
   <Fragment slot="caption">
-    The last frame of each of 48 runs: carbon spheres of 40 to 1,000 atoms held for up to 50 ps at 500 to 5000 K, size across and temperature down. Twenty-eight panels share one scale, a 43.2 Å field set by the widest intact cluster, so a small cluster is drawn small. Twenty panels whose atoms spread further are drawn smaller than the rest and at scales that differ from one another, nineteen framed to a cube of their own of 44.7 to 92.6 Å and C₆₀ at 5000 K to its own atoms: C₄₀, C₆₀, C₈₀, C₁₂₀ and C₃₇₃ at 3000 K, and every size at 4000 and 5000 K except C₄₀ at 4000 K. Ten runs stopped before 50 ps (all six C₁₀₀₀ runs; C₆₈₆ at 1000, 3000 and 4000 K; C₈₀ at 500 K), and the C₈₀ and C₆₈₆ panels at 500 K are byte-identical copies of two earlier test runs that were relaxed with a different minimiser from the rest.
+    The last frame of each of 48 runs: carbon spheres of 40 to 1,000 atoms held for up to 50 ps at 500 to 5000 K, size across and temperature down. Each panel is framed to its own cluster, so sizes are not comparable between panels; the column heading gives the atom count. Ten runs stopped before 50 ps (all six C₁₀₀₀ runs; C₆₈₆ at 1000, 3000 and 4000 K; C₈₀ at 500 K), and the C₈₀ and C₆₈₆ panels at 500 K are byte-identical copies of two earlier test runs that were relaxed with a different minimiser from the rest.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
@@ -324,15 +326,15 @@ The outcome depends on both variables, and the pattern is simple. At 500 K ever
 <Plate n={12}>
   <Grid
     dir="carbon/spheres"
-    columns={2}
     alt="Two 6 Å slices through the middle of the 1,000-atom cluster: at 500 K a compact network of rings filling the whole disc; at 3000 K nested curved sheets seen edge-on as arcs with open space between them, the innermost closed and the outer two joined like a spiral."
+    columnLabels={["500 K", "3000 K"]}
     panels={[
-      { file: "C1000-500K-section.png", label: "C1000 · 500 K" },
-      { file: "C1000-3000K-section.png", label: "C1000 · 3000 K" },
+      "C1000-500K-section.png",
+      "C1000-3000K-section.png",
     ]}
   />
   <Fragment slot="caption">
-    Slices 6 Å thick through the centre of the 1,000-atom cluster, at the 43.2 Å scale of the grid above. At 500 K the network fills the sphere with no layers; at 3000 K it has separated into three density shells, at mean radii of 4.0, 8.1 and 11.7 Å, which the slice cuts as arcs: the innermost closes, and the outer two join at one side and open at the other, so the cluster may be a scroll (one rolled-up sheet) rather than an onion. Both runs stopped early, at 37.9 and 33.1 ps.
+    Slices 6 Å thick through the centre of the 1,000-atom cluster, each framed to its own slice. At 500 K the network fills the sphere with no layers; at 3000 K it has separated into three density shells, at mean radii of 4.0, 8.1 and 11.7 Å, which the slice cuts as arcs: the innermost closes, and the outer two join at one side and open at the other, so the cluster may be a scroll (one rolled-up sheet) rather than an onion. Both runs stopped early, at 37.9 and 33.1 ps.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
