@@ -14,7 +14,7 @@
   doi: 10.1103/PhysRevB.97.054303
   theme: carbon
   anchor: graphene-potential
-  blurb: "A Gaussian approximation potential cut the in-plane force error on graphene to 0.028 eV Å⁻¹ against DFT, twenty times below the best empirical potential, with phonons within a millielectronvolt of experiment at almost every high-symmetry point. Its own paper named the catch: the model knew one form of carbon and could not describe diamond. First author."
+  blurb: "A Gaussian approximation potential for graphene with an in-plane force error of 0.028 eV Å⁻¹ against DFT. That is twenty times below the best empirical potential, and the paper named the catch itself: the model knew one form of carbon and could not describe diamond. First author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/1710.04187" }
     - { label: Code, url: "https://github.com/libAtoms/QUIP" }
@@ -44,7 +44,7 @@
   doi: 10.1021/acs.nanolett.1c02585
   theme: carbon
   anchor: defect-corrugation
-  blurb: "Point defects corrugate free-standing graphene from a concentration of about 0.2%, and the type matters. At 3% divacancies make the sheet almost five times as corrugated as pristine graphene and Stone–Wales defects almost three, and only the machine-learned potential found the divacancy reconstruction unprompted; the classical potentials had to be told. Second author."
+  blurb: "Point defects corrugate free-standing graphene even at a concentration of 0.2%, and the type matters. At 3% divacancies make the sheet almost five times as corrugated as pristine graphene and Stone–Wales defects almost three, and only the machine-learned potential found the divacancy reconstruction unprompted; the two classical potentials tested had to be told. Second author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2107.01128" }
 
@@ -57,7 +57,7 @@
   doi: 10.1016/j.carbon.2022.01.031
   theme: carbon
   anchor: cluster-benchmark
-  blurb: "GAP-20 matched the DFT minima, energies, rings and coordination best of seven carbon potentials put through the same random structure searches of 4- to 200-atom clusters, over-binding C₆₀ by 0.10 eV per atom. The classical potentials under-bound it by 0.30 to 0.91 eV per atom, and GAP-20 then carried the search beyond DFT's reach, to 720 atoms. Third author."
+  blurb: "GAP-20 matched the DFT minima, energies, rings and coordination of random-structure-searched carbon clusters better than every classical potential in a seven-way test. It over-bound C₆₀ by 0.10 eV per atom where the classical potentials under-bound it by 0.30 to 0.91, and then carried the search beyond DFT's reach, to 720 atoms. Third author."
   links:
     - { label: Preprint, url: "https://hal.science/hal-03832937v1" }
     - { label: Data, url: "https://github.com/bkarasulu/Carbon-PP-Benchmark-Paper-SI" }
