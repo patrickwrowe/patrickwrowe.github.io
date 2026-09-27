@@ -55,6 +55,11 @@ const { n, animate = false } = Astro.props;
     margin-inline: auto;
     mix-blend-mode: multiply;
   }
+  .plate__frame :global(video) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
   .plate__caption {
     display: grid;
     grid-template-columns: auto 1fr;

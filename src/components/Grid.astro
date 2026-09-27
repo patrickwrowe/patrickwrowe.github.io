@@ -1,0 +1,81 @@
+---
+// A grid of rendered panels inside a Plate — restructure spec §6.2 and §7.
+//
+// One PNG per panel, all rendered at one ångström per pixel, so a smaller box is
+// honestly smaller in its cell. Labels are text, not pixels: they take the mono
+// label primitive, so they scale with the type system and pass the 11 px rule at
+// phone width by construction. Under 700 px the grid reflows to as many 100 px
+// columns as fit (three at 390 px); every label names both parameters, so a
+// reflowed row still reads.
+//
+// The whole grid is one image to assistive technology: `alt` states the trend,
+// the Plate caption gives the parameters, and the per-panel images are decorative.
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
+interface Panel {
+  file: string;
+  label: string;
+}
+interface Props {
+  /** Subdirectory of src/content/work/figures/ holding the panels. */
+  dir: string;
+  panels: Panel[];
+  /** The trend the grid shows, in one sentence. */
+  alt: string;
+  /** Columns above 700 px. */
+  columns: number;
+}
+const { dir, panels, alt, columns } = Astro.props;
+
+const images = import.meta.glob<ImageMetadata>("/src/content/work/figures/**/*.png", {
+  eager: true,
+  import: "default",
+});
+const resolve = (file: string): ImageMetadata => {
+  const key = `/src/content/work/figures/${dir}/${file}`;
+  const image = images[key];
+  if (!image) throw new Error(`Grid: no panel at ${key}`);
+  return image;
+};
+---
+
+<div class="grid" role="img" aria-label={alt} style={`--columns: ${columns}`}>
+  {
+    panels.map((panel) => (
+      <figure class="grid__panel">
+        <Image src={resolve(panel.file)} alt="" widths={[320, 640]} sizes="(max-width: 700px) 33vw, 160px" loading="lazy" />
+        <figcaption class="label grid__label">{panel.label}</figcaption>
+      </figure>
+    ))
+  }
+</div>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+    gap: 1rem 0.5rem;
+    padding: 1rem 0.75rem;
+  }
+  @media (max-width: 700px) {
+    .grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+  }
+  .grid__panel {
+    margin: 0;
+    text-align: center;
+  }
+  /* Beats Plate's `.plate__frame :global(img)` (width: auto) by specificity. */
+  .grid .grid__panel :global(img) {
+    width: 100%;
+    height: auto;
+    mix-blend-mode: multiply;
+  }
+  .grid__label {
+    display: block;
+    margin-top: 0.4rem;
+    text-transform: none; /* "g cm⁻³" and "K" are not shouted */
+  }
+</style>

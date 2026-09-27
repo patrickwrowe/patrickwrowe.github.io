@@ -13,9 +13,13 @@ method: Gaussian approximation potentials trained on dispersion-corrected DFT, t
 system: Carbon from graphene to diamond, amorphous networks, clusters and hard carbon
 result: Density, not temperature, decides whether amorphous carbon graphitises
 tags: [interatomic-potentials, carbon, materials, machine-learning]
+hero: ./figures/carbon/hero.png
+heroAlt: A 10 Å slab through amorphous carbon annealed at 3500 K and 1.0 g cm⁻³, two periodic cells wide, rendered in greyscale. Provisional caption; the draft rewrites it.
 ---
 
 import Cite from "@/components/Cite.astro";
+import Plate from "@/components/Plate.astro";
+import Grid from "@/components/Grid.astro";
 
 ## Graphene potential
 
@@ -38,6 +42,57 @@ import Cite from "@/components/Cite.astro";
 ## Cluster benchmark
 
 <Cite id="carbon-clusters" />
+
+[Contents ↑](#contents)
+
+## Graphitisation
+
+Provisional placement of the two grids; the prose is written in the draft.
+
+<Plate n={2}>
+  <Grid
+    dir="carbon"
+    columns={7}
+    alt="Seven slabs of amorphous carbon annealed at 3500 K, from 0.5 to 3.5 g cm⁻³: open, curved graphitic sheets around large voids at low density give way to a dense, mostly four-coordinated network at high density."
+    panels={[
+      { file: "density-0.5gcc-3500K.png", label: "0.5 g cm⁻³" },
+      { file: "density-1.0gcc-3500K.png", label: "1.0 g cm⁻³" },
+      { file: "density-1.5gcc-3500K.png", label: "1.5 g cm⁻³" },
+      { file: "density-2.0gcc-3500K.png", label: "2.0 g cm⁻³" },
+      { file: "density-2.5gcc-3500K.png", label: "2.5 g cm⁻³" },
+      { file: "density-3.0gcc-3500K.png", label: "3.0 g cm⁻³" },
+      { file: "density-3.5gcc-3500K.png", label: "3.5 g cm⁻³" },
+    ]}
+  />
+  <Fragment slot="caption">
+    Provisional caption: 10 Å slabs of replica one after the 3500 K anneal, one scale for every panel.
+  </Fragment>
+</Plate>
+
+<Plate n={3}>
+  <Grid
+    dir="carbon"
+    columns={6}
+    alt="Twelve slabs, six anneal temperatures from 2000 to 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row: each row looks alike from end to end, while the two rows differ."
+    panels={[
+      { file: "temp-1.5gcc-2000K.png", label: "1.5 g cm⁻³ · 2000 K" },
+      { file: "temp-1.5gcc-2500K.png", label: "1.5 g cm⁻³ · 2500 K" },
+      { file: "temp-1.5gcc-3000K.png", label: "1.5 g cm⁻³ · 3000 K" },
+      { file: "temp-1.5gcc-3500K.png", label: "1.5 g cm⁻³ · 3500 K" },
+      { file: "temp-1.5gcc-4000K.png", label: "1.5 g cm⁻³ · 4000 K" },
+      { file: "temp-1.5gcc-4500K.png", label: "1.5 g cm⁻³ · 4500 K" },
+      { file: "temp-3.0gcc-2000K.png", label: "3.0 g cm⁻³ · 2000 K" },
+      { file: "temp-3.0gcc-2500K.png", label: "3.0 g cm⁻³ · 2500 K" },
+      { file: "temp-3.0gcc-3000K.png", label: "3.0 g cm⁻³ · 3000 K" },
+      { file: "temp-3.0gcc-3500K.png", label: "3.0 g cm⁻³ · 3500 K" },
+      { file: "temp-3.0gcc-4000K.png", label: "3.0 g cm⁻³ · 4000 K" },
+      { file: "temp-3.0gcc-4500K.png", label: "3.0 g cm⁻³ · 4500 K" },
+    ]}
+  />
+  <Fragment slot="caption">
+    Provisional caption: 10 Å slabs of replica one after a 200 ps anneal at each temperature; the 3500 K panels are the density-set runs.
+  </Fragment>
+</Plate>
 
 [Contents ↑](#contents)
 
