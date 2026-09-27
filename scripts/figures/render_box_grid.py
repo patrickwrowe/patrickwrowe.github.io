@@ -15,6 +15,13 @@ Runs in the molrender environment, which is not the project venv:
         --manifest scripts/figures/data/graphitisation/manifest.json \
         [--only ID ...] [--draft] [--force]
 
+Molecular Nodes copies its startup template into Blender's user-scripts directory on every
+render (molecularnodes scene/base.py, Canvas.__init__), and ~/.config is read-only inside a
+sandboxed session. So when BLENDER_USER_SCRIPTS is unset the driver points it at a directory
+under tempfile.gettempdir() before the first render; the same command then works inside and
+outside the sandbox. That directory holds only the template; extensions and preferences
+still load from ~/.config.
+
 Manifest (JSON; plate-level keys are defaults every panel may override):
     output_dir             where `<id>.png` goes
     direction              vector from the subject towards the camera (molrender normalises
@@ -41,12 +48,17 @@ corner pixel white; residual chroma at most MAX_CHROMA; output saved as 8-bit gr
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
 the size assertion is relaxed to match. EEVEE draws Point spheres far smaller than Cycles
 does, so judge radii at the production tier.
+
+Known defect: Molecular Nodes' compositor overlays an empty annotations image and leaves one
+black pixel at the exact image centre; molrender exposes no switch for it (2026-09-27).
+Once molrender turns compositing off, re-render every panel with `--force`.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import tempfile
 import time
@@ -69,7 +81,10 @@ from molrender import (
 from PIL import Image
 
 WHITE = 255
-MAX_CHROMA = 16  # measured 14/255 of HDRI specular on sphere highlights, spike of 2026-09-27
+# Guards against a coloured material or an AgX transform, either of which lands far above
+# 100/255. The residual is HDRI specular on sphere highlights, measured 14-16/255 on
+# 2026-09-27; the output is saved as 8-bit grey anyway.
+MAX_CHROMA = 32
 RENDER_TIMEOUT_S = 3600
 # Molecular Nodes assets/data.py; its BallAndStick sphere_radius scales this, bond_radius does not
 CARBON_VDW_RADIUS_ANGSTROM = 1.70
@@ -251,6 +266,10 @@ def main(argv: list[str] | None = None) -> int:
         if unknown:
             parser.error(f"unknown panel ids: {sorted(unknown)}")
         panels = [panel for panel in panels if panel["id"] in args.only]
+    if "BLENDER_USER_SCRIPTS" not in os.environ:
+        user_scripts = Path(tempfile.gettempdir()) / "render-box-grid-blender-scripts"
+        user_scripts.mkdir(exist_ok=True)
+        os.environ["BLENDER_USER_SCRIPTS"] = str(user_scripts)
     with tempfile.TemporaryDirectory(prefix="render-box-grid-") as scratch:
         for spec in panels:
             output = Path(spec["output_dir"]) / f"{spec['id']}.png"
