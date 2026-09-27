@@ -49,6 +49,13 @@ def box_edge_from_density(n_atoms: int, density_g_cm3: float) -> float:
     The archive frames carry no cell line, so the cell is recovered from the density the
     run was set up at: 5,832 atoms at 1.0 g cm^-3 give 48.81 A, the 216-atom seed cell
     replicated 3 x 3 x 3.
+
+    Args:
+        n_atoms: Number of carbon atoms the cell holds.
+        density_g_cm3: Target density, in g cm^-3.
+
+    Returns:
+        The cubic cell's edge length, in angstrom.
     """
     mass_g = n_atoms * CARBON_MASS_G_PER_MOL / AVOGADRO_PER_MOL
     volume_cm3 = mass_g / density_g_cm3
@@ -56,31 +63,50 @@ def box_edge_from_density(n_atoms: int, density_g_cm3: float) -> float:
 
 
 def wrap(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.ndarray:
-    """Positions folded into [0, edge) on every axis."""
+    """Positions folded into [0, edge) on every axis.
+
+    Args:
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        edge_angstrom: Cubic cell edge length, in angstrom.
+
+    Returns:
+        Positions folded into [0, edge_angstrom) on every axis, same shape as the input.
+    """
     return np.mod(positions_angstrom, edge_angstrom)
 
 
 def tile(
     positions_angstrom: np.ndarray, edge_angstrom: float, repeats: tuple[int, int, int]
 ) -> np.ndarray:
-    """Periodic images of a wrapped cell, `repeats` copies along x, y and z, origin kept."""
-    shifts = np.array(
-        [
-            (i, j, k)
-            for i in range(repeats[0])
-            for j in range(repeats[1])
-            for k in range(repeats[2])
-        ],
-        dtype=float,
-    )
-    shifts *= edge_angstrom
-    return (positions_angstrom[None, :, :] + shifts[:, None, :]).reshape(-1, 3)
+    """Periodic images of a wrapped cell, `repeats` copies along x, y and z, origin kept.
+
+    Args:
+        positions_angstrom: Wrapped atom positions, shape (n_atoms, 3), in angstrom.
+        edge_angstrom: Cubic cell edge length, in angstrom.
+        repeats: Number of copies along x, y and z.
+
+    Returns:
+        Tiled positions, shape (n_atoms * repeats[0] * repeats[1] * repeats[2], 3), in
+        angstrom: images ordered x slowest through z fastest, the input atom order kept
+        within each image.
+    """
+    shifts_angstrom = np.indices(repeats).reshape(3, -1).T * edge_angstrom
+    return (positions_angstrom[None, :, :] + shifts_angstrom[:, None, :]).reshape(-1, 3)
 
 
 def slab_mask(
     depth_angstrom: np.ndarray, centre_angstrom: float, thickness_angstrom: float
 ) -> np.ndarray:
-    """Atoms whose depth lies within `thickness_angstrom` centred on `centre_angstrom`."""
+    """Atoms whose depth lies within `thickness_angstrom` centred on `centre_angstrom`.
+
+    Args:
+        depth_angstrom: Depth coordinate (typically z) of each atom, in angstrom.
+        centre_angstrom: Centre of the slab along the depth axis, in angstrom.
+        thickness_angstrom: Full thickness of the slab, in angstrom.
+
+    Returns:
+        Boolean mask, True for atoms within the slab, same shape as `depth_angstrom`.
+    """
     return np.abs(depth_angstrom - centre_angstrom) <= thickness_angstrom / 2.0
 
 
@@ -91,6 +117,14 @@ def make_compact(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.nda
     is centred on the origin. Exact for a cluster smaller than half the cell (the largest
     here spans about 25 A in a 64.8 A cell). A dissociated run's fragments land at their
     nearest images, which is the honest picture of what the dump holds.
+
+    Args:
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        edge_angstrom: Cubic cell edge length, in angstrom.
+
+    Returns:
+        Positions re-imaged to their minimum image relative to the first atom and
+        centred on the origin, same shape as the input.
     """
     delta = positions_angstrom - positions_angstrom[0]
     delta -= edge_angstrom * np.round(delta / edge_angstrom)
@@ -104,15 +138,32 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
     The whole file is read (they are about 22 MB) and the last `ITEM: TIMESTEP` block is
     parsed, so a dump that was cut off mid-frame raises rather than returning a partial
     cluster.
+
+    Args:
+        path: Path to the LAMMPS dump file.
+
+    Returns:
+        A tuple of (positions, edge): positions is an (n_atoms, 3) array in angstrom,
+        ordered by atom id; edge is the cubic cell's edge length, in angstrom.
+
+    Raises:
+        ValueError: If the file has no frames, does not end with a newline (a dump cut
+            off mid-write), has a truncated or malformed header, is missing the
+            `id xs ys zs` columns, has a truncated atom block, or has a non-cubic cell.
     """
     text = path.read_text()
+    if not text.endswith("\n"):
+        raise ValueError(f"{path}: last frame truncated: file does not end with a newline")
     start = text.rfind("ITEM: TIMESTEP")
     if start < 0:
         raise ValueError(f"{path}: no frames found")
     lines = text[start:].splitlines()
-    n_atoms = int(lines[3])
-    bounds = np.array([line.split()[:2] for line in lines[5:8]], dtype=float)
-    columns = lines[8].split()[2:]
+    try:
+        n_atoms = int(lines[3])
+        bounds = np.array([line.split()[:2] for line in lines[5:8]], dtype=float)
+        columns = lines[8].split()[2:]
+    except (IndexError, ValueError) as error:
+        raise ValueError(f"{path}: last frame truncated: incomplete header") from error
     try:
         id_col, x_col, y_col, z_col = (columns.index(name) for name in ("id", "xs", "ys", "zs"))
     except ValueError as error:
@@ -135,10 +186,30 @@ def write_pdb(path: Path, positions_angstrom: np.ndarray, bonds: list[tuple[int,
     Fixed columns per the PDB format: serial 7-11, name 13-16, residue CBX, chain A,
     coordinates 31-54, element 77-78. Bonds are written in both directions so any
     reader that trusts CONECT sees each once from either end.
+
+    Args:
+        path: Output PDB file path.
+        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        bonds: Zero-based (first, second) atom index pairs, written as CONECT records.
+
+    Raises:
+        ValueError: If there are more than 99,999 atoms (the serial field is 5 wide), if
+            any coordinate falls outside the PDB's fixed (-999.999, 9999.999) field
+            width, or if a bond index falls outside range(len(positions_angstrom)).
     """
+    n_atoms = len(positions_angstrom)
+    if n_atoms > 99_999:
+        raise ValueError(f"{path}: {n_atoms} atoms exceeds the PDB's 99,999-atom serial limit")
+    if np.any(positions_angstrom <= -999.999) or np.any(positions_angstrom >= 9999.999):
+        raise ValueError(
+            f"{path}: a coordinate falls outside the PDB's (-999.999, 9999.999) field width"
+        )
+    if any(not (0 <= first < n_atoms and 0 <= second < n_atoms) for first, second in bonds):
+        raise ValueError(f"{path}: a bond index falls outside range(len(positions_angstrom))")
     lines = [
-        f"HETATM{index + 1:5d}  C   CBX A   1    {x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00           C"
-        for index, (x, y, z) in enumerate(positions_angstrom)
+        f"HETATM{index + 1:5d}  C   CBX A   1    "
+        f"{x_angstrom:8.3f}{y_angstrom:8.3f}{z_angstrom:8.3f}  1.00  0.00           C"
+        for index, (x_angstrom, y_angstrom, z_angstrom) in enumerate(positions_angstrom)
     ]
     partners: dict[int, list[int]] = {}
     for first, second in bonds:
@@ -148,6 +219,8 @@ def write_pdb(path: Path, positions_angstrom: np.ndarray, bonds: list[tuple[int,
         neighbours = partners[atom]
         for chunk_start in range(0, len(neighbours), 4):
             chunk = neighbours[chunk_start : chunk_start + 4]
-            lines.append(f"CONECT{atom + 1:5d}" + "".join(f"{n + 1:5d}" for n in chunk))
+            lines.append(
+                f"CONECT{atom + 1:5d}" + "".join(f"{neighbour + 1:5d}" for neighbour in chunk)
+            )
     lines.append("END")
     path.write_text("\n".join(lines) + "\n")
