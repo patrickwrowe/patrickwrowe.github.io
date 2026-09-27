@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 167.00 85.00" role="img">
+  <g>
+    <path d="M 17.00 6.00 V 68.00 H 117.00" fill="none" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="15.40" y1="64.00" x2="17.00" y2="64.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="65.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">500</text>
+    <line x1="15.40" y1="58.00" x2="17.00" y2="58.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="59.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1000</text>
+    <line x1="15.40" y1="46.00" x2="17.00" y2="46.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="47.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2000</text>
+    <line x1="15.40" y1="34.00" x2="17.00" y2="34.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="35.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3000</text>
+    <line x1="15.40" y1="22.00" x2="17.00" y2="22.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="23.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4000</text>
+    <line x1="15.40" y1="10.00" x2="17.00" y2="10.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="14.20" y="11.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">5000</text>
+    <line x1="21.00" y1="68.00" x2="21.00" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="21.00" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">40</text>
+    <line x1="32.59" y1="68.00" x2="32.59" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="32.59" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">60</text>
+    <line x1="40.81" y1="68.00" x2="40.81" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="40.81" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">80</text>
+    <line x1="52.40" y1="68.00" x2="52.40" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="52.40" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">120</text>
+    <line x1="60.62" y1="68.00" x2="60.62" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="60.62" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">160</text>
+    <line x1="84.81" y1="68.00" x2="84.81" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="84.81" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">373</text>
+    <line x1="102.23" y1="68.00" x2="102.23" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="102.23" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">686</text>
+    <line x1="113.00" y1="68.00" x2="113.00" y2="69.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="113.00" y="73.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1000</text>
+    <text x="67.00" y="78.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">cluster size / atoms (log scale)</text>
+    <text x="4.50" y="37.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.50 37.00)">temperature / K</text>
+    <g data-run="C40-500K" data-class="disordered"><rect x="19.40" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C40-1000K" data-class="disordered"><rect x="19.40" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C40-2000K" data-class="dissociated"><circle cx="21.00" cy="46.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C40-3000K" data-class="dissociated"><circle cx="21.00" cy="34.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C40-4000K" data-class="dissociated"><circle cx="21.00" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C40-5000K" data-class="dissociated"><circle cx="21.00" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C60-500K" data-class="disordered"><rect x="30.99" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C60-1000K" data-class="disordered"><rect x="30.99" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C60-2000K" data-class="cage"><polygon points="34.32,47.00 32.59,48.00 30.86,47.00 30.86,45.00 32.59,44.00 34.32,45.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C60-3000K" data-class="dissociated"><circle cx="32.59" cy="34.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C60-4000K" data-class="dissociated"><circle cx="32.59" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C60-5000K" data-class="dissociated"><circle cx="32.59" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C80-500K" data-class="disordered"><rect x="39.21" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C80-1000K" data-class="disordered"><rect x="39.21" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C80-2000K" data-class="cage"><polygon points="42.54,47.00 40.81,48.00 39.08,47.00 39.08,45.00 40.81,44.00 42.54,45.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C80-3000K" data-class="dissociated"><circle cx="40.81" cy="34.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C80-4000K" data-class="dissociated"><circle cx="40.81" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C80-5000K" data-class="dissociated"><circle cx="40.81" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C120-500K" data-class="disordered"><rect x="50.80" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C120-1000K" data-class="cage"><polygon points="54.13,59.00 52.40,60.00 50.67,59.00 50.67,57.00 52.40,56.00 54.13,57.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C120-2000K" data-class="cage"><polygon points="54.13,47.00 52.40,48.00 50.67,47.00 50.67,45.00 52.40,44.00 54.13,45.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C120-3000K" data-class="cage"><polygon points="54.13,35.00 52.40,36.00 50.67,35.00 50.67,33.00 52.40,32.00 54.13,33.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C120-4000K" data-class="dissociated"><circle cx="52.40" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C120-5000K" data-class="dissociated"><circle cx="52.40" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C160-500K" data-class="disordered"><rect x="59.02" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C160-1000K" data-class="graphitic onion"><circle cx="60.62" cy="58.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C160-2000K" data-class="graphitic onion"><circle cx="60.62" cy="46.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C160-3000K" data-class="cage"><polygon points="62.35,35.00 60.62,36.00 58.89,35.00 58.89,33.00 60.62,32.00 62.35,33.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C160-4000K" data-class="dissociated"><circle cx="60.62" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C160-5000K" data-class="dissociated"><circle cx="60.62" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C373-500K" data-class="disordered"><rect x="83.21" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C373-1000K" data-class="disordered"><rect x="83.21" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C373-2000K" data-class="graphitic onion"><circle cx="84.81" cy="46.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C373-3000K" data-class="graphitic onion"><circle cx="84.81" cy="34.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C373-4000K" data-class="dissociated"><circle cx="84.81" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C373-5000K" data-class="dissociated"><circle cx="84.81" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C686-500K" data-class="disordered"><rect x="100.63" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C686-1000K" data-class="disordered"><rect x="100.63" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C686-2000K" data-class="graphitic onion"><circle cx="102.23" cy="46.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C686-3000K" data-class="graphitic onion"><circle cx="102.23" cy="34.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C686-4000K" data-class="molten"><path d="M 100.63 20.40 L 103.83 23.60 M 100.63 23.60 L 103.83 20.40" fill="none" stroke="var(--ink)" stroke-width="0.88" stroke-linecap="round"/></g>
+    <g data-run="C686-5000K" data-class="dissociated"><circle cx="102.23" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C1000-500K" data-class="disordered"><rect x="111.40" y="62.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C1000-1000K" data-class="disordered"><rect x="111.40" y="56.40" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C1000-2000K" data-class="graphitic onion"><circle cx="113.00" cy="46.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C1000-3000K" data-class="graphitic onion"><circle cx="113.00" cy="34.00" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <g data-run="C1000-4000K" data-class="dissociated"><circle cx="113.00" cy="22.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-run="C1000-5000K" data-class="dissociated"><circle cx="113.00" cy="10.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <g data-legend="diamond-like"><circle cx="127.00" cy="19.00" r="2.00" fill="var(--ink)" stroke="none"/></g>
+    <text x="131.40" y="20.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">diamond-like (none)</text>
+    <g data-legend="graphitic onion"><circle cx="127.00" cy="26.20" r="2.00" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <text x="131.40" y="27.20" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">graphitic onion (8)</text>
+    <g data-legend="cage"><polygon points="128.73,34.40 127.00,35.40 125.27,34.40 125.27,32.40 127.00,31.40 128.73,32.40" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <text x="131.40" y="34.40" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">cage (6)</text>
+    <g data-legend="disordered"><rect x="125.40" y="39.00" width="3.20" height="3.20" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.55"/></g>
+    <text x="131.40" y="41.60" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">disordered (14)</text>
+    <g data-legend="molten"><path d="M 125.40 46.20 L 128.60 49.40 M 125.40 49.40 L 128.60 46.20" fill="none" stroke="var(--ink)" stroke-width="0.88" stroke-linecap="round"/></g>
+    <text x="131.40" y="48.80" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">molten (1)</text>
+    <g data-legend="dissociated"><circle cx="127.00" cy="55.00" r="0.80" fill="var(--ink)" stroke="none"/></g>
+    <text x="131.40" y="56.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">dissociated (19)</text>
+  </g>
+</svg>
