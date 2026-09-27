@@ -48,7 +48,7 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     grey                   the material's linear RGB value, 0-1, on all three channels (what
                            Solid(rgb=...) receives); not a display value, since the Standard
                            view transform applies the sRGB curve on output
-    panels[].id, .source   an XYZ file readable by render_cluster.read_xyz
+    panels[].id, .source   an XYZ file readable by boxprep.read_xyz
     panels[].density_g_cm3 present for a periodic box: the cell edge follows from it and the
                            frame is wrapped; absent for a free cluster
     panels[].tile          [nx, ny, nz] periodic images (boxes only), default [1, 1, 1]
