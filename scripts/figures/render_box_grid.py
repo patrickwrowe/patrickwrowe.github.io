@@ -56,7 +56,10 @@ ids are unique and use only letters, digits, "_", "." and "-", because each name
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
-corner pixel white; residual chroma at most MAX_CHROMA; output saved as 8-bit greyscale.
+corner white (the median of each CORNER_BLOCK_PX square corner block is 255 on every
+channel); at most MAX_BORDER_STRAYS non-white pixels on the outer one-pixel border, each
+isolated, and reported in the summary line; residual chroma at most MAX_CHROMA; output
+saved as 8-bit greyscale.
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -64,8 +67,12 @@ the size assertion is relaxed to match. EEVEE draws Point spheres far smaller th
 does, so judge radii at the production tier.
 
 Known defect: Molecular Nodes' compositor overlays an empty annotations image and leaves one
-black pixel at the exact image centre; molrender exposes no switch for it (2026-09-27).
-Once molrender turns compositing off, re-render every panel with `--force`.
+black pixel at the exact image centre and, on a non-square frame, can leave a stray pixel on
+the border (the hero's top-right corner came back [234, 255, 232], the only non-white pixel
+in its 40 x 40 corner region). molrender exposes no switch for it (2026-09-27), so the
+whiteness check judges the world, corner blocks and isolated border strays, rather than
+single pixels. Both artefacts vanish once molrender turns compositing off; re-render every
+panel with `--force` then.
 """
 
 from __future__ import annotations
@@ -97,6 +104,8 @@ from molrender import (
 from PIL import Image
 
 WHITE = 255
+CORNER_BLOCK_PX = 8
+MAX_BORDER_STRAYS = 2  # compositor artefacts, see the module docstring
 # Guards against a coloured material, which lands far above 100/255. (AgX keeps a neutral
 # grey neutral, so this does not catch it; scene_for's view_transform="Standard" enforces
 # that.) The residual is HDRI specular on sphere highlights, measured 14-16/255 on
@@ -245,30 +254,70 @@ def scene_for(spec: dict, subject: Path, cage: Path | None, draft: bool) -> Scen
     )
 
 
-def check_and_flatten(png: Path, expected_size: tuple[int, int]) -> None:
-    """Assert size, white corners and near-zero chroma, then save as 8-bit grey.
+def check_and_flatten(
+    png: Path, expected_size: tuple[int, int]
+) -> list[tuple[int, int, list[int]]]:
+    """Assert size, a white world and near-zero chroma, then save as 8-bit grey.
+
+    The world is judged by blocks, not single pixels, because the Molecular Nodes
+    compositor can leave a stray pixel on the border (module docstring): the median of
+    each CORNER_BLOCK_PX square corner block must be 255 on every channel, and at most
+    MAX_BORDER_STRAYS pixels on the outer one-pixel border may be non-white, each with no
+    non-white pixel among its eight neighbours. A sphere reaching the border is a run of
+    non-white pixels and still fails.
 
     Args:
         png: The rendered PNG, overwritten in place as mode L.
         expected_size: (width, height) in pixels the file on disk must have.
 
+    Returns:
+        The tolerated border strays as (row, column, [r, g, b]) in pixels, 0-255.
+
     Raises:
-        RuntimeError: If the size differs, any corner pixel is not pure white, or the
-            largest per-pixel channel spread exceeds MAX_CHROMA.
+        RuntimeError: If the size differs, a corner block's median is not white, the
+            border has more than MAX_BORDER_STRAYS non-white pixels or one that is not
+            isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA.
     """
     image = Image.open(png).convert("RGB")
     if image.size != expected_size:
         raise RuntimeError(f"{png}: rendered {image.size}, expected {expected_size}")
     pixels = np.asarray(image, dtype=np.int16)
-    corners = [pixels[0, 0], pixels[0, -1], pixels[-1, 0], pixels[-1, -1]]
-    if any((corner != WHITE).any() for corner in corners):
+    block = CORNER_BLOCK_PX
+    corner_blocks = [
+        pixels[:block, :block],
+        pixels[:block, -block:],
+        pixels[-block:, :block],
+        pixels[-block:, -block:],
+    ]
+    medians = [np.median(corner.reshape(-1, 3), axis=0) for corner in corner_blocks]
+    if any((median != WHITE).any() for median in medians):
         raise RuntimeError(
-            f"{png}: corner pixels are not white: {[corner.tolist() for corner in corners]}"
+            f"{png}: corner block medians are not white: {[median.tolist() for median in medians]}"
         )
+    non_white = (pixels < WHITE).any(axis=2)
+    on_border = np.ones_like(non_white)
+    on_border[1:-1, 1:-1] = False
+    rows, columns = np.nonzero(non_white & on_border)
+    strays = [
+        (int(row), int(column), pixels[row, column].tolist())
+        for row, column in zip(rows, columns, strict=True)
+    ]
+    if len(strays) > MAX_BORDER_STRAYS:
+        raise RuntimeError(
+            f"{png}: {len(strays)} non-white border pixels, at most {MAX_BORDER_STRAYS}: "
+            f"{strays[:8]}"
+        )
+    padded = np.pad(non_white, 1)
+    for row, column, value in strays:
+        if padded[row : row + 3, column : column + 3].sum() > 1:
+            raise RuntimeError(
+                f"{png}: non-white border pixel ({row}, {column}) {value} has a non-white neighbour"
+            )
     chroma = int((pixels.max(axis=2) - pixels.min(axis=2)).max())
     if chroma > MAX_CHROMA:
         raise RuntimeError(f"{png}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
     image.convert("L").save(png, optimize=True)
+    return strays
 
 
 def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
@@ -292,13 +341,14 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     result = render(scene_for(spec, subject, cage, draft), rendered, timeout=RENDER_TIMEOUT_S)
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
-    check_and_flatten(rendered, (int(width_px * scale), int(height_px * scale)))
+    strays = check_and_flatten(rendered, (int(width_px * scale), int(height_px * scale)))
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(rendered, output)
     elapsed_s = time.perf_counter() - started_s
     print(
         f"{spec['id']}: {n_atoms} atoms, wall {elapsed_s:.0f} s, "
-        f"blender exit {result.returncode}, {output}"
+        f"blender exit {result.returncode}, {output}, "
+        f"border strays (row, column, rgb): {strays or 'none'}"
     )
 
 
