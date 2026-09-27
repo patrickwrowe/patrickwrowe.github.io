@@ -29,9 +29,12 @@ const { n, animate = false } = Astro.props;
   /* Width lives on the figure, not on the frame, so the caption and its rule are
    * the same width as the artwork by construction. Sizing the frame alone is what
    * made the figure look like it was overflowing its own caption. */
+  /* The bottom margin keeps the caption from butting against the paragraph after
+   * it; it collapses into the next plate's larger top margin when plates stack. */
   .plate {
     margin: 0;
     margin-top: clamp(3rem, 7vw, 5rem);
+    margin-bottom: clamp(2rem, 4vw, 3rem);
   }
   .plate__frame {
     background: var(--plate);
@@ -45,24 +48,37 @@ const { n, animate = false } = Astro.props;
   /* Journal figures ship on opaque white. Multiplying against --plate drops the
    * white out so the frame reads as one surface, without editing the artwork —
    * which matters for the figures we hold under a no-derivatives licence. */
-  .plate__frame :global(img) {
-    width: auto;
-    max-width: 100%;
-    /* Portrait composites would otherwise run to two screens once the plate breaks
-     * out of the measure. Height-capped and centred; the intrinsic ratio is never
-     * touched, so a tall figure narrows rather than squashing. */
-    max-height: 85vh;
-    margin-inline: auto;
-    mix-blend-mode: multiply;
-  }
+  /* Full width with the height from the width/height attributes, so the box is
+   * reserved before a lazy image arrives: `width: auto` resolved to 0 x 0 until
+   * load, and every figure shoved the text below it down as the reader scrolled.
+   * Portrait composites would otherwise run to two screens once the plate breaks
+   * out of the measure, so the height is capped and `contain` keeps the intrinsic
+   * ratio: a tall figure narrows inside its box rather than squashing. The video
+   * takes the same box and the same multiply, so a render on a white world drops
+   * onto --plate like the stills do. */
+  .plate__frame :global(img),
   .plate__frame :global(video) {
     display: block;
     width: 100%;
     height: auto;
+    max-height: 85vh;
+    object-fit: contain;
+    mix-blend-mode: multiply;
   }
+  /* A data chart inlined as SVG. --chart-em is the chart's viewBox width in units of
+   * its own tick-label size (figure_style.LABEL_SIZE), so at full size its labels
+   * set at exactly --t-label, the size of every other data label on the site.
+   * Stretched to the full plate they came out at 15-21 px, larger than the prose. */
+  .plate__frame :global(.chart) {
+    max-width: calc(var(--chart-em) * var(--t-label));
+    margin-inline: auto;
+  }
+  /* A fixed marker column, wide enough for "Fig. 15", so every caption on a page
+   * starts its text at the same x; `auto` indented Fig. 10 onwards by a character. */
   .plate__caption {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 3.5rem 1fr;
+    align-items: baseline;
     gap: 0 1.25rem;
     margin-top: 0.9rem;
     padding-top: 0.9rem;
@@ -80,6 +96,14 @@ const { n, animate = false } = Astro.props;
   .plate__text :global(b) {
     color: var(--ink);
     font-weight: 600;
+  }
+  /* A script path in a credit line is provenance, not code to copy: mono marks it
+   * as data, and the prose's --plate chip would make the credit louder than the
+   * caption. It may break anywhere, or a long path overruns the phone column. */
+  .plate__text :global(code) {
+    background: none;
+    padding: 0;
+    overflow-wrap: anywhere;
   }
 
   @media (min-width: 700px) {
@@ -101,8 +125,11 @@ const { n, animate = false } = Astro.props;
       );
     }
   }
+  /* A specimen field drawn with `slice` (the landing hero) is cropped to a band at
+   * phone width. A chart drawn with the default `meet` keeps its own proportions:
+   * forcing it to 230 px letterboxed wide charts and shrank tall ones. */
   @media (max-width: 640px) {
-    .plate__frame :global(svg) {
+    .plate__frame :global(svg[preserveAspectRatio$="slice"]) {
       height: 230px;
       width: 100%;
     }

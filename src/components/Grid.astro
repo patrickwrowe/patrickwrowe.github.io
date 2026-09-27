@@ -4,9 +4,14 @@
 // One PNG per panel, all rendered at one ångström per pixel, so a smaller box is
 // honestly smaller in its cell. Labels are text, not pixels: they take the mono
 // label primitive, so they scale with the type system and pass the 11 px rule at
-// phone width by construction. Under 700 px the grid reflows to as many 100 px
-// columns as fit (three at 390 px); every label names both parameters, so a
-// reflowed row still reads.
+// phone width by construction. A label naming two parameters ("C40 · 500 K") is set
+// as two stacked lines, one parameter each, so a narrow cell never strands a unit on
+// a line of its own and every panel in a grid carries the same number of lines.
+//
+// Under 700 px the grid reflows to at most three columns (fewer when the grid has
+// fewer), each at least 100 px wide: three at 390 px. Each desktop row starts a new
+// row in the reflow, so a temperature row of the cluster grid stays a block instead
+// of running into the next temperature mid-line.
 //
 // The whole grid is one image to assistive technology: `alt` states the trend,
 // the Plate caption gives the parameters, and the per-panel images are decorative.
@@ -27,6 +32,11 @@ interface Props {
   columns: number;
 }
 const { dir, panels, alt, columns } = Astro.props;
+const narrowColumns = Math.min(columns, 3);
+
+// Panel widths for `sizes`: the plate is at most --measure-figure (54rem = 864 px)
+// wide above 1000 px, and about the viewport width below 700 px.
+const sizes = `(max-width: 700px) ${Math.ceil(100 / narrowColumns)}vw, ${Math.ceil(864 / columns)}px`;
 
 const images = import.meta.glob<ImageMetadata>("/src/content/work/figures/**/*.png", {
   eager: true,
@@ -40,12 +50,16 @@ const resolve = (file: string): ImageMetadata => {
 };
 ---
 
-<div class="grid" role="img" aria-label={alt} style={`--columns: ${columns}`}>
+<div class="grid" role="img" aria-label={alt} style={`--columns: ${columns}; --narrow-columns: ${narrowColumns}`}>
   {
-    panels.map((panel) => (
-      <figure class="grid__panel">
-        <Image src={resolve(panel.file)} alt="" widths={[320, 640]} sizes="(max-width: 700px) 33vw, 160px" loading="lazy" />
-        <figcaption class="label grid__label">{panel.label}</figcaption>
+    panels.map((panel, index) => (
+      <figure class:list={["grid__panel", index % columns === 0 && "grid__panel--row"]}>
+        <Image src={resolve(panel.file)} alt="" widths={[320, 640, 800]} sizes={sizes} loading="lazy" />
+        <figcaption class="label grid__label">
+          {panel.label.split(" · ").map((part) => (
+            <span>{part}</span>
+          ))}
+        </figcaption>
       </figure>
     ))
   }
@@ -53,21 +67,32 @@ const resolve = (file: string): ImageMetadata => {
 
 <style>
   .grid {
+    --column-gap: 0.5rem;
     display: grid;
     grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
-    gap: 1rem 0.5rem;
+    gap: 1rem var(--column-gap);
     padding: 1rem 0.75rem;
   }
   @media (max-width: 700px) {
     .grid {
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      /* At most --narrow-columns, each at least 100 px (restructure spec §6.2). */
+      grid-template-columns: repeat(
+        auto-fill,
+        minmax(
+          max(100px, (100% - (var(--narrow-columns) - 1) * var(--column-gap)) / var(--narrow-columns)),
+          1fr
+        )
+      );
+    }
+    .grid__panel--row {
+      grid-column-start: 1;
     }
   }
   .grid__panel {
     margin: 0;
     text-align: center;
   }
-  /* Beats Plate's `.plate__frame :global(img)` (width: auto) by specificity. */
+  /* Beats Plate's `.plate__frame :global(img)` by specificity. */
   .grid .grid__panel :global(img) {
     width: 100%;
     height: auto;
@@ -77,5 +102,8 @@ const resolve = (file: string): ImageMetadata => {
     display: block;
     margin-top: 0.4rem;
     text-transform: none; /* "g cm⁻³" and "K" are not shouted */
+  }
+  .grid__label span {
+    display: block;
   }
 </style>

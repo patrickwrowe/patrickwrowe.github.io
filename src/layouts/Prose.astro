@@ -65,9 +65,12 @@ const { title, description, section, math = false, meta, fields = [], documentTi
     max-width: 24ch;
     text-wrap: balance;
   }
+  /* Baseline, not top: an 11 px label top-aligned against 15 px serif sat a few
+   * pixels above the line it names. */
   .prose-head__fields {
     display: grid;
     grid-template-columns: 5.5rem 1fr;
+    align-items: baseline;
     gap: 0.3rem 1.5rem;
     margin-top: 1.5rem;
     max-width: var(--measure-prose);
@@ -162,5 +165,47 @@ const { title, description, section, math = false, meta, fields = [], documentTi
     border: 0;
     border-top: 1px solid var(--hairline);
     margin-block: 2.5em;
+  }
+  /* Data tables. The header is the label primitive over an ink rule, the body is
+   * serif with tabular figures, and alternate rows sit on --plate (spec 01 §5.1,
+   * "table zebra"). Column alignment comes from the markdown delimiter row, so
+   * numeric columns are right-aligned where the author marks them `--:`. Sized to
+   * fit a 350 px column: the headers wrap by word and the cell padding is tight. */
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--t-small);
+    line-height: 1.45;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .prose th {
+    font-family: var(--mono);
+    font-size: var(--t-label);
+    font-weight: 500;
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--graphite);
+    text-align: left;
+    vertical-align: bottom;
+    padding: 0 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--ink);
+  }
+  .prose td {
+    padding: 0.4rem 0.5rem;
+    vertical-align: baseline;
+  }
+  .prose tbody tr:nth-child(odd) {
+    background: var(--plate);
+  }
+  /* At phone width the tracked header words ("NEIGHBOURS") set the table's minimum
+   * width; untracked and with tighter cells, four columns fit in 350 px. */
+  @media (max-width: 640px) {
+    .prose th {
+      letter-spacing: normal;
+    }
+    .prose th,
+    .prose td {
+      padding-inline: 0.25rem;
+    }
   }
 </style>

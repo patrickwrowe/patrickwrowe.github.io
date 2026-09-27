@@ -55,10 +55,19 @@ const publicationsHere = isTheme
 
   {data.stub && <DraftNotice>{data.stubNote ?? "Placeholder — this page is scaffolding, not a finished account."}</DraftNotice>}
 
+  {/* The hero is the page's largest contentful paint (restructure spec §6.2): eager,
+      high priority, and up to 1728 px for a 54rem plate at 2x. <Image> is lazy by default. */}
   {
     data.hero && (
       <Plate n={1}>
-        <Image src={data.hero} alt={data.heroAlt ?? ""} widths={[640, 1180]} sizes="(max-width: 700px) 100vw, 1180px" />
+        <Image
+          src={data.hero}
+          alt={data.heroAlt ?? ""}
+          widths={[640, 1180, 1728]}
+          sizes="(max-width: 1000px) 100vw, 864px"
+          loading="eager"
+          fetchpriority="high"
+        />
         <Fragment slot="caption">
           {data.heroAlt}
           {data.heroCredit && <span class="credit">{data.heroCredit}</span>}
