@@ -115,6 +115,8 @@ npm test                                  # node --test: src/lib helpers
 uv run scripts/check_links.py             # after npm run build: anchors, hrefs, redirects, return links, Fig. n
 uv run pytest scripts/tests               # the link check's own tests
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...]
+MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
+$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; env is not the venv
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
 ```

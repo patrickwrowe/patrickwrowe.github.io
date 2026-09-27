@@ -1,0 +1,107 @@
+{
+  "note": "3500 K entries of the temperature sets are byte-identical to the 1.5 and 3.0 g cm-3 entries of the density set (md5 checked 2026-09-27); the temperature grids reuse the density files.",
+  "frames": [
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-0.5gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/0.5/0.5_1_Final_Frame.xyz",
+      "md5": "5fedb2403f6f0f19363adf6f1f3041a5",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-1.0gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/1.0/1.0_1_Final_Frame.xyz",
+      "md5": "7aecbeaa1985e9ae8bff1bd0de8ca341",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-1.5gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/1.5/1.5_1_Final_Frame.xyz",
+      "md5": "1995a2ed0cfe60fd11ae3b1d958083ad",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-2.0gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/2.0/2.0_1_Final_Frame.xyz",
+      "md5": "dca0c67d8825a3a87ef1375248c425e7",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-2.5gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/2.5/2.5_1_Final_Frame.xyz",
+      "md5": "103b7cd148ea645d6606064e5de15f0c",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-3.0gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/3.0/3.0_1_Final_Frame.xyz",
+      "md5": "00ec98c6d032c9d2da02f133507da86c",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/density-3.5gcc-3500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/2_Analysis_Dens/Final_Frames/3.5/3.5_1_Final_Frame.xyz",
+      "md5": "d1f65e88a5efededc86aa34eb312f862",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/3_Analysis_T_1.5_gcc/Final_Frames/2000/2000_1_Final_Frame.xyz",
+      "md5": "70506d3b1615f6c1ac13670396e31669",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/3_Analysis_T_1.5_gcc/Final_Frames/2500/2500_1_Final_Frame.xyz",
+      "md5": "f0bb6cbb82a25537925346d4758f4e80",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-3000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/3_Analysis_T_1.5_gcc/Final_Frames/3000/3000_1_Final_Frame.xyz",
+      "md5": "f3b0083b3fbcd2e10469a735cc84e2ff",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/3_Analysis_T_1.5_gcc/Final_Frames/4000/4000_1_Final_Frame.xyz",
+      "md5": "6856f4939660b6252b266e7790ded269",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/3_Analysis_T_1.5_gcc/Final_Frames/4500/4500_1_Final_Frame.xyz",
+      "md5": "1109893d5b35bb380bb61aafb593404b",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/4_Analysis_T_3.0_gcc/Final_Frames/2000/2000_1_Final_Frame.xyz",
+      "md5": "5ea9392437f69d9adb53253bc46a2537",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/4_Analysis_T_3.0_gcc/Final_Frames/2500/2500_1_Final_Frame.xyz",
+      "md5": "8db60d82fd35971455a405deca93061b",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-3000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/4_Analysis_T_3.0_gcc/Final_Frames/3000/3000_1_Final_Frame.xyz",
+      "md5": "a4571e5a0b931650e19afdfdc22e39ac",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4000K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/4_Analysis_T_3.0_gcc/Final_Frames/4000/4000_1_Final_Frame.xyz",
+      "md5": "6f65e823d26e476f810f26dd5fc101cb",
+      "atoms": 5832
+    },
+    {
+      "file": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4500K-r1.xyz",
+      "archive": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/4_Analysis_T_3.0_gcc/Final_Frames/4500/4500_1_Final_Frame.xyz",
+      "md5": "02c50bb749bab92f73f0b971cced0c52",
+      "atoms": 5832
+    }
+  ]
+}
