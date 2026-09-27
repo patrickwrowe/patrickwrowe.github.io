@@ -1,0 +1,153 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["numpy"]
+# ///
+"""Geometry for rendering periodic carbon boxes and free carbon clusters.
+
+The archive's final frames are plain XYZ with no cell line and the cluster dumps are
+LAMMPS `atom`-style with scaled coordinates. This module recovers the cell, folds and
+tiles the box, cuts the slab a camera can see into, re-images a cluster the periodic
+dump has split, and writes a PDB with explicit CONECT records, because Molecular Nodes
+reads bonds from CONECT and infers none for a residue it does not know
+(docs/dossiers/carbon/molrender-api.md section 10).
+
+Pure numpy. The dense bond search is inherited from render_cluster.py and is fine for
+the largest thing rendered here, a two-thousand-atom slab; a whole 5,832-atom box is
+never bonded, it is sliced first.
+
+Units: every length is in angstrom, every density in g cm^-3.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+from render_cluster import Structure, find_bonds, read_xyz
+
+__all__ = [
+    "Structure",
+    "box_edge_from_density",
+    "find_bonds",
+    "make_compact",
+    "read_lammps_last_frame",
+    "read_xyz",
+    "slab_mask",
+    "tile",
+    "wrap",
+    "write_pdb",
+]
+
+CARBON_MASS_G_PER_MOL = 12.011
+AVOGADRO_PER_MOL = 6.02214076e23
+CM_TO_ANGSTROM = 1.0e8
+
+
+def box_edge_from_density(n_atoms: int, density_g_cm3: float) -> float:
+    """Edge of the cubic cell holding `n_atoms` carbon atoms at `density_g_cm3`, in angstrom.
+
+    The archive frames carry no cell line, so the cell is recovered from the density the
+    run was set up at: 5,832 atoms at 1.0 g cm^-3 give 48.81 A, the 216-atom seed cell
+    replicated 3 x 3 x 3.
+    """
+    mass_g = n_atoms * CARBON_MASS_G_PER_MOL / AVOGADRO_PER_MOL
+    volume_cm3 = mass_g / density_g_cm3
+    return volume_cm3 ** (1.0 / 3.0) * CM_TO_ANGSTROM
+
+
+def wrap(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.ndarray:
+    """Positions folded into [0, edge) on every axis."""
+    return np.mod(positions_angstrom, edge_angstrom)
+
+
+def tile(
+    positions_angstrom: np.ndarray, edge_angstrom: float, repeats: tuple[int, int, int]
+) -> np.ndarray:
+    """Periodic images of a wrapped cell, `repeats` copies along x, y and z, origin kept."""
+    shifts = np.array(
+        [
+            (i, j, k)
+            for i in range(repeats[0])
+            for j in range(repeats[1])
+            for k in range(repeats[2])
+        ],
+        dtype=float,
+    )
+    shifts *= edge_angstrom
+    return (positions_angstrom[None, :, :] + shifts[:, None, :]).reshape(-1, 3)
+
+
+def slab_mask(
+    depth_angstrom: np.ndarray, centre_angstrom: float, thickness_angstrom: float
+) -> np.ndarray:
+    """Atoms whose depth lies within `thickness_angstrom` centred on `centre_angstrom`."""
+    return np.abs(depth_angstrom - centre_angstrom) <= thickness_angstrom / 2.0
+
+
+def make_compact(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.ndarray:
+    """Re-image a cluster that a periodic dump has split across the cell boundary.
+
+    Every atom is moved to its minimum image relative to the first atom, then the cluster
+    is centred on the origin. Exact for a cluster smaller than half the cell (the largest
+    here spans about 25 A in a 64.8 A cell). A dissociated run's fragments land at their
+    nearest images, which is the honest picture of what the dump holds.
+    """
+    delta = positions_angstrom - positions_angstrom[0]
+    delta -= edge_angstrom * np.round(delta / edge_angstrom)
+    return delta - delta.mean(axis=0)
+
+
+def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
+    """Last frame of a LAMMPS `atom`-style dump with scaled `xs ys zs` columns.
+
+    Returns positions in angstrom ordered by atom id, and the cubic cell edge in angstrom.
+    The whole file is read (they are about 22 MB) and the last `ITEM: TIMESTEP` block is
+    parsed, so a dump that was cut off mid-frame raises rather than returning a partial
+    cluster.
+    """
+    text = path.read_text()
+    start = text.rfind("ITEM: TIMESTEP")
+    if start < 0:
+        raise ValueError(f"{path}: no frames found")
+    lines = text[start:].splitlines()
+    n_atoms = int(lines[3])
+    bounds = np.array([line.split()[:2] for line in lines[5:8]], dtype=float)
+    columns = lines[8].split()[2:]
+    try:
+        id_col, x_col, y_col, z_col = (columns.index(name) for name in ("id", "xs", "ys", "zs"))
+    except ValueError as error:
+        raise ValueError(f"{path}: expected columns id xs ys zs, found {columns}") from error
+    rows = [line.split() for line in lines[9 : 9 + n_atoms]]
+    if len(rows) != n_atoms or any(len(row) != len(columns) for row in rows):
+        raise ValueError(f"{path}: last frame truncated: {len(rows)} of {n_atoms} atoms")
+    table = np.array(rows, dtype=float)
+    table = table[np.argsort(table[:, id_col])]
+    edges = bounds[:, 1] - bounds[:, 0]
+    if not np.allclose(edges, edges[0], atol=1e-3):
+        raise ValueError(f"{path}: cell is not cubic: {edges}")
+    scaled = table[:, [x_col, y_col, z_col]]
+    return bounds[:, 0] + scaled * edges, float(edges[0])
+
+
+def write_pdb(path: Path, positions_angstrom: np.ndarray, bonds: list[tuple[int, int]]) -> None:
+    """Carbon-only PDB: one HETATM per atom, serials from 1, and a CONECT line per atom.
+
+    Fixed columns per the PDB format: serial 7-11, name 13-16, residue CBX, chain A,
+    coordinates 31-54, element 77-78. Bonds are written in both directions so any
+    reader that trusts CONECT sees each once from either end.
+    """
+    lines = [
+        f"HETATM{index + 1:5d}  C   CBX A   1    {x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00           C"
+        for index, (x, y, z) in enumerate(positions_angstrom)
+    ]
+    partners: dict[int, list[int]] = {}
+    for first, second in bonds:
+        partners.setdefault(first, []).append(second)
+        partners.setdefault(second, []).append(first)
+    for atom in sorted(partners):
+        neighbours = partners[atom]
+        for chunk_start in range(0, len(neighbours), 4):
+            chunk = neighbours[chunk_start : chunk_start + 4]
+            lines.append(f"CONECT{atom + 1:5d}" + "".join(f"{n + 1:5d}" for n in chunk))
+    lines.append("END")
+    path.write_text("\n".join(lines) + "\n")
