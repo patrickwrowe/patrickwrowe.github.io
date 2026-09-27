@@ -13,9 +13,9 @@ classical, empirically-fitted potentials get the open marker. This is the same
 filled-versus-open device graphitisation_figure.py uses to tell two series apart without
 spending a second colour, just drawn across three groups instead of two.
 
-House style of graphitisation_figure.py: emitted as SVG by hand so that every stroke and
-fill resolves to `var(--ink)`, `var(--graphite)` or `var(--plate)`, with no hue, over a
-unitless viewBox.
+House style of the site's figures (figure_style.py): emitted as SVG by hand so that every
+stroke and fill resolves to `var(--ink)`, `var(--graphite)` or `var(--plate)`, with no hue,
+over a unitless viewBox.
 
 Data: docs/dossiers/carbon/dossier.md lines 472-473, Table II of Karasulu et al., "A
 transferable machine-learning potential for carbon", Carbon 191, 255-266 (2022) — cohesive
@@ -30,6 +30,8 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+from figure_style import AXIS_TITLE_SIZE, AXIS_WIDTH, LABEL_SIZE, TICK_LENGTH, svg_text
 
 # (method label, cohesive energy in eV per atom, marker kind). Order is DFT first, then
 # the seven potentials as Table II lists them.
@@ -63,13 +65,9 @@ DOMAIN_MAX_EV_PER_ATOM = max(value for _, value, _ in METHODS) + DOMAIN_PADDING_
 
 X_TICKS_EV_PER_ATOM = (-7.6, -7.4, -7.2, -7.0, -6.8, -6.6)
 
-AXIS_WIDTH = 0.45
 STEM_WIDTH = 0.6
 MARKER_STROKE = 0.7
 MARKER_RADIUS = 1.7
-TICK_LENGTH = 1.6
-LABEL_SIZE = 3.0
-AXIS_TITLE_SIZE = 3.2
 
 
 def x_for_value(cohesive_energy_ev_per_atom: float) -> float:
@@ -84,31 +82,6 @@ def x_for_value(cohesive_energy_ev_per_atom: float) -> float:
     span = DOMAIN_MAX_EV_PER_ATOM - DOMAIN_MIN_EV_PER_ATOM
     fraction = (cohesive_energy_ev_per_atom - DOMAIN_MIN_EV_PER_ATOM) / span
     return PLOT_LEFT + fraction * PLOT_WIDTH
-
-
-def _text(
-    pos_x: float,
-    pos_y: float,
-    content: str,
-    size: float,
-    anchor: str = "middle",
-) -> str:
-    """A text element in the figure's mono face, filled with `var(--graphite)`.
-
-    Args:
-        pos_x: Anchor x, in viewBox units.
-        pos_y: Baseline y, in viewBox units.
-        content: The text.
-        size: Font size, in viewBox units (unitless, matching graphitisation_figure.py).
-        anchor: SVG text-anchor.
-
-    Returns:
-        The SVG element as a string.
-    """
-    return (
-        f'<text x="{pos_x:.2f}" y="{pos_y:.2f}" text-anchor="{anchor}" font-size="{size}" '
-        f'fill="var(--graphite)" stroke="none" font-family="var(--mono)">{content}</text>'
-    )
 
 
 def _marker(pos_x: float, pos_y: float, filled: bool) -> str:
@@ -167,9 +140,9 @@ def build() -> str:
             f'stroke-width="{AXIS_WIDTH}"/>'
         )
         tick_label_y = baseline_y + TICK_LENGTH + LABEL_SIZE + 0.4
-        parts.append(_text(tick_x, tick_label_y, f"{tick_value:.1f}", LABEL_SIZE))
+        parts.append(svg_text(tick_x, tick_label_y, f"{tick_value:.1f}", LABEL_SIZE))
     parts.append(
-        _text(
+        svg_text(
             PLOT_LEFT + PLOT_WIDTH / 2,
             baseline_y + TICK_LENGTH + LABEL_SIZE * 2 + 3.2,
             "Cohesive energy of C₆₀ (eV per atom)",
@@ -189,7 +162,8 @@ def build() -> str:
                 f'y2="{row_y:.2f}" stroke="var(--graphite)" stroke-width="{STEM_WIDTH}"/>'
             )
         row_parts.append(_marker(value_x, row_y, filled))
-        row_parts.append(_text(PLOT_LEFT - LABEL_GAP, row_y + 1.0, method_label, LABEL_SIZE, "end"))
+        label_x = PLOT_LEFT - LABEL_GAP
+        row_parts.append(svg_text(label_x, row_y + 1.0, method_label, LABEL_SIZE, "end"))
 
         row_body = "\n    ".join(row_parts)
         row_open = f'<g data-method="{method_label}" data-kind="{marker_kind}">'
