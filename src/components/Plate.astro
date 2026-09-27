@@ -134,6 +134,21 @@ const { n, animate = false } = Astro.props;
       width: 100%;
     }
   }
+  /* Below 700 px a chart shrunk to the plate's width drops its tick labels under
+   * the 11 px floor (design review C1). Instead the chart keeps the natural width
+   * --chart-em already sets it to, and its own frame scrolls horizontally, so the
+   * labels stay the size every other data label on the page is. Grids and raster
+   * images are unaffected: this targets only the inline SVG charts' wrapper. */
+  @media (max-width: 699px) {
+    .plate__frame:has(:global(.chart)) {
+      overflow-x: auto;
+    }
+    .plate__frame :global(.chart) {
+      max-width: none;
+      min-width: calc(var(--chart-em) * var(--t-label));
+      margin-inline: 0;
+    }
+  }
 
   /* MOTION — the entire budget for the page load. The specimen field is scanned in
    * left to right, then the ring defects register. Nothing else animates. */

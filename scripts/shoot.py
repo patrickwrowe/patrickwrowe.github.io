@@ -26,6 +26,39 @@ ROUTES = {
 }
 
 
+SCROLL_STEP_WAIT_MS = 250  # pause per viewport-height step, long enough to start a lazy fetch
+
+
+def _scroll_through_lazy_figures(page) -> None:
+    """Walk the page top to bottom so `loading="lazy"` figures come into view and load.
+
+    Steps in viewport-sized increments with a short wait at each, then scrolls back to
+    the top (the recorded scroll position) and waits for the network to go idle so every
+    triggered image fetch has finished before the screenshot.
+
+    Args:
+        page: The Playwright page to scroll.
+    """
+    page.evaluate(
+        """
+        async (stepWaitMs) => {
+            const step = window.innerHeight;
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            let scrolled = 0;
+            const scrollHeight = document.documentElement.scrollHeight;
+            while (scrolled < scrollHeight) {
+                scrolled += step;
+                window.scrollTo(0, scrolled);
+                await sleep(stepWaitMs);
+            }
+            window.scrollTo(0, 0);
+        }
+        """,
+        SCROLL_STEP_WAIT_MS,
+    )
+    page.wait_for_load_state("networkidle")
+
+
 def main() -> None:
     """Screenshot ROUTES, or the routes given after the output directory, at both widths.
 
@@ -49,6 +82,7 @@ def main() -> None:
             for name, route in routes.items():
                 page.goto(f"{BASE}{route}", wait_until="networkidle")
                 page.wait_for_timeout(1400)  # let the plate scan-in settle
+                _scroll_through_lazy_figures(page)
                 path = out / f"{name}-{label}.png"
                 page.screenshot(path=path, full_page=True)
                 print(f"{path}  ({width}px)")
