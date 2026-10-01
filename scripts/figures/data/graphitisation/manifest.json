@@ -1,33 +1,209 @@
 {
   "output_dir": "src/content/work/figures/carbon",
-  "direction": [0.0, -0.32, 0.95],
+  "direction": [
+    0.0,
+    -0.32,
+    0.95
+  ],
   "margin": 1.02,
-  "cage_angstrom": [63.0, 63.0, 11.0],
+  "cage_angstrom": [
+    63.0,
+    63.0,
+    11.0
+  ],
   "slab_angstrom": 10.0,
-  "resolution": [800, 800],
-  "sphere_radius_angstrom": 0.40,
+  "resolution": [
+    800,
+    800
+  ],
+  "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
   "grey": 0.35,
   "panels": [
-    {"id": "density-0.5gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-0.5gcc-3500K-r1.xyz", "density_g_cm3": 0.5},
-    {"id": "density-1.0gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-1.0gcc-3500K-r1.xyz", "density_g_cm3": 1.0},
-    {"id": "density-1.5gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-1.5gcc-3500K-r1.xyz", "density_g_cm3": 1.5},
-    {"id": "density-2.0gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-2.0gcc-3500K-r1.xyz", "density_g_cm3": 2.0},
-    {"id": "density-2.5gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-2.5gcc-3500K-r1.xyz", "density_g_cm3": 2.5},
-    {"id": "density-3.0gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-3.0gcc-3500K-r1.xyz", "density_g_cm3": 3.0},
-    {"id": "density-3.5gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-3.5gcc-3500K-r1.xyz", "density_g_cm3": 3.5},
-    {"id": "temp-1.5gcc-2000K", "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2000K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-1.5gcc-2500K", "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2500K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-1.5gcc-3000K", "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-3000K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-1.5gcc-4000K", "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4000K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-1.5gcc-4500K", "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4500K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-2000K", "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2000K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-2500K", "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2500K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-3000K", "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-3000K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-4000K", "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4000K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-4500K", "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4500K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-1.5gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-1.5gcc-3500K-r1.xyz", "density_g_cm3": 1.5, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "temp-3.0gcc-3500K", "source": "scripts/figures/data/graphitisation/frames/density-3.0gcc-3500K-r1.xyz", "density_g_cm3": 3.0, "cage_angstrom": [44.2, 44.2, 11.0]},
-    {"id": "hero", "source": "scripts/figures/data/graphitisation/frames/density-1.0gcc-3500K-r1.xyz", "density_g_cm3": 1.0, "tile": [2, 1, 1], "cage_angstrom": null, "resolution": [1728, 972], "margin": 1.02}
+    {
+      "id": "density-0.5gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-0.5gcc-3500K-r1.xyz",
+      "density_g_cm3": 0.5,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-1.0gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-1.0gcc-3500K-r1.xyz",
+      "density_g_cm3": 1.0,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-1.5gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-1.5gcc-3500K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-2.0gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-2.0gcc-3500K-r1.xyz",
+      "density_g_cm3": 2.0,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-2.5gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-2.5gcc-3500K-r1.xyz",
+      "density_g_cm3": 2.5,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-3.0gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-3.0gcc-3500K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "density-3.5gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-3.5gcc-3500K-r1.xyz",
+      "density_g_cm3": 3.5,
+      "cage_angstrom": null,
+      "margin": 1.02
+    },
+    {
+      "id": "temp-1.5gcc-2000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2000K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-1.5gcc-2500K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-2500K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-1.5gcc-3000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-3000K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-1.5gcc-4000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4000K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-1.5gcc-4500K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-1.5gcc-4500K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-2000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2000K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-2500K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-2500K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-3000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-3000K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-4000K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4000K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-4500K",
+      "source": "scripts/figures/data/graphitisation/frames/temp-3.0gcc-4500K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-1.5gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-1.5gcc-3500K-r1.xyz",
+      "density_g_cm3": 1.5,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "temp-3.0gcc-3500K",
+      "source": "scripts/figures/data/graphitisation/frames/density-3.0gcc-3500K-r1.xyz",
+      "density_g_cm3": 3.0,
+      "cage_angstrom": [
+        44.2,
+        44.2,
+        11.0
+      ]
+    },
+    {
+      "id": "hero",
+      "source": "scripts/figures/data/graphitisation/frames/density-1.0gcc-3500K-r1.xyz",
+      "density_g_cm3": 1.0,
+      "tile": [
+        2,
+        1,
+        1
+      ],
+      "cage_angstrom": null,
+      "resolution": [
+        1728,
+        972
+      ],
+      "margin": 1.02
+    }
   ]
 }

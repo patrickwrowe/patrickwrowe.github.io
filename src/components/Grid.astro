@@ -2,18 +2,22 @@
 // A matrix of rendered panels inside a Plate — restructure spec §6.2 and §7.
 //
 // One PNG per panel, laid out `columnLabels.length` across in the order given. The
-// labels are text, not pixels, and they name the axes rather than the cells:
-// `columnLabels` run along the top and `rowLabels`, when there is more than one row
-// worth naming, down the left. A cell is then only its picture, so a row of eight is
-// a row of eight pictures and not eight pictures under sixteen lines of type.
+// labels are text, not pixels, and they label the axes the way the SVG charts do
+// (figure_style.py): bare ticks under one `columnTitle` that carries the unit, and
+// `rowLabels` down the left when there is more than one row worth naming. A cell is
+// then only its picture, so a row of seven is a row of seven pictures and not seven
+// pictures under fourteen lines of type.
+//
+// `weights` gives a row of panels that share a scale cells in proportion to what
+// they show (the graphitisation density row: cell edges in ångström), bottom-aligned,
+// so the layout itself shows the cell shrinking and no panel sits in empty ground.
 //
 // The column count holds at every width. Until the plate breaks out to its full
 // measure at 1000 px, every column is at least 100 px wide (the spec's phone-width
-// floor) and a grid wider than its plate scrolls sideways with the row labels held
-// at the left edge, so the matrix keeps its shape: size across, temperature down,
-// and a column still reads as one series. Reflowing to three columns kept every
-// panel in view and lost the matrix; above 1000 px the widest matrix (eight columns
-// and a row-label column) fits the 864 px plate only without the floor.
+// floor; with weights, 3.1 px per unit of weight, which holds the smallest density
+// cell at 100 px) and a grid wider than its plate scrolls sideways with the row
+// labels held at the left edge, so the matrix keeps its shape. Above 1000 px the
+// floor comes off, which is where the widest matrix first fits the 864 px plate.
 //
 // Whether the panels of a plate share a scale is the render manifest's business and
 // the caption's to state; the grid draws each picture at the width of its cell.
@@ -28,14 +32,18 @@ interface Props {
   dir: string;
   /** Panel files, row by row. */
   panels: string[];
-  /** One heading per column. */
+  /** One tick per column: a bare value, the unit lives in `columnTitle`. */
   columnLabels: string[];
+  /** The axis title over the columns, with its unit ("density / g cm⁻³"). */
+  columnTitle?: string;
   /** One heading per row; omit for a grid whose rows need no name. */
   rowLabels?: string[];
+  /** Relative cell widths, one per column, for panels that share a scale. */
+  weights?: number[];
   /** The trend the grid shows, in one sentence. */
   alt: string;
 }
-const { dir, panels, columnLabels, rowLabels = [], alt } = Astro.props;
+const { dir, panels, columnLabels, columnTitle, rowLabels = [], weights, alt } = Astro.props;
 const columns = columnLabels.length;
 if (panels.length % columns !== 0) {
   throw new Error(`Grid: ${panels.length} panels do not fill rows of ${columns}`);
@@ -43,10 +51,24 @@ if (panels.length % columns !== 0) {
 if (rowLabels.length > 0 && rowLabels.length * columns !== panels.length) {
   throw new Error(`Grid: ${rowLabels.length} row labels for ${panels.length / columns} rows`);
 }
+if (weights && weights.length !== columns) {
+  throw new Error(`Grid: ${weights.length} weights for ${columns} columns`);
+}
 
-// Panel width for `sizes`: the plate is at most --measure-figure (54rem = 864 px)
-// wide, and a column is never narrower than the 100 px floor.
-const sizes = `${Math.max(100, Math.ceil(864 / columns))}px`;
+// The panel tracks: equal shares, or shares in proportion to the weights with a floor
+// of --floor-per-weight each (3.1 px a unit under 1000 px, nothing above; set in CSS).
+const tracks = weights
+  ? weights.map((weight) => `minmax(calc(${weight} * var(--floor-per-weight)), ${weight}fr)`).join(" ")
+  : `repeat(${columns}, minmax(var(--floor), 1fr))`;
+
+// Panel widths for `sizes`: the plate is at most --measure-figure (54rem = 864 px)
+// wide less its padding, and a column is never narrower than the 100 px floor.
+const plateWidth = 864 - 24;
+const weightSum = weights ? weights.reduce((sum, weight) => sum + weight, 0) : columns;
+const sizesFor = (column: number): string => {
+  const share = weights ? weights[column] / weightSum : 1 / columns;
+  return `${Math.max(100, Math.ceil(plateWidth * share))}px`;
+};
 
 const images = import.meta.glob<ImageMetadata>("/src/content/work/figures/**/*.png", {
   eager: true,
@@ -58,14 +80,18 @@ const resolve = (file: string): ImageMetadata => {
   if (!image) throw new Error(`Grid: no panel at ${key}`);
   return image;
 };
+// Never ask the image service to enlarge a panel.
+const widthsFor = (image: ImageMetadata): number[] =>
+  [320, 640, 800, 1200].filter((width) => width < image.width).concat(image.width);
 ---
 
 <div
-  class:list={["grid", rowLabels.length > 0 && "grid--rows"]}
+  class:list={["grid", rowLabels.length > 0 && "grid--rows", weights && "grid--weighted"]}
   role="img"
   aria-label={alt}
-  style={`--columns: ${columns}`}
+  style={`--tracks: ${tracks}`}
 >
+  {columnTitle && <span class="label grid__title">{columnTitle}</span>}
   {rowLabels.length > 0 && <span />}
   {columnLabels.map((label) => <span class="label grid__column-label">{label}</span>)}
   {
@@ -74,7 +100,14 @@ const resolve = (file: string): ImageMetadata => {
         {rowLabels.length > 0 && index % columns === 0 && (
           <span class="label grid__row-label">{rowLabels[index / columns]}</span>
         )}
-        <Image src={resolve(file)} alt="" widths={[320, 640, 800]} sizes={sizes} loading="lazy" />
+        <Image
+          src={resolve(file)}
+          alt=""
+          widths={widthsFor(resolve(file))}
+          sizes={sizesFor(index % columns)}
+          quality="max"
+          loading="lazy"
+        />
       </>
     ))
   }
@@ -83,8 +116,9 @@ const resolve = (file: string): ImageMetadata => {
 <style>
   .grid {
     --floor: 100px;
+    --floor-per-weight: 3.1px;
     display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(var(--floor), 1fr));
+    grid-template-columns: var(--tracks);
     gap: 0.5rem;
     align-items: center;
     padding: 1rem 0.75rem;
@@ -92,12 +126,17 @@ const resolve = (file: string): ImageMetadata => {
     overflow-x: auto;
   }
   .grid--rows {
-    grid-template-columns: auto repeat(var(--columns), minmax(var(--floor), 1fr));
+    grid-template-columns: auto var(--tracks);
+  }
+  /* Panels in proportion to their cell edge stand on a common baseline. */
+  .grid--weighted {
+    align-items: end;
   }
   /* The plate's breakout width (Plate.astro): the matrix fits, so the floor comes off. */
   @media (min-width: 1000px) {
     .grid {
       --floor: 0px;
+      --floor-per-weight: 0px;
     }
   }
   .grid > :global(img) {
@@ -105,10 +144,36 @@ const resolve = (file: string): ImageMetadata => {
     height: auto;
     mix-blend-mode: multiply;
   }
+  .grid__title,
   .grid__column-label,
   .grid__row-label {
     text-transform: none; /* "g cm⁻³" and "K" are not shouted */
+    letter-spacing: 0; /* tracking is for capitals; these are figures, like a chart's ticks */
+  }
+  /* A row label is short and pinned; a column label may wrap in a 100 px phone cell. */
+  .grid__row-label {
     white-space: nowrap;
+  }
+  .grid__column-label {
+    text-wrap: balance;
+  }
+  .grid__title {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+  .grid--rows .grid__title {
+    grid-column: 2 / -1;
+  }
+  /* While the grid can scroll, a title centred over the whole matrix would sit
+   * off-screen; it is pinned to the left edge instead, like the row labels. */
+  @media (max-width: 999px) {
+    .grid__title {
+      justify-self: start;
+      position: sticky;
+      left: 0;
+      background: var(--plate);
+    }
   }
   .grid__column-label {
     text-align: center;

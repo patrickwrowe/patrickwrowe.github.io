@@ -189,3 +189,39 @@ def test_an_agx_grey_world_fails(tmp_path):
     _write_image(png, pixels)
     with pytest.raises(RuntimeError, match="corner block medians are not white"):
         panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def _grey_panel(tmp_path, blob: tuple[int, int, int, int], strays: list[tuple[int, int]]):
+    """A 200 x 200 white panel with a dark blob (top, bottom, left, right) and lone dark pixels."""
+    pixels = np.full((200, 200), 255, dtype=np.uint8)
+    top, bottom, left, right = blob
+    pixels[top:bottom, left:right] = 90
+    for row, column in strays:
+        pixels[row, column] = 0
+    png = tmp_path / "panel.png"
+    Image.fromarray(pixels, mode="L").save(png)
+    return png
+
+
+def test_crop_to_ink_squares_the_blob_and_ignores_isolated_pixels(tmp_path):
+    png = _grey_panel(tmp_path, (50, 90, 120, 150), strays=[(0, 10), (100, 100), (199, 199)])
+    side = panel_checks.crop_to_ink(png)
+    assert side == round(40 * 1.06)
+    cropped = np.asarray(Image.open(png))
+    assert cropped.shape == (side, side)
+    rows, columns = np.nonzero(cropped < 245)
+    assert rows.min() >= 1 and columns.min() >= 1  # the margin survives on every side
+    assert rows.max() <= side - 2 and columns.max() <= side - 2
+
+
+def test_crop_to_ink_clamps_at_the_image_edge(tmp_path):
+    png = _grey_panel(tmp_path, (0, 60, 0, 30), strays=[])
+    side = panel_checks.crop_to_ink(png)
+    assert side == round(60 * 1.06)
+    assert np.asarray(Image.open(png)).shape == (side, side)
+
+
+def test_crop_to_ink_refuses_an_empty_panel(tmp_path):
+    png = _grey_panel(tmp_path, (0, 0, 0, 0), strays=[(100, 100)])
+    with pytest.raises(RuntimeError, match="no connected ink"):
+        panel_checks.crop_to_ink(png)

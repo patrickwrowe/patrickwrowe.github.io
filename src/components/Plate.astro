@@ -139,14 +139,35 @@ const { n, animate = false } = Astro.props;
    * --chart-em already sets it to, and its own frame scrolls horizontally, so the
    * labels stay the size every other data label on the page is. Grids and raster
    * images are unaffected: this targets only the inline SVG charts' wrapper. */
+  /* A chart's narrow variant is hidden until the phone rule below shows it; this
+   * rule comes first so that one wins at equal specificity. */
+  .plate__frame :global(.chart--narrow) {
+    display: none;
+  }
   @media (max-width: 699px) {
-    .plate__frame:has(:global(.chart)) {
+    /* `:global()` must wrap the whole selector: Astro leaves it verbatim inside
+     * `:has()`, which makes the selector invalid and drops the rule. */
+    :global(.plate__frame:has(.chart)) {
       overflow-x: auto;
     }
     .plate__frame :global(.chart) {
       max-width: none;
       min-width: calc(var(--chart-em) * var(--t-label));
       margin-inline: 0;
+    }
+    /* A chart with a narrow variant beside it (`.chart--narrow`, drawn by its script to
+     * fit 350 px at --t-label) shows that variant instead of scrolling. */
+    :global(.plate__frame .chart:not(.chart--narrow):has(+ .chart--narrow)) {
+      display: none;
+    }
+    .plate__frame :global(.chart--narrow) {
+      display: block;
+    }
+    /* The marker column and its gap took 76 of 350 px, 38 characters a line; stacked,
+     * the caption runs about 52 (design critique 2, finding 8). */
+    .plate__caption {
+      grid-template-columns: 1fr;
+      row-gap: 0.25rem;
     }
   }
 

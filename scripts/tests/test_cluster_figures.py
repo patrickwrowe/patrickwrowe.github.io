@@ -46,6 +46,28 @@ def test_sp3_plot_has_one_line_per_size_and_no_hue():
     assert paints(svg) <= ALLOWED_PAINT
 
 
+def test_narrow_outcome_diagram_fits_the_phone_width_budget():
+    # Plate.astro's `.chart--narrow` sets `--chart-em: 31.5`; the viewBox width must match
+    # that exactly so the chart's labels render at LABEL_SIZE, not shrunk to fit.
+    svg = cluster_outcomes.build_narrow(SPHERES)
+    viewbox = re.search(r'viewBox="0 0 ([\d.]+) [\d.]+"', svg)
+    assert viewbox, "no viewBox on the narrow diagram"
+    assert float(viewbox.group(1)) == pytest.approx(31.5 * cluster_outcomes.LABEL_SIZE, abs=0.001)
+
+    classes = re.findall(r'data-run="C\d+-\d+K" data-class="([^"]+)"', svg)
+    assert len(classes) == 48
+    assert set(classes) <= set(cluster_outcomes.CLASSES)
+    assert len(re.findall(r"data-legend=", svg)) == len(cluster_outcomes.CLASSES) == 6
+    assert classes.count("cage") == 6 and classes.count("graphitic onion") == 8
+
+    sizes = [float(size) for size in re.findall(r'font-size="([\d.]+)"', svg)]
+    assert sizes, "no text in the narrow diagram"
+    assert min(sizes) >= cluster_outcomes.LABEL_SIZE
+
+    assert not HEX_COLOUR.search(svg)
+    assert paints(svg) <= ALLOWED_PAINT
+
+
 def test_a_cage_glyph_is_a_hexagon_centred_on_its_run():
     # C60 at 2000 K is a cage in census.csv: its glyph is a six-cornered polygon whose
     # corners average to the run's (size, temperature) position.

@@ -51,6 +51,9 @@ MAX_BORDER_STRAYS = 2  # compositor artefacts, see render_box_grid.py's module d
 # view_transform="Standard" enforces that.) The residual is HDRI specular on sphere
 # highlights, measured 14-16/255 on 2026-09-27; the output is saved as 8-bit grey anyway.
 MAX_CHROMA = 32
+INK_THRESHOLD = 245  # pixels darker than this are drawn atoms or bonds
+# Border round the ink of a self-framed panel, per side, as a fraction of its square.
+CROP_MARGIN = 0.03
 
 
 def load_panels(manifest_path: Path) -> list[dict]:
@@ -190,3 +193,53 @@ def check_and_flatten(
         raise RuntimeError(f"{png}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
     image.convert("L").save(png, optimize=True)
     return strays
+
+
+def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
+    """Crop a flattened grey panel, in place, to a square round its ink.
+
+    For a panel framed to its own subject (`cage_angstrom` null) molrender fits the
+    camera to the subject's three-dimensional box, so the drawn atoms fill a median 77%
+    of the frame's long side (design critique 2, finding 2b). The square is centred on
+    the ink's bounding box, as long as that box's longer side plus `margin_fraction` on
+    each side, and clamped to the image. Isolated dark pixels do not count: the
+    Molecular Nodes compositor leaves one at the centre and sometimes one on the border
+    (render_box_grid.py's module docstring), and a border stray would otherwise pin the
+    crop to the edge. A panel that shares a cage must never be cropped, or the shared
+    angstrom per pixel is lost; render_box_grid.py enforces that.
+
+    Args:
+        png: An 8-bit grey PNG written by `check_and_flatten`, overwritten in place.
+        margin_fraction: Border added on each side, as a fraction of the square's side.
+
+    Returns:
+        The side of the cropped square in pixels.
+
+    Raises:
+        RuntimeError: If the panel holds no connected ink darker than INK_THRESHOLD.
+    """
+    image = Image.open(png)
+    pixels = np.asarray(image.convert("L"))
+    ink = pixels < INK_THRESHOLD
+    padded = np.pad(ink, 1)
+    neighbours = sum(
+        padded[1 + dr : padded.shape[0] - 1 + dr, 1 + dc : padded.shape[1] - 1 + dc]
+        for dr in (-1, 0, 1)
+        for dc in (-1, 0, 1)
+        if (dr, dc) != (0, 0)
+    )
+    connected = ink & (neighbours > 0)
+    rows, columns = np.nonzero(connected)
+    if rows.size == 0:
+        raise RuntimeError(f"{png}: no connected ink darker than {INK_THRESHOLD}/255 to crop to")
+    height_px, width_px = pixels.shape
+    top, bottom = int(rows.min()), int(rows.max()) + 1
+    left, right = int(columns.min()), int(columns.max()) + 1
+    side_px = int(round(max(bottom - top, right - left) * (1 + 2 * margin_fraction)))
+    side_px = min(side_px, height_px, width_px)
+    row0 = int(round((top + bottom) / 2 - side_px / 2))
+    column0 = int(round((left + right) / 2 - side_px / 2))
+    row0 = min(max(row0, 0), height_px - side_px)
+    column0 = min(max(column0, 0), width_px - side_px)
+    image.crop((column0, row0, column0 + side_px, row0 + side_px)).save(png, optimize=True)
+    return side_px

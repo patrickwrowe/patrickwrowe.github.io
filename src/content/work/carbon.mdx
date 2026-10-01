@@ -29,6 +29,7 @@ import Gap20Phonons from "./figures/carbon-gap-20/fig05-phonon-dispersion.png";
 import DefectStructures from "./figures/carbon/gap20-fig6-defect-structures.png";
 import c60Energies from "./figures/carbon/cluster-benchmark-c60.svg?raw";
 import clusterOutcomes from "./figures/carbon/cluster-outcomes.svg?raw";
+import clusterOutcomesNarrow from "./figures/carbon/cluster-outcomes-narrow.svg?raw";
 import clusterSp3 from "./figures/carbon/cluster-sp3.svg?raw";
 import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
 
@@ -166,7 +167,9 @@ The protocol, from the input files and logs rather than from my slides of the ti
   <Grid
     dir="carbon"
     alt="Seven slabs of amorphous carbon annealed at 3500 K, from 0.5 to 3.5 g cm⁻³, drawn at one scale so the low-density cells are larger: open, curved graphitic sheets around large voids at low density give way, between 2.5 and 3.0 g cm⁻³, to a dense network in which most atoms have four neighbours."
-    columnLabels={["0.5 g cm⁻³", "1.0 g cm⁻³", "1.5 g cm⁻³", "2.0 g cm⁻³", "2.5 g cm⁻³", "3.0 g cm⁻³", "3.5 g cm⁻³"]}
+    columnTitle="density / g cm⁻³"
+    columnLabels={["0.5", "1.0", "1.5", "2.0", "2.5", "3.0", "3.5"]}
+    weights={[61.5, 48.8, 42.6, 38.7, 36.0, 33.8, 32.2]}
     panels={[
       "density-0.5gcc-3500K.png",
       "density-1.0gcc-3500K.png",
@@ -178,7 +181,7 @@ The protocol, from the input files and logs rather than from my slides of the ti
     ]}
   />
   <Fragment slot="caption">
-    The annealed network at each density, 0.5 to 3.5 g cm⁻³, after 200 ps at 3500 K: a 10 Å slab through the final frame of replica one, every panel at the same scale, so the 61.5 Å cell at 0.5 g cm⁻³ is drawn larger than the 32.2 Å cell at 3.5. Frames are taken at the end of each run's cooling ramp, not at 300 K.
+    The annealed network at each density, 0.5 to 3.5 g cm⁻³, after 200 ps at 3500 K: a 10 Å slab through the final frame of replica one, every panel at the same scale, so the 61.5 Å cell at 0.5 g cm⁻³ is drawn larger than the 32.2 Å cell at 3.5. Frames are taken at the end of each run's cooling ramp, with no hold at 300 K.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
@@ -188,26 +191,21 @@ Density sets the regime, and it does so with a switch rather than a slope. At 35
 <Plate n={9}>
   <Grid
     dir="carbon"
-    alt="Twelve slabs of annealed amorphous carbon, six anneal temperatures from 2000 to 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row, at one scale: the top row is open graphitic sheets at every temperature, the bottom row a dense four-coordinated network at every temperature, and neither row changes character from end to end."
-    columnLabels={["2000 K", "2500 K", "3000 K", "3500 K", "4000 K", "4500 K"]}
+    alt="Six slabs of annealed amorphous carbon, at 2000, 3000 and 4500 K at 1.5 g cm⁻³ in the top row and at 3.0 g cm⁻³ in the bottom row, at one scale: the top row is open graphitic sheets at every temperature, the bottom row a dense network in which most atoms have four neighbours at every temperature, and neither row changes character from end to end."
+    columnTitle="anneal temperature / K"
+    columnLabels={["2000", "3000", "4500"]}
     rowLabels={["1.5 g cm⁻³", "3.0 g cm⁻³"]}
     panels={[
       "temp-1.5gcc-2000K.png",
-      "temp-1.5gcc-2500K.png",
       "temp-1.5gcc-3000K.png",
-      "temp-1.5gcc-3500K.png",
-      "temp-1.5gcc-4000K.png",
       "temp-1.5gcc-4500K.png",
       "temp-3.0gcc-2000K.png",
-      "temp-3.0gcc-2500K.png",
       "temp-3.0gcc-3000K.png",
-      "temp-3.0gcc-3500K.png",
-      "temp-3.0gcc-4000K.png",
       "temp-3.0gcc-4500K.png",
     ]}
   />
   <Fragment slot="caption">
-    The annealed network against anneal temperature, 2000 to 4500 K, at 1.5 g cm⁻³ (top row) and 3.0 g cm⁻³ (bottom row): 10 Å slabs through the final frame of replica one after a 200 ps anneal, every panel at one scale. The 3500 K panels are the density-set runs. Frames are taken at the end of each run's cooling ramp, not at 300 K.
+    The annealed network at 2000, 3000 and 4500 K, at 1.5 g cm⁻³ (top row) and 3.0 g cm⁻³ (bottom row): 10 Å slabs through the final frame of replica one after a 200 ps anneal, every panel at one scale; the table gives all six temperatures. Frames are taken at the end of each run's cooling ramp, with no hold at 300 K.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
@@ -261,62 +259,25 @@ I analysed the last frame of every run. Two atoms are bonded if they sit closer 
 <Plate n={11}>
   <Grid
     dir="carbon/spheres"
-    alt="Forty-eight carbon clusters from 40 to 1,000 atoms after up to 50 ps at 500 to 5000 K, size across and temperature down: at 500 K every cluster is a compact, disordered ball; at 2000 and 3000 K the larger ones become round, closed cages and onions while the smallest break into chains; at 4000 and 5000 K almost every cluster has come apart into scattered chains."
-    columnLabels={["C40", "C60", "C80", "C120", "C160", "C373", "C686", "C1000"]}
-    rowLabels={["500 K", "1000 K", "2000 K", "3000 K", "4000 K", "5000 K"]}
+    alt="Three whole carbon clusters, one per outcome: a 120-atom closed cage of rings; a 686-atom molten cluster, a torn, curved sheet of rings with chains trailing from it and twenty-one smaller pieces drifting free; and a 60-atom cluster broken into separate short chains."
+    columnLabels={["cage: C120, 2000 K", "molten: C686, 4000 K", "dissociated: C60, 3000 K"]}
     panels={[
-      "C40-500K.png",
-      "C60-500K.png",
-      "C80-500K.png",
-      "C120-500K.png",
-      "C160-500K.png",
-      "C373-500K.png",
-      "C686-500K.png",
-      "C1000-500K.png",
-      "C40-1000K.png",
-      "C60-1000K.png",
-      "C80-1000K.png",
-      "C120-1000K.png",
-      "C160-1000K.png",
-      "C373-1000K.png",
-      "C686-1000K.png",
-      "C1000-1000K.png",
-      "C40-2000K.png",
-      "C60-2000K.png",
-      "C80-2000K.png",
-      "C120-2000K.png",
-      "C160-2000K.png",
-      "C373-2000K.png",
-      "C686-2000K.png",
-      "C1000-2000K.png",
-      "C40-3000K.png",
-      "C60-3000K.png",
-      "C80-3000K.png",
-      "C120-3000K.png",
-      "C160-3000K.png",
-      "C373-3000K.png",
-      "C686-3000K.png",
-      "C1000-3000K.png",
-      "C40-4000K.png",
-      "C60-4000K.png",
-      "C80-4000K.png",
-      "C120-4000K.png",
-      "C160-4000K.png",
-      "C373-4000K.png",
-      "C686-4000K.png",
-      "C1000-4000K.png",
-      "C40-5000K.png",
-      "C60-5000K.png",
-      "C80-5000K.png",
-      "C120-5000K.png",
-      "C160-5000K.png",
-      "C373-5000K.png",
-      "C686-5000K.png",
-      "C1000-5000K.png",
+      "exemplar-C120-2000K.png",
+      "exemplar-C686-4000K.png",
+      "exemplar-C60-3000K.png",
+    ]}
+  />
+  <Grid
+    dir="carbon/spheres"
+    alt="Two 6 Å slices through the middle of the 1,000-atom cluster: at 500 K a compact network of rings filling the whole disc; at 3000 K nested curved sheets seen edge-on as arcs with open space between them, the innermost closed and the outer two joined like a spiral."
+    columnLabels={["disordered: C1000, 500 K, slice", "graphitic onion: C1000, 3000 K, slice"]}
+    panels={[
+      "exemplar-C1000-500K-section.png",
+      "exemplar-C1000-3000K-section.png",
     ]}
   />
   <Fragment slot="caption">
-    The last frame of each of 48 runs: carbon spheres of 40 to 1,000 atoms held for up to 50 ps at 500 to 5000 K, size across and temperature down. Each panel is framed to its own cluster, so sizes are not comparable between panels; the column heading gives the atom count. Ten runs stopped before 50 ps (all six C₁₀₀₀ runs; C₆₈₆ at 1000, 3000 and 4000 K; C₈₀ at 500 K), and the C₈₀ and C₆₈₆ panels at 500 K are byte-identical copies of two earlier test runs that were relaxed with a different minimiser from the rest.
+    One run from each outcome class of the 48, named as the map below names them. Top, whole clusters after up to 50 ps: C₁₂₀ at 2000 K, a single closed cage; C₆₈₆ at 4000 K, the one molten run, which still held 63.8% of its atoms in one piece when it stopped at 32.9 ps; C₆₀ at 3000 K, dissociated into chains. Bottom, slices 6 Å thick through the centre of C₁₀₀₀: at 500 K the network fills the sphere with no graphitic layers, disordered; at 3000 K it has separated into three density shells, at mean radii of 4.0, 8.1 and 11.7 Å, which the slice cuts as arcs: the innermost closes, and the outer two join at one side and open at the other, so the cluster may be a scroll (one rolled-up sheet) rather than an onion. Each panel is framed to its own atoms, so sizes are not comparable between panels. Both C₁₀₀₀ runs stopped early, at 37.9 and 33.1 ps.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
@@ -324,26 +285,11 @@ I analysed the last frame of every run. Two atoms are bonded if they sit closer 
 The outcome depends on both variables, and the pattern is simple. At 500 K every cluster holds together and none is ordered: the largest, C₁₀₀₀, is 81.3% three-coordinated, with the least layered bonding of any intact run and no graphitic layers, a disordered ball. At 1000 K the first order appears, and only in the middle sizes: C₁₂₀ closes into a cage and C₁₆₀ into an onion. At 2000 and 3000 K the clusters that survive close up into sp² shells, 84–94% of atoms three-coordinated. The small ones become single closed cages, C₆₀ to C₁₂₀ at 2000 K and C₁₂₀ and C₁₆₀ at 3000 K, and the large ones become graphitic onions of two or three nested shells, C₁₆₀ to C₁₀₀₀ at 2000 K and C₃₇₃ to C₁₀₀₀ at 3000 K. C₁₀₀₀ at 3000 K has three shells, at mean radii of 4.0, 8.1 and 11.7 Å, and 247 of its 467 rings of 3 to 10 atoms are hexagons. Heat further and the clusters come apart into carbon chains, the smallest first: C₄₀ already by 2000 K, C₆₀ and C₈₀ by 3000 K, every size but one by 4000 K and all of them at 5000 K. The one exception, C₆₈₆ at 4000 K, still held 63.8% of its atoms in one piece when its run stopped at 32.9 ps, molten rather than dissociated. Of the 48 runs, 19 dissociated, 1 was molten, 8 formed onions, 6 formed cages and 14 stayed disordered.
 
 <Plate n={12}>
-  <Grid
-    dir="carbon/spheres"
-    alt="Two 6 Å slices through the middle of the 1,000-atom cluster: at 500 K a compact network of rings filling the whole disc; at 3000 K nested curved sheets seen edge-on as arcs with open space between them, the innermost closed and the outer two joined like a spiral."
-    columnLabels={["500 K", "3000 K"]}
-    panels={[
-      "C1000-500K-section.png",
-      "C1000-3000K-section.png",
-    ]}
-  />
-  <Fragment slot="caption">
-    Slices 6 Å thick through the centre of the 1,000-atom cluster, each framed to its own slice. At 500 K the network fills the sphere with no layers; at 3000 K it has separated into three density shells, at mean radii of 4.0, 8.1 and 11.7 Å, which the slice cuts as arcs: the innermost closes, and the outer two join at one side and open at the other, so the cluster may be a scroll (one rolled-up sheet) rather than an onion. Both runs stopped early, at 37.9 and 33.1 ps.
-    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
-  </Fragment>
-</Plate>
-
-Four-coordinated, diamond-like carbon never amounts to much, and this is where the analysis and my slides part company. The largest sp³ fraction in any run is 11.2%, in C₁₀₀₀ at 1000 K; at 500 K C₁₀₀₀ has 7.9%, and the smaller clusters less. Deep inside the cluster, more than 3.4 Å below the surface, C₁₀₀₀ reaches 13.9% at 500 K and 21.8% at 1000 K, and above 2000 K sp³ carbon all but disappears. In 2021 I called the 500 K C₁₀₀₀ cluster a “diamond-like sphere” with “high sp³ content”, impermeable to lithium, and contrasted it with the 3000 K onion, which was “lithium permeable”. The census supports the contrast in layering and not the word “diamond-like”, and it turns out the archive's own ring program had printed the same 7.9% for that frame in 2021. I had the number and read the picture instead. {/* Q: clusters 2 */}
-
-<Plate n={13}>
-  <div class="chart" style="--chart-em: 55.7" role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
+  <div class="chart" style="--chart-em: 55.7" role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size and at 1000 K for most, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
     <Fragment set:html={clusterOutcomes} />
+  </div>
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size and at 1000 K for most, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
+    <Fragment set:html={clusterOutcomesNarrow} />
   </div>
   <Fragment slot="caption">
     One symbol per run: the structure of the last frame after up to 50 ps, classified by a written rule from its coordination, fragments, shells and bond directions. No run meets the rule for diamond-like carbon, at least 40% four-coordinated atoms. Several cages and onions sit close to a class boundary; the classification notes list them.
@@ -351,7 +297,9 @@ Four-coordinated, diamond-like carbon never amounts to much, and this is where t
   </Fragment>
 </Plate>
 
-<Plate n={14}>
+Four-coordinated, diamond-like carbon never amounts to much, and this is where the analysis and my slides part company. The largest sp³ fraction in any run is 11.2%, in C₁₀₀₀ at 1000 K; at 500 K C₁₀₀₀ has 7.9%, and the smaller clusters less. Deep inside the cluster, more than 3.4 Å below the surface, C₁₀₀₀ reaches 13.9% at 500 K and 21.8% at 1000 K, and above 2000 K sp³ carbon all but disappears. In 2021 I called the 500 K C₁₀₀₀ cluster a “diamond-like sphere” with “high sp³ content”, impermeable to lithium, and contrasted it with the 3000 K onion, which was “lithium permeable”. The census supports the contrast in layering and not the word “diamond-like”, and it turns out the archive's own ring program had printed the same 7.9% for that frame in 2021. I had the number and read the picture instead. {/* Q: clusters 2 */}
+
+<Plate n={13}>
   <div class="chart" style="--chart-em: 41" role="img" aria-label="Percentage of four-coordinated atoms against temperature, one line per cluster size: never above 11.2%, highest in the 373-, 686- and 1,000-atom clusters at 500 and 1000 K, at most 2.5% for every smaller cluster, and near zero for all sizes above 2000 K.">
     <Fragment set:html={clusterSp3} />
   </div>
@@ -361,6 +309,7 @@ Four-coordinated, diamond-like carbon never amounts to much, and this is where t
   </Fragment>
 </Plate>
 
+
 The map has limits. Each cell is one frame of one trajectory, not an average and not a converged phase: there are no replicas, one starting structure per size and 50 ps at most. Ten runs stopped early, between 29.9 and 49.8 ps, including all six C₁₀₀₀ runs, and two of the 500 K runs, C₈₀ and C₆₈₆, were relaxed with a different minimiser from the rest. Several of the cages and onions sit near a class boundary, C₁₆₀ at 2000 K most of all, with a 20-atom cage nested inside a 140-atom one, and a count of density shells cannot tell an onion from a scroll. {/* Q: onion or scroll at 3000 K */} What survives all of that is the shape of the map. Cold clusters are disordered, warm ones are cages and onions, hot ones are chains, and up to C₆₈₆ the temperature at which a cluster stops being a cluster rises with its size.
 
 [Contents ↑](#contents)
@@ -369,7 +318,7 @@ The map has limits. Each cell is one frame of one trajectory, not an average and
 
 Carbon is rarely found alone, and my thesis names hydrogen and oxygen as the next step for that reason: the char in a furnace, the hard carbon in a battery anode and the soot in a flame all carry both. The GAP-20 paper lists hydrogenation and oxidation among the things it cannot do. So the last carbon potential I worked on was CHO-GAP (carbon, hydrogen and oxygen): the same method, three elements. This section is shorter than the work was, because the project ended without a paper and the numbers I would like to give you are in a draft and a set of status notes that as of September 2026 I have not put beside this page, so they stay off it. What I can show is what the data files on this site show. {/* Q: 2 */}
 
-<Plate n={15}>
+<Plate n={14}>
   <div class="chart" style="--chart-em: 48.1" role="img" aria-label="Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.">
     <Fragment set:html={combustionSeries} />
   </div>

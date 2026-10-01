@@ -217,6 +217,48 @@
       "id": "C1000-3000K-section",
       "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz",
       "slab_angstrom": 6.0
+    },
+    {
+      "id": "exemplar-C120-2000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C120-2000K.xyz",
+      "resolution": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "id": "exemplar-C686-4000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C686-4000K.xyz",
+      "resolution": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "id": "exemplar-C60-3000K",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C60-3000K.xyz",
+      "resolution": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "id": "exemplar-C1000-500K-section",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-500K.xyz",
+      "slab_angstrom": 6.0,
+      "resolution": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "id": "exemplar-C1000-3000K-section",
+      "source": "scripts/figures/data/carbon-clusters/spheres/C1000-3000K.xyz",
+      "slab_angstrom": 6.0,
+      "resolution": [
+        1200,
+        1200
+      ]
     }
   ]
 }
