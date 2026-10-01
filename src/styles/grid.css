@@ -1,0 +1,134 @@
+/* The panel grid (src/components/Grid.astro) — restructure spec §6.2 and §7.
+ *
+ * Imported by the work-article page rather than scoped in the component: a component
+ * that only MDX imports gets its scoped styles injected by a separate path in dev, and
+ * on one of Patrick's servers that path delivered the markup without the stylesheet.
+ * Classes are namespaced `grid__*`, so nothing here needs scoping. */
+
+.grid {
+  --floor: 100px;
+  --floor-per-weight: 3.1px;
+  display: grid;
+  grid-template-columns: var(--tracks);
+  gap: 0.5rem;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  /* Columns never shrink below the floor; a plate narrower than the matrix scrolls. */
+  overflow-x: auto;
+}
+.grid--rows {
+  grid-template-columns: auto var(--tracks);
+}
+/* Panels in proportion to their cell edge stand on a common baseline. */
+.grid--weighted {
+  align-items: end;
+}
+/* The plate's breakout width (Plate.astro): the matrix fits, so the floor comes off. */
+@media (min-width: 1000px) {
+  .grid {
+    --floor: 0px;
+    --floor-per-weight: 0px;
+  }
+}
+
+/* Axis labels: bare ticks under one title with the unit, set like a chart's. */
+.grid__title,
+.grid__column-label,
+.grid__row-label,
+.grid__large-label {
+  text-transform: none; /* "g cm⁻³" and "K" are not shouted */
+  letter-spacing: 0; /* tracking is for capitals; these are figures, like a chart's ticks */
+}
+.grid__title {
+  grid-column: 1 / -1;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+.grid--rows .grid__title {
+  grid-column: 2 / -1;
+}
+/* While the grid can scroll, a title centred over the whole matrix would sit
+ * off-screen; it is pinned to the left edge instead, like the row labels. */
+@media (max-width: 999px) {
+  .grid__title {
+    justify-self: start;
+    position: sticky;
+    left: 0;
+    background: var(--plate);
+  }
+}
+.grid__column-label {
+  text-align: center;
+  align-self: end;
+  text-wrap: balance;
+}
+.grid__row-label {
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 0.25rem;
+  /* Pinned at the left edge while the matrix scrolls under it on a phone. */
+  position: sticky;
+  left: 0;
+  background: var(--plate);
+}
+
+/* A thumbnail is a button that opens the panel's full render. */
+.grid__thumb {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.grid__thumb:focus-visible,
+.grid__close:focus-visible {
+  outline: 2px solid var(--lustre);
+  outline-offset: 2px;
+}
+.grid__thumb > img,
+.grid__large > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+}
+
+/* The enlarged panel: a popover in the top layer, opened and closed by the HTML
+ * popover attributes alone (Escape and a click outside close it), so the page
+ * keeps its zero-script budget. Browsers without popovers keep the thumbnails. */
+.grid__large {
+  inset: 0;
+  margin: auto;
+  width: min(92vw, 1200px);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 2.5rem 0.75rem 0.75rem;
+  border: 1px solid var(--hairline);
+  background: var(--plate);
+  color: var(--ink);
+}
+.grid__large::backdrop {
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
+}
+.grid__large-label {
+  display: block;
+  margin-top: 0.5rem;
+}
+.grid__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  cursor: pointer;
+}
+@supports not selector(:popover-open) {
+  .grid__large {
+    display: none;
+  }
+  .grid__thumb {
+    cursor: default;
+  }
+}
