@@ -18,7 +18,6 @@ import pathlib
 import sys
 
 from playwright.sync_api import sync_playwright
-
 from shoot import BASE
 
 # (name, viewport width in CSS px, device pixel ratio): a 1x monitor, a 2x laptop, the
