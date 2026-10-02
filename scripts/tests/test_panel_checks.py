@@ -214,11 +214,34 @@ def test_crop_to_ink_squares_the_blob_and_ignores_isolated_pixels(tmp_path):
     assert rows.max() <= side - 2 and columns.max() <= side - 2
 
 
-def test_crop_to_ink_clamps_at_the_image_edge(tmp_path):
+def test_crop_to_ink_shifts_the_square_inside_the_image_edge(tmp_path):
     png = _grey_panel(tmp_path, (0, 60, 0, 30), strays=[])
     side = panel_checks.crop_to_ink(png)
     assert side == round(60 * 1.06)
-    assert np.asarray(Image.open(png)).shape == (side, side)
+    cropped = np.asarray(Image.open(png))
+    assert cropped.shape == (side, side)
+    assert (cropped[:60, :30] == 90).all(), "the shift lost ink"
+
+
+def test_crop_to_ink_raises_rather_than_cut_ink_that_does_not_fit(tmp_path):
+    # 195 px of ink plus 3% a side needs a 207 px square in a 200 px image: clamping it
+    # would cut the subject, so it raises and leaves the file untouched.
+    png = _grey_panel(tmp_path, (2, 197, 40, 60), strays=[])
+    before = png.read_bytes()
+    with pytest.raises(RuntimeError, match="207 px square, larger than the 200 x 200 px"):
+        panel_checks.crop_to_ink(png)
+    assert png.read_bytes() == before
+
+
+def test_crop_to_ink_raises_on_the_hero_rather_than_square_it(tmp_path):
+    # The hero's shape: a 1728 x 972 frame whose ink spans 1708 x 864 px. Squared, it
+    # would lose 44% of its width; render_box_grid never crops it, and this is the guard.
+    pixels = np.full((972, 1728), 255, dtype=np.uint8)
+    pixels[54:918, 10:1718] = 90
+    png = tmp_path / "hero.png"
+    Image.fromarray(pixels, mode="L").save(png)
+    with pytest.raises(RuntimeError, match="larger than the 1728 x 972 px image"):
+        panel_checks.crop_to_ink(png)
 
 
 def test_crop_to_ink_refuses_an_empty_panel(tmp_path):

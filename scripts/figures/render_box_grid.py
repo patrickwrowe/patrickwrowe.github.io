@@ -31,10 +31,12 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            it), same for every panel; its z-up projection is the image's up
     margin                 molrender View.margin (1.02 = a two per cent border)
     cage_angstrom          [x, y, z] extents of a hidden box loaded with the subject, or null.
-                           Null fits the camera to the subject and crops the flattened PNG to
-                           a square round its ink plus 3% a side (panel_checks.crop_to_ink);
-                           a caged panel is never cropped. Any plate-level key, resolution
-                           included, may be overridden per panel.
+                           Null fits the camera to the subject and, when the resolution is
+                           square, crops the flattened PNG to a square round its ink plus 3%
+                           a side (panel_checks.crop_to_ink, which raises rather than cut the
+                           ink); an uncaged non-square panel (the hero) and a caged panel are
+                           never cropped. Any plate-level key, resolution included, may be
+                           overridden per panel.
                            molrender fits the camera to everything loaded, hidden or not, so a
                            fixed cage gives every panel of a plate the same angstrom per pixel
                            (molrender session.py lines 26-30). null fits the subject alone.
@@ -228,7 +230,9 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         ValueError: From `prepare` when the source is not all carbon or the cage does
             not hold the subject.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
-            section 6.2 rule; nothing is then written to `<output_dir>/<id>.png`.
+            section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square
+            panel's ink does not fit its crop; nothing is then written to
+            `<output_dir>/<id>.png`.
         molrender.RenderError: If Blender fails, times out or writes nothing.
     """
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
@@ -242,15 +246,21 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         rendered, (int(width_px * scale), int(height_px * scale))
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
-    # its empty ground away; a panel with a cage shares a scale and keeps its frame.
-    cropped_px = None if spec.get("cage_angstrom") else panel_checks.crop_to_ink(rendered)
+    # its empty ground away to a square; a panel with a cage shares a scale and keeps its
+    # frame, and a non-square frame (the hero) is composed as it is and keeps it too.
+    if spec.get("cage_angstrom"):
+        crop = "none (caged)"
+    elif width_px != height_px:
+        crop = f"skipped (uncaged, but {width_px} x {height_px} is not square)"
+    else:
+        crop = f"{panel_checks.crop_to_ink(rendered)} px"
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(rendered, output)
     elapsed_s = time.perf_counter() - started_s
     print(
         f"{spec['id']}: {n_atoms} atoms, wall {elapsed_s:.0f} s, "
         f"blender exit {result.returncode}, {output}, "
-        f"crop {cropped_px or 'none'} px, "
+        f"crop {crop}, "
         f"border strays (row, column, rgb): {strays or 'none'}"
     )
 
