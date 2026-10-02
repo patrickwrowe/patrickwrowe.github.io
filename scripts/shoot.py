@@ -1,18 +1,19 @@
 """Screenshot the running site at the two widths CLAUDE.md requires.
 
     npm run preview &
-    PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir]
+    PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py \
+        [outdir] [route ...] [--base-url http://localhost:4321]
 
 Definition of done item 2: visual changes are checked in a browser at 1280px and
 390px. Screenshot it, don't reason about the CSS.
 """
 
+import argparse
 import pathlib
-import sys
 
 from playwright.sync_api import Page, sync_playwright
 
-BASE = "http://localhost:4321"
+DEFAULT_BASE_URL = "http://localhost:4321"
 WIDTHS = {"desktop": 1280, "mobile": 390}
 ROUTES = {
     "landing": "/",
@@ -29,7 +30,7 @@ ROUTES = {
 SCROLL_STEP_WAIT_MS = 250  # pause per viewport-height step, long enough to start a lazy fetch
 
 
-def _scroll_through_lazy_figures(page: Page) -> None:
+def scroll_through_lazy_figures(page: Page) -> None:
     """Walk the page top to bottom so `loading="lazy"` figures come into view and load.
 
     Steps in viewport-sized increments with a short wait at each, then scrolls back to
@@ -59,20 +60,23 @@ def _scroll_through_lazy_figures(page: Page) -> None:
     page.wait_for_load_state("networkidle")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     """Screenshot ROUTES, or the routes given after the output directory, at both widths.
-
-    Usage:
-        python scripts/shoot.py [outdir] [route ...]
 
     Names for routes given on the command line come from the route itself, so
     ``/work/carbon/`` is saved as ``work-carbon-desktop.png``.
+
+    Args:
+        argv: Command-line arguments; None reads `sys.argv`.
     """
-    out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "screenshots")
-    out.mkdir(parents=True, exist_ok=True)
-    requested = sys.argv[2:]
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("outdir", nargs="?", type=pathlib.Path, default=pathlib.Path("screenshots"))
+    parser.add_argument("routes", nargs="*", help="routes to shoot (default: every page type)")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="the running site")
+    args = parser.parse_args(argv)
+    args.outdir.mkdir(parents=True, exist_ok=True)
     routes = {
-        route.strip("/").replace("/", "-") or "landing": route for route in requested
+        route.strip("/").replace("/", "-") or "landing": route for route in args.routes
     } or ROUTES
 
     with sync_playwright() as playwright:
@@ -80,10 +84,10 @@ def main() -> None:
         for label, width in WIDTHS.items():
             page = browser.new_page(viewport={"width": width, "height": 900})
             for name, route in routes.items():
-                page.goto(f"{BASE}{route}", wait_until="networkidle")
+                page.goto(f"{args.base_url}{route}", wait_until="networkidle")
                 page.wait_for_timeout(1400)  # let the plate scan-in settle
-                _scroll_through_lazy_figures(page)
-                path = out / f"{name}-{label}.png"
+                scroll_through_lazy_figures(page)
+                path = args.outdir / f"{name}-{label}.png"
                 page.screenshot(path=path, full_page=True)
                 print(f"{path}  ({width}px)")
             page.close()

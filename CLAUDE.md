@@ -114,8 +114,8 @@ npm run preview          # verify the built output, not just dev
 npm test                                  # node --test: src/lib helpers
 uv run scripts/check_links.py             # after npm run build: anchors, hrefs, redirects, return links, Fig. n
 uv run pytest scripts/tests               # the Python tests (link check, geometry, census, figures)
-PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...]
-PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route]   # every grid/chart plate at five widths and densities, with layout numbers
+PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...] [--base-url URL]
+PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
 MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
 $MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; env is not the venv
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)

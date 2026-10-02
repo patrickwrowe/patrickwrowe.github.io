@@ -1,8 +1,7 @@
 """Render periodic carbon boxes and free clusters as greyscale PNG panels through molrender.
 
 One PNG per panel. The page lays panels out with `src/components/Grid.astro`, so labels
-are real text in the site's mono face rather than pixels, and the grid reflows to three
-columns at phone width without a second render (restructure spec section 6.2, 7).
+are real text in the site's mono face rather than pixels (restructure spec section 6.2, 7).
 
 This module imports `molrender` at the top, which lives only in the environment named
 below, not the project `.venv` — there is no PEP 723 header to run it with `uv run`,
