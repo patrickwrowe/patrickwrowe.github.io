@@ -13,12 +13,23 @@ Import it as a sibling module (`from figure_style import ...`); the scripts run 
 
 from __future__ import annotations
 
-__all__ = ["AXIS_TITLE_SIZE", "AXIS_WIDTH", "LABEL_SIZE", "TICK_LENGTH", "svg_text"]
+__all__ = [
+    "AXIS_TITLE_SIZE",
+    "AXIS_WIDTH",
+    "LABEL_SIZE",
+    "NARROW_CHART_EM",
+    "TICK_LENGTH",
+    "svg_text",
+]
 
 AXIS_WIDTH = 0.45
 TICK_LENGTH = 1.6
 LABEL_SIZE = 3.0
 AXIS_TITLE_SIZE = 3.2
+# The phone-width budget of a chart's narrow variant, in units of its label size: 31.5
+# labels of 11 px (--t-label) is 346.5 px, inside the 350 px plate of a 390 px screen.
+# Plate.astro shows a `.chart--narrow` below 700 px.
+NARROW_CHART_EM = 31.5
 
 
 def svg_text(

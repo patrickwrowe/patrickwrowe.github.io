@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94.50 94.00" role="img">
+  <g>
+  <line x1="31.645038" y1="6.00" x2="31.645038" y2="74.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="2 1.6" data-reference="DFT"/>
+  <line x1="18.00" y1="74.00" x2="89.50" y2="74.00" stroke="var(--graphite)" stroke-width="0.45"/>
+  <line x1="24.55" y1="74.00" x2="24.55" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="24.55" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.6</text>
+  <line x1="35.47" y1="74.00" x2="35.47" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="35.47" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.4</text>
+  <line x1="46.38" y1="74.00" x2="46.38" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="46.38" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.2</text>
+  <line x1="57.30" y1="74.00" x2="57.30" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="57.30" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.0</text>
+  <line x1="68.21" y1="74.00" x2="68.21" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="68.21" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−6.8</text>
+  <line x1="79.13" y1="74.00" x2="79.13" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="79.13" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−6.6</text>
+  <text x="53.75" y="84.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Cohesive energy of C60 (eV per atom)</text>
+  <g data-method="DFT" data-kind="reference">
+    <circle cx="31.65" cy="10.25" r="1.7" fill="var(--ink)" stroke="none"/>
+    <text x="15.00" y="11.25" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">DFT</text>
+  </g>
+  <g data-method="GAP-20" data-kind="gap">
+    <line x1="31.65" y1="18.75" x2="26.19" y2="18.75" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="26.19" cy="18.75" r="1.7" fill="var(--ink)" stroke="none"/>
+    <text x="15.00" y="19.75" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">GAP-20</text>
+  </g>
+  <g data-method="ReaxFF" data-kind="classical">
+    <line x1="31.65" y1="27.25" x2="48.02" y2="27.25" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="48.02" cy="27.25" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="28.25" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">ReaxFF</text>
+  </g>
+  <g data-method="LCBOP-I" data-kind="classical">
+    <line x1="31.65" y1="35.75" x2="61.12" y2="35.75" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="61.12" cy="35.75" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="36.75" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">LCBOP-I</text>
+  </g>
+  <g data-method="REBO-II" data-kind="classical">
+    <line x1="31.65" y1="44.25" x2="66.03" y2="44.25" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="66.03" cy="44.25" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="45.25" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">REBO-II</text>
+  </g>
+  <g data-method="AIREBO" data-kind="classical">
+    <line x1="31.65" y1="52.75" x2="67.67" y2="52.75" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="67.67" cy="52.75" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="53.75" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">AIREBO</text>
+  </g>
+  <g data-method="Tersoff" data-kind="classical">
+    <line x1="31.65" y1="61.25" x2="72.03" y2="61.25" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="72.03" cy="61.25" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="62.25" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Tersoff</text>
+  </g>
+  <g data-method="C-EDIP" data-kind="classical">
+    <line x1="31.65" y1="69.75" x2="81.31" y2="69.75" stroke="var(--graphite)" stroke-width="0.6"/>
+    <circle cx="81.31" cy="69.75" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+    <text x="15.00" y="70.75" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">C-EDIP</text>
+  </g>
+  </g>
+</svg>

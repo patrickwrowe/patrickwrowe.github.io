@@ -26,9 +26,11 @@ import ConfigurationSpace from "./figures/carbon/gap20-fig1-configuration-space.
 import Gap20Phonons from "./figures/carbon-gap-20/fig05-phonon-dispersion.png";
 import DefectStructures from "./figures/carbon/gap20-fig6-defect-structures.png";
 import c60Energies from "./figures/carbon/cluster-benchmark-c60.svg?raw";
+import c60EnergiesNarrow from "./figures/carbon/cluster-benchmark-c60-narrow.svg?raw";
 import clusterOutcomes from "./figures/carbon/cluster-outcomes.svg?raw";
 import clusterOutcomesNarrow from "./figures/carbon/cluster-outcomes-narrow.svg?raw";
 import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
+import combustionSeriesNarrow from "./figures/cho-gap/combustion-series-narrow.svg?raw";
 
 Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes, fullerenes, amorphous films and the hot liquid differ enough in their bonding that a model fitted to any one of them is usually wrong about the rest, and the standard models were fitted to a few of them by hand. Anyone who has simulated a carbon material with more than a few hundred atoms for longer than a few picoseconds has used one of those models, and has inherited its opinions. Some of the opinions are odd. Ask the classical carbon potentials of 2017 (fitted formulas that give the energy of a set of atoms, and the forces on them, from their positions) whether a free graphene sheet expands or contracts when you warm it, and they disagree on the sign: three of them switch sign somewhere between 500 and 1000 K, one tears the sheet apart above 1500 K, and none of them agrees with the quantum-mechanical answer across the whole range. Thermal expansion is about as basic as a property gets.
 
@@ -139,6 +141,9 @@ The search was ab initio random structure searching (AIRSS), the Pickard–Needs
 <Plate n={7}>
   <div class="chart" style="--chart-em: 45.7" role="img" aria-label="A dot chart of the cohesive energy per atom of icosahedral C₆₀, one row per method: DFT at the top with a vertical reference line at its value, GAP-20 just beyond it on the more strongly bound side, and the six classical potentials spread out on the less strongly bound side.">
     <Fragment set:html={c60Energies} />
+  </div>
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="A dot chart of the cohesive energy per atom of icosahedral C₆₀, one row per method: DFT at the top with a vertical reference line at its value, GAP-20 just beyond it on the more strongly bound side, and the six classical potentials spread out on the less strongly bound side.">
+    <Fragment set:html={c60EnergiesNarrow} />
   </div>
   <Fragment slot="caption">
     Cohesive energy per atom of icosahedral C₆₀ from DFT and from each of the seven potentials in the benchmark, from table II of Karasulu et al. GAP-20 over-binds the molecule by 0.10 eV per atom; the six classical potentials under-bind it by between 0.30 and 0.91 eV per atom.
@@ -375,6 +380,9 @@ Carbon is rarely found alone, and my thesis names hydrogen and oxygen as the nex
 <Plate n={14}>
   <div class="chart" style="--chart-em: 48.1" role="img" aria-label="Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.">
     <Fragment set:html={combustionSeries} />
+  </div>
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.">
+    <Fragment set:html={combustionSeriesNarrow} />
   </div>
   <Fragment slot="caption">
     Eight methane and sixteen oxygen molecules in a 10 Å periodic box at 3000 K under CHO-GAP, at 0, 10, 20 and 50 ps, drawn as ball-and-stick monochrome with carbon filled, oxygen open and hydrogen small. At 50 ps the box holds 7 CO₂, 1 CO, 12 H₂O, 3 OH, 3 H and 1 H₂O₂: methane has burned, with the radicals (reactive fragments such as OH and H) a flame is supposed to have.

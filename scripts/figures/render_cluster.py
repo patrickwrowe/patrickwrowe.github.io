@@ -20,6 +20,15 @@ reserved for state and anomaly.
 
 Usage:
     uv run scripts/figures/render_cluster.py <input.xyz> <output.svg> [--rotate X,Y,Z]
+
+The CHO-GAP combustion series (Fig. 14 of the carbon article), and with `--narrow` its
+phone-width variant, whose labels are sized so the viewBox is figure_style.NARROW_CHART_EM
+labels wide:
+    D=scripts/figures/data/cho-gap
+    uv run scripts/figures/render_cluster.py $D/combustion-0ps.xyz $D/combustion-10ps.xyz \
+        $D/combustion-20ps.xyz $D/combustion-50ps.xyz --labels "0 ps,10 ps,20 ps,50 ps" \
+        --columns 2 --radius-scale 2.2 \
+        --output src/content/work/figures/cho-gap/combustion-series.svg [--narrow]
 """
 
 from __future__ import annotations
@@ -32,6 +41,7 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
+from figure_style import NARROW_CHART_EM
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
 # nested front-to-back, so anything approaching space-filling collapses into a
@@ -242,8 +252,12 @@ def render_series(
     radius_scale: float = 1.0,
     columns: int | None = None,
     slab_angstrom: float | None = None,
+    label_em: float | None = None,
 ) -> str:
     """Lay several clusters out on a grid at one shared scale.
+
+    `label_em`, when given, sizes the labels so the viewBox is that many labels wide (the
+    page's `--chart-em`); otherwise a label is LABEL_SIZE_FRACTION of the drawing's width.
 
     The viewBox is in Angstrom throughout, so the clusters are drawn true to
     relative size — which is the point of the figure. Scaling each to fit its
@@ -297,7 +311,8 @@ def render_series(
         cursor += 2 * half_width + SERIES_GAP_ANGSTROM
     total_width = cursor - SERIES_GAP_ANGSTROM
 
-    label_size = total_width * LABEL_SIZE_FRACTION
+    view_width = total_width + 2 * ATOM_RADIUS
+    label_size = view_width / label_em if label_em else total_width * LABEL_SIZE_FRACTION
     label_band = label_size * LABEL_BAND_RATIO
 
     # The first row is centred on y = 0, which is where a single-row figure has
@@ -336,7 +351,7 @@ def render_series(
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="{-ATOM_RADIUS:.3f} {-row_half_height[0]:.3f} '
-        f'{total_width + 2 * ATOM_RADIUS:.3f} {total_height:.3f}" role="img">\n'
+        f'{view_width:.3f} {total_height:.3f}" role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
         f'    {"".join(placed)}\n'
         f"    {label_markup}\n"
@@ -379,6 +394,12 @@ def main() -> None:
         help="Wrap a series onto this many columns. Default is a single row.",
     )
     parser.add_argument(
+        "--narrow",
+        action="store_true",
+        help="Series mode: size the labels so the viewBox is figure_style.NARROW_CHART_EM "
+        "labels wide, the phone-width variant of a chart.",
+    )
+    parser.add_argument(
         "--slab",
         type=float,
         default=None,
@@ -408,7 +429,12 @@ def main() -> None:
             for label, path in zip(labels, args.inputs, strict=True)
         ]
         svg = render_series(  # type: ignore[arg-type]
-            clusters, rotate, args.radius_scale, args.columns, args.slab
+            clusters,
+            rotate,
+            args.radius_scale,
+            args.columns,
+            args.slab,
+            NARROW_CHART_EM if args.narrow else None,
         )
         for label, structure in clusters:
             print(f"  {label}: {len(structure)} atoms, {describe(structure)}")

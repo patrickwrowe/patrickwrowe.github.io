@@ -36,7 +36,14 @@ import math
 from pathlib import Path
 
 from cluster_census import SIZES, TEMPERATURES_KELVIN, read_census_columns
-from figure_style import AXIS_TITLE_SIZE, AXIS_WIDTH, LABEL_SIZE, TICK_LENGTH, svg_text
+from figure_style import (
+    AXIS_TITLE_SIZE,
+    AXIS_WIDTH,
+    LABEL_SIZE,
+    NARROW_CHART_EM,
+    TICK_LENGTH,
+    svg_text,
+)
 
 # Legend order: from most ordered to least. Diamond-like is part of the scheme but no run
 # is classed so; the legend says "(none)" rather than hiding it.
@@ -68,7 +75,7 @@ BASELINE = MARGIN_TOP + PLOT_HEIGHT
 # LABEL_SIZE (Plate.astro's `.chart--narrow`); everything else here is chosen to fit it
 # without crowding the tick labels (checked by hand against the rendered coordinates,
 # scripts/tests/test_cluster_figures.py pins the result).
-NARROW_WIDTH = 31.5 * LABEL_SIZE
+NARROW_WIDTH = NARROW_CHART_EM * LABEL_SIZE
 NARROW_PLOT_WIDTH = 76.0
 NARROW_PLOT_HEIGHT = 100.0
 NARROW_MARGIN_LEFT = MARGIN_LEFT
