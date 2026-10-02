@@ -228,9 +228,10 @@ def build(narrow: bool = False) -> str:
     width = plot_left + plot_width + MARGIN_RIGHT
     height = MARGIN_TOP + PLOT_HEIGHT + MARGIN_BOTTOM
     body = "\n  ".join(parts)
+    # data-chart-em: the viewBox width in labels, the page wrapper's --chart-em.
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
-        f'role="img">\n  <g>\n  {body}\n  </g>\n</svg>\n'
+        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n  <g>\n  {body}\n  </g>\n</svg>\n'
     )
 
 

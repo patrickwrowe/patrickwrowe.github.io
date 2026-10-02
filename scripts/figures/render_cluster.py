@@ -351,7 +351,9 @@ def render_series(
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="{-ATOM_RADIUS:.3f} {-row_half_height[0]:.3f} '
-        f'{view_width:.3f} {total_height:.3f}" role="img">\n'
+        f'{view_width:.3f} {total_height:.3f}" role="img" '
+        # The viewBox width in labels, the page wrapper's --chart-em.
+        f'data-chart-em="{view_width / label_size:.1f}">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
         f'    {"".join(placed)}\n'
         f"    {label_markup}\n"

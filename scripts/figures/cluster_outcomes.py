@@ -304,9 +304,11 @@ def build(data_dir: Path) -> str:
     width = left + PLOT_WIDTH + LEGEND_GAP + LEGEND_WIDTH
     height = BASELINE + MARGIN_BOTTOM
     body = "\n    ".join(parts)
+    # data-chart-em: the viewBox width in labels, the page wrapper's --chart-em.
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
-        f'role="img">\n  <g>\n    {body}\n  </g>\n</svg>\n'
+        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n'
+        f"  <g>\n    {body}\n  </g>\n</svg>\n"
     )
 
 
@@ -385,7 +387,8 @@ def build_narrow(data_dir: Path) -> str:
     body = "\n    ".join(parts)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {NARROW_WIDTH:.2f} {height:.2f}" '
-        f'role="img">\n  <g>\n    {body}\n  </g>\n</svg>\n'
+        f'role="img" data-chart-em="{NARROW_WIDTH / LABEL_SIZE:.1f}">\n'
+        f"  <g>\n    {body}\n  </g>\n</svg>\n"
     )
 
 

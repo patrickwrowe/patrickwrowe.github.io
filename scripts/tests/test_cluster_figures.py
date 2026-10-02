@@ -8,8 +8,13 @@ from pathlib import Path
 import cluster_outcomes
 import cluster_sp3
 import pytest
+from figure_style import NARROW_CHART_EM
 
 SPHERES = Path(__file__).resolve().parents[1] / "figures" / "data" / "carbon-clusters" / "spheres"
+NARROW_DIAGRAM = (
+    Path(__file__).resolve().parents[2]
+    / "src/content/work/figures/carbon/cluster-outcomes-narrow.svg"
+)
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b")
 ALLOWED_PAINT = {"var(--ink)", "var(--graphite)", "var(--plate)", "none"}
 
@@ -46,24 +51,25 @@ def test_sp3_plot_has_one_line_per_size_and_no_hue():
     assert paints(svg) <= ALLOWED_PAINT
 
 
-def test_narrow_outcome_diagram_fits_the_phone_width_budget():
-    # Plate.astro's `.chart--narrow` sets `--chart-em: 31.5`; the viewBox width must match
-    # that exactly so the chart's labels render at LABEL_SIZE, not shrunk to fit.
-    svg = cluster_outcomes.build_narrow(SPHERES)
-    viewbox = re.search(r'viewBox="0 0 ([\d.]+) [\d.]+"', svg)
-    assert viewbox, "no viewBox on the narrow diagram"
-    assert float(viewbox.group(1)) == pytest.approx(31.5 * cluster_outcomes.LABEL_SIZE, abs=0.001)
+def test_the_committed_narrow_diagram_fits_the_phone_width_budget():
+    # Read from the file the page inlines: its viewBox over its smallest label is the width
+    # it needs at the 11 px label size, and that must fit Plate.astro's `.chart--narrow`.
+    svg = NARROW_DIAGRAM.read_text()
+    viewbox_width = float(re.search(r'viewBox="0 0 ([\d.]+) [\d.]+"', svg).group(1))
+    smallest_label = min(float(size) for size in re.findall(r'font-size="([\d.]+)"', svg))
+    chart_em = float(re.search(r'data-chart-em="([\d.]+)"', svg).group(1))
+    assert chart_em == pytest.approx(viewbox_width / smallest_label, abs=0.05)
+    assert chart_em <= NARROW_CHART_EM
+    assert svg == cluster_outcomes.build_narrow(SPHERES), "the committed file is stale"
 
+
+def test_narrow_outcome_diagram_draws_every_run_and_no_hue():
+    svg = cluster_outcomes.build_narrow(SPHERES)
     classes = re.findall(r'data-run="C\d+-\d+K" data-class="([^"]+)"', svg)
     assert len(classes) == 48
     assert set(classes) <= set(cluster_outcomes.CLASSES)
     assert len(re.findall(r"data-legend=", svg)) == len(cluster_outcomes.CLASSES) == 6
     assert classes.count("cage") == 6 and classes.count("graphitic onion") == 8
-
-    sizes = [float(size) for size in re.findall(r'font-size="([\d.]+)"', svg)]
-    assert sizes, "no text in the narrow diagram"
-    assert min(sizes) >= cluster_outcomes.LABEL_SIZE
-
     assert not HEX_COLOUR.search(svg)
     assert paints(svg) <= ALLOWED_PAINT
 

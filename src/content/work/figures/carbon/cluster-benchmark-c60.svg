@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 137.00 94.00" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 137.00 94.00" role="img" data-chart-em="45.7">
   <g>
   <line x1="55.129771" y1="6.00" x2="55.129771" y2="74.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="2 1.6" data-reference="DFT"/>
   <line x1="37.00" y1="74.00" x2="132.00" y2="74.00" stroke="var(--graphite)" stroke-width="0.45"/>
