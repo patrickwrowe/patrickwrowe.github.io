@@ -31,11 +31,13 @@
   }
 }
 
-/* Axis labels: bare ticks under one title with the unit, set like a chart's. */
-.grid__title,
-.grid__column-label,
-.grid__row-label,
-.grid__large-label {
+/* Axis labels: bare ticks under one title with the unit, set like a chart's. Two
+   classes, because global.css's `.label` (uppercase, tracked) is emitted after this
+   file in the build and would win at equal specificity. */
+.grid .grid__title,
+.grid .grid__column-label,
+.grid .grid__row-label,
+.grid .grid__large-label {
   text-transform: none; /* "g cm⁻³" and "K" are not shouted */
   letter-spacing: 0; /* tracking is for capitals; these are figures, like a chart's ticks */
 }
@@ -137,7 +139,7 @@
 
 /* A closed archive of panels, kept for the record: until opened, the summary is all
  * that stands on the plate, and the lazy thumbnails inside do not load. */
-.archive__summary {
+.archive > .archive__summary {
   padding: 1rem 0.75rem;
   cursor: pointer;
   text-transform: none;
