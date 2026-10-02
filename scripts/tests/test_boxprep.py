@@ -7,6 +7,7 @@ from pathlib import Path
 import boxprep
 import numpy as np
 import pytest
+from constants import CARBON_BOND_CUTOFF_ANGSTROM
 
 FIXTURES = Path(__file__).parent / "fixtures"
 DATA = Path(__file__).resolve().parents[1] / "figures" / "data"
@@ -158,7 +159,7 @@ def test_real_dense_slab_has_sensible_coordination():
     # periodic neighbours that find_bonds, with no wrapping of its own, can't see. Tiling
     # 3 x 3 in x and y gives the centre copy's atoms their true neighbours, exactly the
     # render path a Blender driver would use; scoring only that centre copy, and only
-    # atoms at least 1.82 A (the bond cutoff) inside both slab faces, then reproduces the
+    # atoms at least one bond cutoff (1.824 A) inside both slab faces, then reproduces the
     # archive's chemistry. A wrong edge shows up here as overlapping atoms at the seams.
     structure = boxprep.read_xyz(DATA / "graphitisation" / "final-frame-3.5gcc.xyz")
     edge_angstrom = boxprep.box_edge_from_density(len(structure), 3.5)
@@ -168,10 +169,9 @@ def test_real_dense_slab_has_sensible_coordination():
     slab = tiled[boxprep.slab_mask(tiled[:, 2], centre_angstrom, 10.0)]
     bonds = boxprep.find_bonds(slab)
     counts = np.bincount(np.array(bonds).ravel(), minlength=len(slab))
-    bond_cutoff_angstrom = 1.82
     in_centre_tile = (slab[:, 0] >= edge_angstrom) & (slab[:, 0] < 2 * edge_angstrom)
     in_centre_tile &= (slab[:, 1] >= edge_angstrom) & (slab[:, 1] < 2 * edge_angstrom)
-    away_from_slab_faces = np.abs(slab[:, 2] - centre_angstrom) <= 5.0 - bond_cutoff_angstrom
+    away_from_slab_faces = np.abs(slab[:, 2] - centre_angstrom) <= 5.0 - CARBON_BOND_CUTOFF_ANGSTROM
     bulk_counts = counts[in_centre_tile & away_from_slab_faces]
     assert bulk_counts.mean() == pytest.approx(3.95, abs=0.03)
     assert np.mean(bulk_counts == 4) == pytest.approx(0.948, abs=0.01)

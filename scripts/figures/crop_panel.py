@@ -38,13 +38,18 @@ def crop_panel(input_path: Path, box: Box, output_path: Path) -> None:
             needed.
 
     Raises:
-        ValueError: If `box` is degenerate (left >= right or top >= bottom) or falls
-            outside the source image's bounds.
+        ValueError: If `box` is inverted or empty (left >= right or top >= bottom), or
+            falls outside the source image's bounds; the message says which.
     """
     left, top, right, bottom = box
+    if left >= right or top >= bottom:
+        raise ValueError(
+            f"box {box} is inverted or empty: it needs left < right and top < bottom, "
+            f"in (left, top, right, bottom) order"
+        )
     with Image.open(input_path) as image:
         width, height = image.size
-        if not (0 <= left < right <= width and 0 <= top < bottom <= height):
+        if not (0 <= left and right <= width and 0 <= top and bottom <= height):
             raise ValueError(f"box {box} is outside the {width} x {height} image {input_path}")
         cropped = image.crop(box)
         output_path.parent.mkdir(parents=True, exist_ok=True)

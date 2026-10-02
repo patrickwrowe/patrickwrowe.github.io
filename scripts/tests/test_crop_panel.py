@@ -43,5 +43,13 @@ def test_box_outside_the_image_raises_value_error(tmp_path: Path):
     output_path = tmp_path / "cropped.png"
     _make_marked_image().save(input_path)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="outside the 40 x 40 image"):
         crop_panel.crop_panel(input_path, (30, 30, IMAGE_SIZE + 10, IMAGE_SIZE + 10), output_path)
+
+
+def test_an_inverted_box_is_reported_as_inverted_not_outside(tmp_path: Path):
+    # The user review's case: left greater than right, every coordinate inside the image.
+    input_path = tmp_path / "source.png"
+    _make_marked_image().save(input_path)
+    with pytest.raises(ValueError, match="inverted or empty"):
+        crop_panel.crop_panel(input_path, (30, 5, 10, 35), tmp_path / "cropped.png")

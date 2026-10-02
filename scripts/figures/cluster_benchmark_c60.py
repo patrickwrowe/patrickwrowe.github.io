@@ -61,7 +61,7 @@ METHODS: tuple[tuple[str, float, str], ...] = (
     ("C-EDIP", -6.56, "classical"),
 )
 
-DFT_REFERENCE_EV_PER_ATOM = -7.47
+DFT_REFERENCE_EV_PER_ATOM = METHODS[0][1]
 
 # Plot geometry, in viewBox user units (unitless, like graphitisation_figure.py).
 LABEL_END_X = 34.0

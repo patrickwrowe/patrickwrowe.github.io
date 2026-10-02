@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import math
+from collections import Counter
 from pathlib import Path
 
 from cluster_census import read_census_columns
@@ -213,21 +214,6 @@ def _read_outcomes(data_dir: Path) -> dict[tuple[int, int], str]:
     return outcome
 
 
-def _class_counts(outcome: dict[tuple[int, int], str]) -> dict[str, int]:
-    """How many runs fall in each class, zero-filled for classes with no runs.
-
-    Args:
-        outcome: Run classes, as returned by `_read_outcomes`.
-
-    Returns:
-        One count per OutcomeClass, in legend order.
-    """
-    counts = {class_name: 0 for class_name in OutcomeClass}
-    for class_name in outcome.values():
-        counts[class_name] += 1
-    return counts
-
-
 def build(data_dir: Path) -> str:
     """The outcome diagram as an SVG document.
 
@@ -283,7 +269,7 @@ def build(data_dir: Path) -> str:
             f"{glyph(class_name, size_to_x(n_atoms), temperature_to_y(kelvin))}</g>"
         )
 
-    counts = _class_counts(outcome)
+    counts = Counter(outcome.values())  # a class with no runs reads 0
     legend_x = left + PLOT_WIDTH + LEGEND_GAP
     row_height = LABEL_SIZE * 2.4
     legend_top = top + (PLOT_HEIGHT - row_height * (len(OutcomeClass) - 1)) / 2
@@ -368,7 +354,7 @@ def build_narrow(data_dir: Path) -> str:
             f"{glyph(class_name, temperature_to_x_narrow(kelvin), size_to_y_narrow(n_atoms))}</g>"
         )
 
-    counts = _class_counts(outcome)
+    counts = Counter(outcome.values())  # a class with no runs reads 0
     row_height = LABEL_SIZE * 2.4
     legend_top = title_y + NARROW_LEGEND_GAP
     for index, class_name in enumerate(OutcomeClass):
