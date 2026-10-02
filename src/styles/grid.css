@@ -97,10 +97,12 @@
 /* The enlarged panel: a popover in the top layer, opened and closed by the HTML
  * popover attributes alone (Escape and a click outside close it), so the page
  * keeps its zero-script budget. Browsers without popovers keep the thumbnails. */
+/* Never wider than the render itself plus its padding and border (--intrinsic-width, set per
+ * panel by Grid.astro), so a 490 px panel is not blown up to fill a 1200 px popover. */
 .grid__large {
   inset: 0;
   margin: auto;
-  width: min(92vw, 1200px);
+  width: min(92vw, 1200px, calc(var(--intrinsic-width, 1200px) + 1.5rem + 2px));
   max-height: 92vh;
   overflow: auto;
   padding: 2.5rem 0.75rem 0.75rem;

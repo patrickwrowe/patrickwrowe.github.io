@@ -83,6 +83,9 @@ const sizesFor = (column: number): string => {
   return `${Math.max(100, Math.ceil(plateWidth * share))}px`;
 };
 
+// Each `widths` list ends with the panel's own width: Astro drops every width above an
+// imported image's own and adds that one (astro/dist/assets/services/service.js,
+// getSrcSet), so the image service is never asked to enlarge a panel.
 const images = import.meta.glob<ImageMetadata>("/src/content/work/figures/**/*.png", {
   eager: true,
   import: "default",
@@ -93,9 +96,6 @@ const resolve = (file: string): ImageMetadata => {
   if (!image) throw new Error(`Grid: no panel at ${key}`);
   return image;
 };
-// Never ask the image service to enlarge a panel.
-const widthsUpTo = (image: ImageMetadata, candidates: number[]): number[] =>
-  candidates.filter((width) => width < image.width).concat(image.width);
 
 // The popover's caption: "<row>, <column> <unit>", the unit taken from the title.
 const unit = columnTitle?.includes(" / ") ? columnTitle.split(" / ")[1] : "";
@@ -131,17 +131,23 @@ const idFor = (file: string): string => `panel-${slug(dir)}-${slug(file.replace(
             <Image
               src={image}
               alt=""
-              widths={widthsUpTo(image, [320, 640, 800])}
+              widths={[320, 640, 800, image.width]}
               sizes={sizesFor(index % columns)}
               quality="max"
               loading="lazy"
             />
           </button>
-          <figure id={id} class="grid__large" popover="auto" aria-label={caption}>
+          <figure
+            id={id}
+            class="grid__large"
+            popover="auto"
+            aria-label={caption}
+            style={`--intrinsic-width: ${image.width}px`}
+          >
             <Image
               src={image}
               alt=""
-              widths={widthsUpTo(image, [800, 1200])}
+              widths={[800, 1200, image.width]}
               sizes="min(92vw, 1200px)"
               quality="max"
               loading="lazy"
