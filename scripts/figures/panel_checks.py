@@ -25,8 +25,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-# A relative `source` in a manifest is relative to the repository root, whatever the
-# current directory (pytest from scripts/tests, the renderer from anywhere).
+# A relative `source` or `output_dir` in a manifest is relative to the repository root,
+# whatever the current directory (pytest from scripts/tests, the renderer from anywhere).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 REQUIRED_KEYS = (
@@ -115,7 +115,7 @@ def load_panels(manifest_path: Path) -> list[dict]:
     Returns:
         One dict per panel, each holding every plate-level key (lengths in angstrom,
         resolution in pixels) overridden by the panel's own keys, with a relative
-        `source` resolved against REPO_ROOT.
+        `source` or `output_dir` resolved against REPO_ROOT.
 
     Raises:
         ValueError: If the manifest has no "panels" list, a panel lacks a key in
@@ -132,8 +132,9 @@ def load_panels(manifest_path: Path) -> list[dict]:
     plate = {key: value for key, value in manifest.items() if key != "panels"}
     panels = [{**plate, **panel} for panel in manifest["panels"]]
     for panel in panels:
-        if isinstance(panel.get("source"), str) and not Path(panel["source"]).is_absolute():
-            panel["source"] = str(REPO_ROOT / panel["source"])
+        for key in ("source", "output_dir"):
+            if isinstance(panel.get(key), str) and not Path(panel[key]).is_absolute():
+                panel[key] = str(REPO_ROOT / panel[key])
     seen_ids: set[str] = set()
     for index, panel in enumerate(panels):
         name = panel.get("id", f"panels[{index}]")
