@@ -28,3 +28,7 @@ screenshots/
 # Local tooling config
 .claude/
 .mcp.json
+
+# Dead-letter record written by scripts/figures/extract_spheres.py when a run fails; the
+# merged provenance.json is the record, the failures are re-run, not committed.
+scripts/figures/data/carbon-clusters/spheres/provenance-failures.json
