@@ -7,7 +7,7 @@
 
 .grid {
   --floor: 100px;
-  --floor-per-weight: 3.1px;
+  --floor-per-weight: 2.88px; /* 100 px for the smallest weight in use, 34.8 (Fig. 8) */
   display: grid;
   grid-template-columns: var(--tracks);
   gap: 0.5rem;

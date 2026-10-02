@@ -19,20 +19,9 @@ from PIL import Image
 REPO = Path(__file__).resolve().parents[2]
 MANIFESTS = sorted((REPO / "scripts" / "figures" / "data").glob("**/manifest.json"))
 # 2026-10-01: uncropped 800 x 800 renders from before the crop. The two whole-cluster
-# sections are on no page (Fig. 11 shows the exemplar sections); the density row is caged
-# and re-rendered in a later commit. The mark is strict, so a name left here after its
-# panel is re-rendered fails the suite.
-UNCROPPED_PENDING_RERENDER = {
-    "C1000-500K-section",
-    "C1000-3000K-section",
-    "density-0.5gcc-3500K",
-    "density-1.0gcc-3500K",
-    "density-1.5gcc-3500K",
-    "density-2.0gcc-3500K",
-    "density-2.5gcc-3500K",
-    "density-3.0gcc-3500K",
-    "density-3.5gcc-3500K",
-}
+# sections are on no page (Fig. 11 shows the exemplar sections). The mark is strict, so
+# a name left here after its panel is re-rendered fails the suite.
+UNCROPPED_PENDING_RERENDER = {"C1000-500K-section", "C1000-3000K-section"}
 PANELS = [
     pytest.param(
         panel,

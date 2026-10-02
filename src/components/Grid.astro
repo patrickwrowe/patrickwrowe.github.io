@@ -13,17 +13,26 @@
 // size therefore serves the overview; the detail is one click away.
 //
 // `weights` gives a row of panels that share a scale cells in proportion to what
-// they show (the graphitisation density row: cell edges in ångström), bottom-aligned,
-// so the layout itself shows the cell shrinking and no panel sits in empty ground.
+// they show, bottom-aligned, so the layout itself shows the cell shrinking and no panel
+// sits in empty ground. Each weight is the width in ångström of the panel's frame: its
+// render manifest cages it at its cell edge plus a sphere diameter, and molrender's
+// orthographic camera frames that cage's projected extent, which under the plate's
+// tilted view is the cage's height, not its edge (the graphitisation density row;
+// scripts/tests/test_article_figures.py recomputes every weight from the manifest).
 //
 // The column count holds at every width. Until the plate breaks out to its full
 // measure at 1000 px, every column is at least 100 px wide (the spec's phone-width
-// floor; with weights, 3.1 px per unit of weight) and a grid wider than its plate
-// scrolls sideways with the row labels held at the left edge.
+// floor; with weights, --floor-per-weight per unit, 100 px for the smallest weight
+// in use) and a grid wider than its plate scrolls sideways with the row labels held
+// at the left edge.
 //
-// Styles live in src/styles/grid.css, imported by the work-article page (see the
-// note there). Whether the panels of a plate share a scale is the render manifest's
-// business and the caption's to state.
+// Styles live in src/styles/grid.css, imported by the work-article page, not by this
+// component. The trade-off: a component that only MDX imports gets its scoped styles
+// by a separate dev-server path, which on one of Patrick's servers delivered the
+// markup without the stylesheet; importing grid.css from the page avoids that path,
+// at the cost that any other page using <Grid> must import grid.css itself or render
+// the grid unstyled. Whether the panels of a plate share a scale is the render
+// manifest's business and the caption's to state.
 //
 // To assistive technology the grid is a group named by `alt`, which states the
 // trend; each thumbnail is a button named "Enlarge <row>, <column>"; the images
@@ -60,7 +69,7 @@ if (weights && weights.length !== columns) {
 }
 
 // The panel tracks: equal shares, or shares in proportion to the weights with a floor
-// of --floor-per-weight each (3.1 px a unit under 1000 px, nothing above; grid.css).
+// of --floor-per-weight each (2.88 px a unit under 1000 px, nothing above; grid.css).
 const tracks = weights
   ? weights.map((weight) => `minmax(calc(${weight} * var(--floor-per-weight)), ${weight}fr)`).join(" ")
   : `repeat(${columns}, minmax(var(--floor), 1fr))`;
