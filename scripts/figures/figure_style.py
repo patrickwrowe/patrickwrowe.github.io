@@ -1,11 +1,10 @@
 """Shared drawing style for the site's hand-written SVG data figures.
 
-The figure scripts (graphitisation_figure.py, cluster_outcomes.py, cluster_sp3.py,
-cluster_benchmark_c60.py) emit
-SVG by hand so that every stroke and fill resolves to a design token (`var(--ink)`,
-`var(--graphite)`, `var(--plate)`) and no hue enters a figure (spec 01 section 6.2). The
-viewBox is unitless, so every size here is in drawing units, not pixels; the figure
-scales with its container.
+The figure scripts (graphitisation_figure.py, cluster_outcomes.py,
+cluster_benchmark_c60.py) emit SVG by hand so that every stroke and fill resolves to a
+design token (`var(--ink)`, `var(--graphite)`, `var(--plate)`) and no hue enters a figure
+(spec 01 section 6.2). The viewBox is unitless, so every size here is in drawing units,
+not pixels; the figure scales with its container.
 
 Import it as a sibling module (`from figure_style import ...`); the scripts run from
 `scripts/figures/`, which is then on the import path.
