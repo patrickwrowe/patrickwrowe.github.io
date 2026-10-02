@@ -282,14 +282,15 @@ def test_crop_to_ink_shifts_the_square_inside_the_image_edge(tmp_path):
     assert (cropped[:60, :30] == 90).all(), "the shift lost ink"
 
 
-def test_crop_to_ink_raises_rather_than_cut_ink_that_does_not_fit(tmp_path):
-    # 195 px of ink plus 3% a side needs a 207 px square in a 200 px image: clamping it
-    # would cut the subject, so it raises and leaves the file untouched.
+def test_crop_to_ink_gives_up_margin_not_ink_when_the_ink_nearly_fills_a_square(tmp_path):
+    # 195 px of ink plus 3% a side would need a 207 px square in a 200 px image: the
+    # square is clamped to the image, so the crop is the whole frame and no ink is lost.
+    # (C60-2000K is 7 px from this; before 2026-10-02 the clamp was a RuntimeError.)
     png = _grey_panel(tmp_path, (2, 197, 40, 60), strays=[])
-    before = png.read_bytes()
-    with pytest.raises(RuntimeError, match="207 px square, larger than the 200 x 200 px"):
-        panel_checks.crop_to_ink(png)
-    assert png.read_bytes() == before
+    assert panel_checks.crop_to_ink(png) == 200
+    cropped = np.asarray(Image.open(png))
+    assert cropped.shape == (200, 200)
+    assert (cropped[2:197, 40:60] == 90).all(), "the clamp lost ink"
 
 
 def test_crop_to_ink_raises_on_the_hero_rather_than_square_it(tmp_path):
@@ -299,7 +300,7 @@ def test_crop_to_ink_raises_on_the_hero_rather_than_square_it(tmp_path):
     pixels[54:918, 10:1718] = 90
     png = tmp_path / "hero.png"
     Image.fromarray(pixels, mode="L").save(png)
-    with pytest.raises(RuntimeError, match="larger than the 1728 x 972 px image"):
+    with pytest.raises(RuntimeError, match="does not fit a square inside the 1728 x 972 px"):
         panel_checks.crop_to_ink(png)
 
 

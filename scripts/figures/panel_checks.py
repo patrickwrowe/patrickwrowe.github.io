@@ -25,6 +25,10 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+# A relative `source` in a manifest is relative to the repository root, whatever the
+# current directory (pytest from scripts/tests, the renderer from anywhere).
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 REQUIRED_KEYS = (
     "id",
     "source",
@@ -110,7 +114,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
 
     Returns:
         One dict per panel, each holding every plate-level key (lengths in angstrom,
-        resolution in pixels) overridden by the panel's own keys.
+        resolution in pixels) overridden by the panel's own keys, with a relative
+        `source` resolved against REPO_ROOT.
 
     Raises:
         ValueError: If the manifest has no "panels" list, a panel lacks a key in
@@ -126,6 +131,9 @@ def load_panels(manifest_path: Path) -> list[dict]:
         raise ValueError(f'{manifest_path}: no "panels" list')
     plate = {key: value for key, value in manifest.items() if key != "panels"}
     panels = [{**plate, **panel} for panel in manifest["panels"]]
+    for panel in panels:
+        if isinstance(panel.get("source"), str) and not Path(panel["source"]).is_absolute():
+            panel["source"] = str(REPO_ROOT / panel["source"])
     seen_ids: set[str] = set()
     for index, panel in enumerate(panels):
         name = panel.get("id", f"panels[{index}]")
@@ -259,10 +267,11 @@ def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
     of the frame's long side (design critique 2, finding 2b). The square is centred on
     the ink's bounding box, as long as that box's longer side plus `margin_fraction` on
     each side, and shifted inside the image where it would cross an edge (which loses no
-    ink). It is never shrunk: a square that does not fit raises instead, so a panel is
-    never silently cut to its short side. Only a square render is cropped this way;
-    render_box_grid.py leaves a non-square one (the hero) at its full frame. Isolated
-    dark pixels do not count: the
+    ink). A square larger than the image's shorter side is clamped to it, which in a
+    square frame gives up margin only; it raises when the ink's box itself exceeds that
+    side, so a panel is never cut to its short side. Only a square render is cropped
+    this way; render_box_grid.py leaves a non-square one (the hero) at its full frame.
+    Isolated dark pixels do not count: the
     Molecular Nodes compositor leaves one at the centre and sometimes one on the border
     (render_box_grid.py's module docstring), and a border stray would otherwise pin the
     crop to the edge. A panel that shares a cage must never be cropped, or the shared
@@ -277,7 +286,7 @@ def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
 
     Raises:
         RuntimeError: If the panel holds no connected ink darker than INK_THRESHOLD, or
-            the ink's square with its margin is larger than the image's shorter side.
+            the ink's bounding box is larger than the image's shorter side.
     """
     image = Image.open(png)
     pixels = np.asarray(image.convert("L"))
@@ -296,13 +305,13 @@ def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
     height_px, width_px = pixels.shape
     top, bottom = int(rows.min()), int(rows.max()) + 1
     left, right = int(columns.min()), int(columns.max()) + 1
-    side_px = int(round(max(bottom - top, right - left) * (1 + 2 * margin_fraction)))
-    if side_px > min(height_px, width_px):
+    ink_side_px = max(bottom - top, right - left)
+    if ink_side_px > min(height_px, width_px):
         raise RuntimeError(
-            f"{png}: the ink's {right - left} x {bottom - top} px box with a "
-            f"{margin_fraction:.0%} margin needs a {side_px} px square, larger than the "
-            f"{width_px} x {height_px} px image; widen the render or give it a cage"
+            f"{png}: the ink's {right - left} x {bottom - top} px box does not fit a square "
+            f"inside the {width_px} x {height_px} px image; widen the render or give it a cage"
         )
+    side_px = min(int(round(ink_side_px * (1 + 2 * margin_fraction))), height_px, width_px)
     row0 = int(round((top + bottom) / 2 - side_px / 2))
     column0 = int(round((left + right) / 2 - side_px / 2))
     row0 = min(max(row0, 0), height_px - side_px)

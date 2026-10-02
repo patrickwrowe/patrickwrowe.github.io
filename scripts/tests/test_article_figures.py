@@ -34,9 +34,7 @@ WEIGHTED_GRIDS = [
         [float(weight) for weight in weights.split(",")],
         re.findall(r'"([^"]+)\.png"', panels),
     )
-    for weights, panels in re.findall(
-        r"weights=\{\[([^\]]+)\]\}\s*panels=\{\[([^\]]+)\]\}", MDX
-    )
+    for weights, panels in re.findall(r"weights=\{\[([^\]]+)\]\}\s*panels=\{\[([^\]]+)\]\}", MDX)
 ]
 RAW_IMPORTS = dict(re.findall(r'^import (\w+) from "(\./[^"]+\.svg)\?raw";$', MDX, re.M))
 WRAPPERS = re.findall(

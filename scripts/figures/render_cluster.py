@@ -28,7 +28,9 @@ labels wide:
     uv run scripts/figures/render_cluster.py $D/combustion-0ps.xyz $D/combustion-10ps.xyz \
         $D/combustion-20ps.xyz $D/combustion-50ps.xyz --labels "0 ps,10 ps,20 ps,50 ps" \
         --columns 2 --radius-scale 2.2 \
-        --output src/content/work/figures/cho-gap/combustion-series.svg [--narrow]
+        --output src/content/work/figures/cho-gap/combustion-series.svg
+    and again with --narrow and
+        --output src/content/work/figures/cho-gap/combustion-series-narrow.svg
 """
 
 from __future__ import annotations

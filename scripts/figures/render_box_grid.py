@@ -32,7 +32,7 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     cage_angstrom          [x, y, z] extents of a hidden box loaded with the subject, or null.
                            Null fits the camera to the subject and, when the resolution is
                            square, crops the flattened PNG to a square round its ink plus 3%
-                           a side (panel_checks.crop_to_ink, which raises rather than cut the
+                           a side (panel_checks.crop_to_ink, which gives up margin, never
                            ink); an uncaged non-square panel (the hero) and a caged panel are
                            never cropped. Any plate-level key, resolution included, may be
                            overridden per panel.
@@ -238,7 +238,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
             not hold the subject.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
             section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square
-            panel's ink does not fit its crop; nothing is then written to
+            panel has no ink; nothing is then written to
             `<output_dir>/<id>.png`.
         molrender.RenderError: If Blender fails, times out or writes nothing.
     """
