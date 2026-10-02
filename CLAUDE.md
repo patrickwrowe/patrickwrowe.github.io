@@ -118,6 +118,7 @@ PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
 MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
 $MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; env is not the venv
+FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh   # Fig. 10's clip; FFMPEG is required, ffmpeg is not system-wide
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
 ```

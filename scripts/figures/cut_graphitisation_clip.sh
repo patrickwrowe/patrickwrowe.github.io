@@ -5,11 +5,12 @@
 # 1.0 g cm^-3, 3500 K graphitisation run. Re-encoded at 720 px wide, CRF 28, no audio,
 # faststart, which lands well under the 15 MB target. The poster is the final frame.
 #
-# ffmpeg is not installed system-wide; the origins_md environment has one.
-#   FFMPEG=... scripts/figures/cut_graphitisation_clip.sh
+# ffmpeg is not installed system-wide, so the binary is a required environment variable
+# (the script stops before doing anything if it is unset):
+#   FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh
 set -euo pipefail
 
-FFMPEG="${FFMPEG:-/home/patrick/micromamba/envs/origins_md/bin/ffmpeg}"
+FFMPEG="${FFMPEG:?set FFMPEG to an ffmpeg binary, e.g. FFMPEG=/path/to/ffmpeg $0}"
 SRC="/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/Research/Carbon_Potential/2_Applications/1_Graphitisation/5_Visualisations/dens_1.0_3500K/Graphitisation_1.0.mp4"
 OUT_DIR="public/video"
 STEM="$OUT_DIR/graphitisation-1.0gcc-3500K"

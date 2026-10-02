@@ -27,3 +27,9 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+# The figure scripts import their siblings by plain name (`import boxprep`), which works
+# when a script runs from scripts/figures/ (its own directory is sys.path[0]); the tests
+# get the same directory on the path from here.
+pythonpath = ["scripts/figures"]
