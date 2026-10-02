@@ -25,7 +25,16 @@ def _white_pixels(size: int = IMAGE_SIZE) -> np.ndarray:
 
 
 def _manifest(tmp_path: Path, panels: list[dict], **plate_overrides: object) -> Path:
-    """Write a minimal manifest.json and return its path."""
+    """Write a minimal manifest.json and return its path.
+
+    Each panel's relative source is created as an empty file under `tmp_path` and named
+    by its absolute path, so the source-exists rule passes unless a test removes it.
+    """
+    for panel in panels:
+        if isinstance(panel.get("source"), str):
+            source = tmp_path / panel["source"]
+            source.touch()
+            panel["source"] = str(source)
     plate: dict[str, object] = {
         "output_dir": "out",
         "direction": [0.0, 0.0, 1.0],
@@ -84,6 +93,56 @@ def test_load_panels_rejects_an_unknown_key(tmp_path):
     # the default and render the whole panel wrong.
     manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", "slab_angstorm": 9.0}])
     with pytest.raises(ValueError, match="slab_angstorm"):
+        panel_checks.load_panels(manifest_path)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("resolution", None),
+        ("resolution", [800, 800, 3]),
+        ("resolution", "800x800"),
+        ("resolution", [800, 0]),
+        ("resolution", [800.5, 800]),
+        ("grey", 1.5),
+        ("grey", -0.1),
+        ("grey", True),
+        ("cage_angstrom", [44.2, 44.2]),
+        ("cage_angstrom", [44.2, -1.0, 11.0]),
+        ("density_g_cm3", -1.0),
+        ("density_g_cm3", 0),
+        ("tile", [0, -1, 1]),
+        ("tile", [2, 1]),
+    ],
+)
+def test_load_panels_rejects_a_bad_value_naming_manifest_panel_and_key(tmp_path, key, value):
+    manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", key: value}])
+    with pytest.raises(ValueError) as error:
+        panel_checks.load_panels(manifest_path)
+    assert str(manifest_path) in str(error.value)
+    assert "panel a" in str(error.value) and key in str(error.value)
+
+
+def test_load_panels_accepts_null_cage_and_a_tile(tmp_path):
+    manifest_path = _manifest(
+        tmp_path,
+        [{"id": "a", "source": "a.xyz", "cage_angstrom": None, "tile": [2, 1, 1]}],
+        density_g_cm3=1.0,
+    )
+    assert panel_checks.load_panels(manifest_path)[0]["tile"] == [2, 1, 1]
+
+
+def test_load_panels_rejects_a_missing_source(tmp_path):
+    manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz"}])
+    (tmp_path / "a.xyz").unlink()
+    with pytest.raises(ValueError, match=r"panel a: source .* existing XYZ file"):
+        panel_checks.load_panels(manifest_path)
+
+
+def test_load_panels_rejects_a_manifest_without_panels(tmp_path):
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text('{"output_dir": "out"}')
+    with pytest.raises(ValueError, match='no "panels" list'):
         panel_checks.load_panels(manifest_path)
 
 

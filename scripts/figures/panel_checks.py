@@ -43,6 +43,51 @@ OPTIONAL_KEYS = frozenset({"margin", "cage_angstrom", "slab_angstrom", "density_
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
 
+
+def _is_number(value: object) -> bool:
+    """True for an int or float that is not a bool (JSON true would otherwise pass)."""
+    return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _positive_list(value: object, length: int, integers: bool = False) -> bool:
+    """True for a list of `length` positive numbers, integers only if `integers`."""
+    return (
+        isinstance(value, list)
+        and len(value) == length
+        and all(
+            _is_number(item) and item > 0 and (not integers or isinstance(item, int))
+            for item in value
+        )
+    )
+
+
+# Value rules for load_panels, checked on each panel's merged dict wherever the key is
+# present: (test, what a valid value is). Paths are relative to the repository root,
+# where every command in CLAUDE.md runs.
+VALUE_RULES = {
+    "resolution": (
+        lambda value: _positive_list(value, 2, integers=True),
+        "two positive integers, [width, height] in pixels",
+    ),
+    "grey": (lambda value: _is_number(value) and 0 <= value <= 1, "a linear grey from 0 to 1"),
+    "cage_angstrom": (
+        lambda value: value is None or _positive_list(value, 3),
+        "null or three positive extents [x, y, z] in angstrom",
+    ),
+    "density_g_cm3": (
+        lambda value: _is_number(value) and value > 0,
+        "a positive density in g cm^-3",
+    ),
+    "tile": (
+        lambda value: _positive_list(value, 3, integers=True),
+        "three positive integers [nx, ny, nz]",
+    ),
+    "source": (
+        lambda value: isinstance(value, str) and Path(value).is_file(),
+        "the path of an existing XYZ file",
+    ),
+}
+
 WHITE = 255
 CORNER_BLOCK_PX = 8
 MAX_BORDER_STRAYS = 2  # compositor artefacts, see render_box_grid.py's module docstring
@@ -68,11 +113,17 @@ def load_panels(manifest_path: Path) -> list[dict]:
         resolution in pixels) overridden by the panel's own keys.
 
     Raises:
-        ValueError: If a panel lacks a key in REQUIRED_KEYS, holds a key outside
-            REQUIRED_KEYS and OPTIONAL_KEYS, an id does not match PANEL_ID (letters,
-            digits, "_", "." and "-"), or two panels share an id.
+        ValueError: If the manifest has no "panels" list, a panel lacks a key in
+            REQUIRED_KEYS, holds a key outside REQUIRED_KEYS and OPTIONAL_KEYS, has a
+            value that breaks its VALUE_RULES entry (a resolution of two positive
+            integers, a grey in [0, 1], a cage of null or three positive extents, a
+            positive density, a tile of three positive integers, a source that exists),
+            an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
+            panels share an id. Every message names the manifest, the panel and the key.
     """
     manifest = json.loads(manifest_path.read_text())
+    if not isinstance(manifest.get("panels"), list):
+        raise ValueError(f'{manifest_path}: no "panels" list')
     plate = {key: value for key, value in manifest.items() if key != "panels"}
     panels = [{**plate, **panel} for panel in manifest["panels"]]
     seen_ids: set[str] = set()
@@ -84,6 +135,11 @@ def load_panels(manifest_path: Path) -> list[dict]:
         unknown = sorted(set(panel) - ALLOWED_KEYS)
         if unknown:
             raise ValueError(f"{manifest_path}: panel {name} has unknown key(s) {unknown}")
+        for key, (is_valid, expected) in VALUE_RULES.items():
+            if key in panel and not is_valid(panel[key]):
+                raise ValueError(
+                    f"{manifest_path}: panel {name}: {key} is {panel[key]!r}, expected {expected}"
+                )
         if not PANEL_ID.fullmatch(str(name)):
             raise ValueError(f"{manifest_path}: panel id {name!r} does not match [\\w.-]+")
         if name in seen_ids:

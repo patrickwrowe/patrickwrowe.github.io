@@ -63,8 +63,11 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
 Every panel must end up with each key in panel_checks.REQUIRED_KEYS, from the plate or its
 own entry, and no key outside panel_checks.ALLOWED_KEYS (a typo such as "slab_angstorm"
 would otherwise fall back to a default rather than failing); ids are unique and use only
-letters, digits, "_", "." and "-", because each names a file. `panel_checks.load_panels`
-enforces all of this.
+letters, digits, "_", "." and "-", because each names a file. Values are checked too
+(panel_checks.VALUE_RULES): resolution two positive integers, grey in [0, 1], cage null or
+three positive extents, density positive, tile three positive integers, and a source that
+exists, relative to the repository root where this command runs. `panel_checks.load_panels`
+enforces all of this, naming the manifest, panel and key of the first value it refuses.
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
