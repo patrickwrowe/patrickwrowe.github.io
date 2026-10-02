@@ -6,6 +6,7 @@ directory, and builds whatever archive it needs from the C40 fixture dump.
 
 from __future__ import annotations
 
+import ast
 import json
 import shutil
 from pathlib import Path
@@ -94,3 +95,20 @@ def test_the_archive_is_a_required_argument(capsys):
         extract_spheres.main([])
     assert exit_info.value.code == 2
     assert "--archive" in capsys.readouterr().err
+
+
+def test_no_figure_or_analysis_module_imports_the_archive_extractor():
+    # The run grid and every other shared constant live in constants.py; the /data
+    # adapter is a leaf that only its tests import.
+    importers = []
+    for module in sorted(Path(extract_spheres.__file__).parent.glob("*.py")):
+        for node in ast.walk(ast.parse(module.read_text())):
+            if isinstance(node, ast.Import):
+                imported = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                imported = [node.module]
+            else:
+                continue
+            if "extract_spheres" in imported:
+                importers.append(module.name)
+    assert importers == []

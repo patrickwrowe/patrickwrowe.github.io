@@ -26,15 +26,14 @@ from collections import Counter, deque
 from pathlib import Path
 
 import numpy as np
+from constants import BOND_TOLERANCE, COVALENT_RADIUS_ANGSTROM
 
 # `pair_coeff * * <model>.xml "" 6 1 8` in in.cho_opt maps LAMMPS types 1, 2, 3
 # onto Z = 6, 1, 8. The Masses block of combustion_chamber.data agrees.
 TYPE_TO_SPECIES = {1: "C", 2: "H", 3: "O"}
 
-# Cordero covalent radii and the tolerance used by render_cluster.py, so the
-# bonds counted here are the bonds drawn there.
-COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
-BOND_TOLERANCE = 1.2
+# The bond rule (Cordero covalent radii, tolerance) is constants.py's, the one
+# render_cluster.py draws with, so the bonds counted here are the bonds drawn there.
 
 # LAMMPS `timestep 0.0005` (metal units, ps) with `dump ... 20`.
 TIMESTEP_PICOSECONDS = 0.0005

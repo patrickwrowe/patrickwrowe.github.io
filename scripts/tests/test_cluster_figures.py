@@ -8,6 +8,7 @@ from pathlib import Path
 import cluster_outcomes
 import cluster_sp3
 import pytest
+from constants import OutcomeClass
 from figure_style import NARROW_CHART_EM
 
 SPHERES = Path(__file__).resolve().parents[1] / "figures" / "data" / "carbon-clusters" / "spheres"
@@ -35,8 +36,8 @@ def test_outcome_diagram_has_one_glyph_per_run_and_no_hue():
     svg = cluster_outcomes.build(SPHERES)
     classes = re.findall(r'data-run="C\d+-\d+K" data-class="([^"]+)"', svg)
     assert len(classes) == 48
-    assert set(classes) <= set(cluster_outcomes.CLASSES)
-    assert len(re.findall(r"data-legend=", svg)) == len(cluster_outcomes.CLASSES) == 6
+    assert set(classes) <= set(OutcomeClass)
+    assert len(re.findall(r"data-legend=", svg)) == len(OutcomeClass) == 6
     assert classes.count("cage") == 6 and classes.count("graphitic onion") == 8
     assert not HEX_COLOUR.search(svg)
     assert paints(svg) <= ALLOWED_PAINT
@@ -67,8 +68,8 @@ def test_narrow_outcome_diagram_draws_every_run_and_no_hue():
     svg = cluster_outcomes.build_narrow(SPHERES)
     classes = re.findall(r'data-run="C\d+-\d+K" data-class="([^"]+)"', svg)
     assert len(classes) == 48
-    assert set(classes) <= set(cluster_outcomes.CLASSES)
-    assert len(re.findall(r"data-legend=", svg)) == len(cluster_outcomes.CLASSES) == 6
+    assert set(classes) <= set(OutcomeClass)
+    assert len(re.findall(r"data-legend=", svg)) == len(OutcomeClass) == 6
     assert classes.count("cage") == 6 and classes.count("graphitic onion") == 8
     assert not HEX_COLOUR.search(svg)
     assert paints(svg) <= ALLOWED_PAINT

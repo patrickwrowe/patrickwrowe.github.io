@@ -48,14 +48,13 @@ import sys
 from pathlib import Path
 
 import boxprep
+from constants import SIZES, TEMPERATURES_KELVIN
 
 SERIES = "3_GAP_Spheres_Opt2"
 TEST_SERIES = "1_RSS_Spheres_Test"
 OUT_DIR = Path(__file__).resolve().parent / "data" / "carbon-clusters" / "spheres"
 PROVENANCE_NAME = "provenance.json"
 FAILURES_NAME = "provenance-failures.json"
-SIZES = (40, 60, 80, 120, 160, 373, 686, 1000)
-TEMPERATURES_KELVIN = (500, 1000, 2000, 3000, 4000, 5000)
 NVT_STEPS = 25_000
 DUMP_INTERVAL_STEPS = 25
 

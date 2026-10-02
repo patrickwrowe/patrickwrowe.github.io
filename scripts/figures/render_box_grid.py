@@ -50,7 +50,8 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     sphere_radius_angstrom, bond_radius_angstrom
                            Molecular Nodes reads BallAndStick.sphere_radius as a factor on
                            each atom's vdW radius, not a length, so the sphere radius is
-                           divided by carbon's 1.70 A here; every atom drawn is carbon.
+                           divided by constants.CARBON_VDW_RADIUS_ANGSTROM (1.70 A, Molecular
+                           Nodes' carbon); every atom drawn is carbon. bond_radius is a length.
     grey                   the material's linear RGB value, 0-1, on all three channels (what
                            Solid(rgb=...) receives); not a display value, since the Standard
                            view transform applies the sRGB curve on output
@@ -101,6 +102,7 @@ from pathlib import Path
 import boxprep
 import numpy as np
 import panel_checks
+from constants import CARBON_VDW_RADIUS_ANGSTROM
 from molrender import (
     DRAFT,
     PRODUCTION,
@@ -114,8 +116,6 @@ from molrender import (
 )
 
 RENDER_TIMEOUT_S = 3600
-# Molecular Nodes assets/data.py; its BallAndStick sphere_radius scales this, bond_radius does not
-CARBON_VDW_RADIUS_ANGSTROM = 1.70
 
 
 def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:

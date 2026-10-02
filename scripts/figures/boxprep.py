@@ -20,6 +20,9 @@ Pure numpy. The dense bond search (`find_bonds`) is fine for the largest thing
 rendered here, a two-thousand-atom slab; a whole 5,832-atom box is never bonded, it is
 sliced first.
 
+The bond rule (covalent radii, tolerance, the 1.824 A carbon cutoff) and the physical
+constants come from constants.py.
+
 Units: every length is in angstrom, every density in g cm^-3.
 """
 
@@ -29,6 +32,14 @@ from pathlib import Path
 from typing import NamedTuple
 
 import numpy as np
+from constants import (
+    AVOGADRO_PER_MOL,
+    BOND_TOLERANCE,
+    CARBON_BOND_CUTOFF_ANGSTROM,
+    CARBON_MASS_G_PER_MOL,
+    CM_TO_ANGSTROM,
+    COVALENT_RADIUS_ANGSTROM,
+)
 
 __all__ = [
     "Structure",
@@ -44,20 +55,6 @@ __all__ = [
     "wrap",
     "write_pdb",
 ]
-
-CARBON_MASS_G_PER_MOL = 12.011
-AVOGADRO_PER_MOL = 6.02214076e23
-CM_TO_ANGSTROM = 1.0e8
-
-# Covalent radii in Angstrom (Cordero et al., Dalton Trans. 2008). A pair is bonded
-# within BOND_TOLERANCE times the sum of its two radii, which puts C-C at 1.82 A:
-# above the 1.55 A single bond, below the 2.4 A second neighbour in every phase these
-# searches produce. This is the 1.8 A cutoff render_cluster.py used before it was
-# generalised beyond carbon, so its published cage figures are unchanged by it.
-COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
-BOND_TOLERANCE = 1.2
-# The flat carbon-carbon cutoff find_bonds applies: 1.2 x (0.76 + 0.76) = 1.824 A.
-CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 
 
 class Structure(NamedTuple):
@@ -120,7 +117,7 @@ def read_xyz(path: Path, frame: int = -1) -> Structure:
     if unknown:
         raise ValueError(
             f"{path}: no covalent radius for {sorted(unknown)}. Add it to "
-            f"COVALENT_RADIUS_ANGSTROM here, and to DRAW_RADIUS_FACTOR in "
+            f"COVALENT_RADIUS_ANGSTROM in constants.py, and to DRAW_RADIUS_FACTOR in "
             f"render_cluster.py if it will be drawn."
         )
     return Structure(species, positions_angstrom)

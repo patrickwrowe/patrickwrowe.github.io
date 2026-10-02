@@ -39,9 +39,8 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
-from extract_spheres import SIZES, TEMPERATURES_KELVIN
+from constants import CARBON_BOND_CUTOFF_ANGSTROM, SIZES, TEMPERATURES_KELVIN, OutcomeClass
 
-SITE_BOND_CUTOFF_ANGSTROM = boxprep.CARBON_BOND_CUTOFF_ANGSTROM
 SPHERES_DIR = Path(__file__).resolve().parent / "data" / "carbon-clusters" / "spheres"
 MAX_RING_SIZE = 10
 
@@ -125,7 +124,7 @@ def load_frame(name: str, data_dir: Path = SPHERES_DIR) -> tuple[np.ndarray, flo
 def bonds_at_cutoff(
     positions_angstrom: np.ndarray,
     edge_angstrom: float,
-    cutoff_angstrom: float = SITE_BOND_CUTOFF_ANGSTROM,
+    cutoff_angstrom: float = CARBON_BOND_CUTOFF_ANGSTROM,
 ) -> np.ndarray:
     """Carbon-carbon bonds shorter than `cutoff_angstrom` to the nearest periodic image.
 
@@ -148,7 +147,7 @@ def bonds_at_cutoff(
         ValueError: From `find_bonds_periodic`, if the scaled edge is not more than twice
             the cutoff.
     """
-    scale = SITE_BOND_CUTOFF_ANGSTROM / cutoff_angstrom
+    scale = CARBON_BOND_CUTOFF_ANGSTROM / cutoff_angstrom
     bonds = boxprep.find_bonds_periodic(positions_angstrom * scale, edge_angstrom * scale)
     return np.array(bonds, dtype=int).reshape(-1, 2)
 
@@ -703,7 +702,7 @@ def census(positions_angstrom: np.ndarray, edge_angstrom: float) -> dict[str, fl
     return record
 
 
-def classify(record: dict[str, float | int | str]) -> str:
+def classify(record: dict[str, float | int | str]) -> OutcomeClass:
     """One of: dissociated, molten, diamond-like, graphitic onion, cage, disordered.
 
     Rules, applied in order, on the site-cutoff census of a single frame. "Low
@@ -730,29 +729,29 @@ def classify(record: dict[str, float | int | str]) -> str:
         record: A `census` record (values may be strings, as read back from CSV).
 
     Returns:
-        The class name.
+        The outcome class; a StrEnum, so it writes to CSV as its name.
     """
     low_coordination = float(record["low_coordination_fraction"])
     largest = float(record["largest_fragment_fraction"])
     if is_dissociated(largest, low_coordination):
-        return "dissociated"
+        return OutcomeClass.DISSOCIATED
     if (
         largest < MOLTEN_BELOW_LARGEST_FRAGMENT_FRACTION
         and low_coordination >= MOLTEN_ABOVE_LOW_COORDINATION_FRACTION
     ):
-        return "molten"
+        return OutcomeClass.MOLTEN
     if float(record["sp3_fraction"]) >= DIAMOND_LIKE_ABOVE_SP3_FRACTION:
-        return "diamond-like"
+        return OutcomeClass.DIAMOND_LIKE
     shelled = (
         float(record["sp2_fraction"]) >= SHELLED_ABOVE_SP2_FRACTION
         and float(record["mean_radial_bond_cosine"]) < SHELLED_BELOW_RADIAL_BOND_COSINE
     )
     n_shells = int(record["n_shells"])
     if shelled and n_shells >= 2:
-        return "graphitic onion"
+        return OutcomeClass.GRAPHITIC_ONION
     if shelled and n_shells == 1 and low_coordination <= CAGE_MAX_LOW_COORDINATION_FRACTION:
-        return "cage"
-    return "disordered"
+        return OutcomeClass.CAGE
+    return OutcomeClass.DISORDERED
 
 
 def main(argv: list[str] | None = None) -> None:

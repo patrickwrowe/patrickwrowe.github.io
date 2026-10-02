@@ -35,7 +35,8 @@ import argparse
 import math
 from pathlib import Path
 
-from cluster_census import SIZES, TEMPERATURES_KELVIN, read_census_columns
+from cluster_census import read_census_columns
+from constants import SIZES, TEMPERATURES_KELVIN, OutcomeClass
 from figure_style import (
     AXIS_TITLE_SIZE,
     AXIS_WIDTH,
@@ -45,16 +46,9 @@ from figure_style import (
     svg_text,
 )
 
-# Legend order: from most ordered to least. Diamond-like is part of the scheme but no run
-# is classed so; the legend says "(none)" rather than hiding it.
-CLASSES = (
-    "diamond-like",
-    "graphitic onion",
-    "cage",
-    "disordered",
-    "molten",
-    "dissociated",
-)
+# The legend lists constants.OutcomeClass in its order, most ordered to least. Diamond-like
+# is part of the scheme but no run is classed so; the legend says "(none)" rather than
+# hiding it.
 
 PLOT_WIDTH = 100.0
 PLOT_HEIGHT = 62.0
@@ -153,7 +147,7 @@ def glyph(class_name: str, x_centre: float, y_centre: float) -> str:
     neighbour knocks it out, as in graphitisation_figure.py.
 
     Args:
-        class_name: One of CLASSES.
+        class_name: An OutcomeClass, or its name.
         x_centre: Centre x, in viewBox units.
         y_centre: Centre y, in viewBox units.
 
@@ -161,29 +155,29 @@ def glyph(class_name: str, x_centre: float, y_centre: float) -> str:
         SVG markup for the glyph.
 
     Raises:
-        ValueError: If `class_name` is not one of CLASSES.
+        ValueError: If `class_name` is not an OutcomeClass.
     """
     outline = f'stroke="var(--ink)" stroke-width="{GLYPH_STROKE}"'
     radius = GLYPH_RADIUS
     centre = f'cx="{x_centre:.2f}" cy="{y_centre:.2f}"'
-    if class_name == "diamond-like":
+    if class_name == OutcomeClass.DIAMOND_LIKE:
         return f'<circle {centre} r="{radius:.2f}" fill="var(--ink)" stroke="none"/>'
-    if class_name == "graphitic onion":
+    if class_name == OutcomeClass.GRAPHITIC_ONION:
         return f'<circle {centre} r="{radius:.2f}" fill="var(--plate)" {outline}/>'
-    if class_name == "cage":
+    if class_name == OutcomeClass.CAGE:
         corners = " ".join(
             f"{x_centre + radius * math.cos(math.radians(30 + 60 * corner)):.2f},"
             f"{y_centre + radius * math.sin(math.radians(30 + 60 * corner)):.2f}"
             for corner in range(6)
         )
         return f'<polygon points="{corners}" fill="var(--plate)" {outline}/>'
-    if class_name == "disordered":
+    if class_name == OutcomeClass.DISORDERED:
         side = radius * 1.6
         return (
             f'<rect x="{x_centre - side / 2:.2f}" y="{y_centre - side / 2:.2f}" '
             f'width="{side:.2f}" height="{side:.2f}" fill="var(--plate)" {outline}/>'
         )
-    if class_name == "molten":
+    if class_name == OutcomeClass.MOLTEN:
         arm = radius * 0.8
         return (
             f'<path d="M {x_centre - arm:.2f} {y_centre - arm:.2f} '
@@ -192,9 +186,9 @@ def glyph(class_name: str, x_centre: float, y_centre: float) -> str:
             f'L {x_centre + arm:.2f} {y_centre - arm:.2f}" fill="none" '
             f'stroke="var(--ink)" stroke-width="{GLYPH_STROKE * 1.6:.2f}" stroke-linecap="round"/>'
         )
-    if class_name == "dissociated":
+    if class_name == OutcomeClass.DISSOCIATED:
         return f'<circle {centre} r="{DOT_RADIUS:.2f}" fill="var(--ink)" stroke="none"/>'
-    raise ValueError(f"unknown class {class_name!r}; expected one of {CLASSES}")
+    raise ValueError(f"unknown class {class_name!r}; expected one of {list(OutcomeClass)}")
 
 
 def _read_outcomes(data_dir: Path) -> dict[tuple[int, int], str]:
@@ -226,9 +220,9 @@ def _class_counts(outcome: dict[tuple[int, int], str]) -> dict[str, int]:
         outcome: Run classes, as returned by `_read_outcomes`.
 
     Returns:
-        One count per entry of CLASSES, in CLASSES order.
+        One count per OutcomeClass, in legend order.
     """
-    counts = {class_name: 0 for class_name in CLASSES}
+    counts = {class_name: 0 for class_name in OutcomeClass}
     for class_name in outcome.values():
         counts[class_name] += 1
     return counts
@@ -292,8 +286,8 @@ def build(data_dir: Path) -> str:
     counts = _class_counts(outcome)
     legend_x = left + PLOT_WIDTH + LEGEND_GAP
     row_height = LABEL_SIZE * 2.4
-    legend_top = top + (PLOT_HEIGHT - row_height * (len(CLASSES) - 1)) / 2
-    for index, class_name in enumerate(CLASSES):
+    legend_top = top + (PLOT_HEIGHT - row_height * (len(OutcomeClass) - 1)) / 2
+    for index, class_name in enumerate(OutcomeClass):
         row_y = legend_top + index * row_height
         label = f"{class_name} ({counts[class_name] or 'none'})"
         parts.append(f'<g data-legend="{class_name}">{glyph(class_name, legend_x, row_y)}</g>')
@@ -377,13 +371,13 @@ def build_narrow(data_dir: Path) -> str:
     counts = _class_counts(outcome)
     row_height = LABEL_SIZE * 2.4
     legend_top = title_y + NARROW_LEGEND_GAP
-    for index, class_name in enumerate(CLASSES):
+    for index, class_name in enumerate(OutcomeClass):
         row_y = legend_top + index * row_height
         label = f"{class_name} ({counts[class_name] or 'none'})"
         parts.append(f'<g data-legend="{class_name}">{glyph(class_name, left, row_y)}</g>')
         parts.append(svg_text(left + GLYPH_RADIUS + 2.4, row_y + 1.0, label, LABEL_SIZE, "start"))
 
-    height = legend_top + (len(CLASSES) - 1) * row_height + NARROW_BOTTOM_PAD
+    height = legend_top + (len(OutcomeClass) - 1) * row_height + NARROW_BOTTOM_PAD
     body = "\n    ".join(parts)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {NARROW_WIDTH:.2f} {height:.2f}" '
