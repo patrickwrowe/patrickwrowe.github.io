@@ -5,9 +5,7 @@ kind: theme
 year: "2017–22"
 order: 1
 featured: true
-draft: true
-stub: true
-stubNote: Draft article awaiting the stylist, audit and design review.
+draft: false
 summary: One Gaussian approximation potential for the whole of carbon, the graphene accuracy it gave up to get there, and what annealing 5,832 atoms of carbon showed about graphitisation.
 method: Gaussian approximation potentials fitted to van der Waals-inclusive DFT and run in LAMMPS
 system: Carbon from graphene and diamond to the liquid, amorphous networks and free clusters
@@ -30,7 +28,6 @@ import DefectStructures from "./figures/carbon/gap20-fig6-defect-structures.png"
 import c60Energies from "./figures/carbon/cluster-benchmark-c60.svg?raw";
 import clusterOutcomes from "./figures/carbon/cluster-outcomes.svg?raw";
 import clusterOutcomesNarrow from "./figures/carbon/cluster-outcomes-narrow.svg?raw";
-import clusterSp3 from "./figures/carbon/cluster-sp3.svg?raw";
 import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
 
 Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes, fullerenes, amorphous films and the hot liquid differ enough in their bonding that a model fitted to any one of them is usually wrong about the rest, and the standard models were fitted to a few of them by hand. Anyone who has simulated a carbon material with more than a few hundred atoms for longer than a few picoseconds has used one of those models, and has inherited its opinions. Some of the opinions are odd. Ask the classical carbon potentials of 2017 (fitted formulas that give the energy of a set of atoms, and the forces on them, from their positions) whether a free graphene sheet expands or contracts when you warm it, and they disagree on the sign: three of them switch sign somewhere between 500 and 1000 K, one tears the sheet apart above 1500 K, and none of them agrees with the quantum-mechanical answer across the whole range. Thermal expansion is about as basic as a property gets.
@@ -300,12 +297,69 @@ The outcome depends on both variables, and the pattern is simple. At 500 K ever
 Four-coordinated, diamond-like carbon never amounts to much, and this is where the analysis and my slides part company. The largest sp³ fraction in any run is 11.2%, in C₁₀₀₀ at 1000 K; at 500 K C₁₀₀₀ has 7.9%, and the smaller clusters less. Deep inside the cluster, more than 3.4 Å below the surface, C₁₀₀₀ reaches 13.9% at 500 K and 21.8% at 1000 K, and above 2000 K sp³ carbon all but disappears. In 2021 I called the 500 K C₁₀₀₀ cluster a “diamond-like sphere” with “high sp³ content”, impermeable to lithium, and contrasted it with the 3000 K onion, which was “lithium permeable”. The census supports the contrast in layering and not the word “diamond-like”, and it turns out the archive's own ring program had printed the same 7.9% for that frame in 2021. I had the number and read the picture instead. {/* Q: clusters 2 */}
 
 <Plate n={13}>
-  <div class="chart" style="--chart-em: 41" role="img" aria-label="Percentage of four-coordinated atoms against temperature, one line per cluster size: never above 11.2%, highest in the 373-, 686- and 1,000-atom clusters at 500 and 1000 K, at most 2.5% for every smaller cluster, and near zero for all sizes above 2000 K.">
-    <Fragment set:html={clusterSp3} />
-  </div>
+  <details class="archive">
+    <summary class="label archive__summary">All 48 final frames, size across and temperature down</summary>
+    <Grid
+      dir="carbon/spheres"
+      alt="Forty-eight carbon clusters from 40 to 1,000 atoms after up to 50 ps at 500 to 5000 K, size across and temperature down: compact balls at 500 and 1000 K; at 2000 and 3000 K round closed shells from the middle sizes upwards while the smallest break into chains; scattered chains almost everywhere at 4000 and 5000 K."
+      columnTitle="cluster size / atoms"
+      columnLabels={["40", "60", "80", "120", "160", "373", "686", "1000"]}
+      rowLabels={["500 K", "1000 K", "2000 K", "3000 K", "4000 K", "5000 K"]}
+      panels={[
+      "C40-500K.png",
+      "C60-500K.png",
+      "C80-500K.png",
+      "C120-500K.png",
+      "C160-500K.png",
+      "C373-500K.png",
+      "C686-500K.png",
+      "C1000-500K.png",
+      "C40-1000K.png",
+      "C60-1000K.png",
+      "C80-1000K.png",
+      "C120-1000K.png",
+      "C160-1000K.png",
+      "C373-1000K.png",
+      "C686-1000K.png",
+      "C1000-1000K.png",
+      "C40-2000K.png",
+      "C60-2000K.png",
+      "C80-2000K.png",
+      "C120-2000K.png",
+      "C160-2000K.png",
+      "C373-2000K.png",
+      "C686-2000K.png",
+      "C1000-2000K.png",
+      "C40-3000K.png",
+      "C60-3000K.png",
+      "C80-3000K.png",
+      "C120-3000K.png",
+      "C160-3000K.png",
+      "C373-3000K.png",
+      "C686-3000K.png",
+      "C1000-3000K.png",
+      "C40-4000K.png",
+      "C60-4000K.png",
+      "C80-4000K.png",
+      "C120-4000K.png",
+      "C160-4000K.png",
+      "C373-4000K.png",
+      "C686-4000K.png",
+      "C1000-4000K.png",
+      "C40-5000K.png",
+      "C60-5000K.png",
+      "C80-5000K.png",
+      "C120-5000K.png",
+      "C160-5000K.png",
+      "C373-5000K.png",
+      "C686-5000K.png",
+      "C1000-5000K.png",
+      ]}
+    />
+  </details>
   <Fragment slot="caption">
-    Share of atoms with four neighbours within 1.82 Å in the last frame of each run. Dark lines are the three largest clusters, labelled; the grey lines are the five of 40 to 160 atoms. Ten of the 48 points come from runs that stopped before 50 ps.
-    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/cluster_sp3.py</code>.</span>
+    The last frame of every run, for the record: eight sizes across, six temperatures down, each panel framed to its own atoms, so sizes are not comparable between panels. Open the list to see them; a panel enlarges on a click. Ten runs stopped before 50 ps (all six C₁₀₀₀ runs; C₆₈₆ at 1000, 3000 and 4000 K; C₈₀ at 500 K), and the C₈₀ and C₆₈₆ panels at 500 K are byte-identical copies of two earlier test runs that were relaxed with a different minimiser from the rest.
+    <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
 

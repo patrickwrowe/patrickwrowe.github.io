@@ -132,3 +132,19 @@
     cursor: default;
   }
 }
+
+/* A closed archive of panels, kept for the record: until opened, the summary is all
+ * that stands on the plate, and the lazy thumbnails inside do not load. */
+.archive__summary {
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.archive__summary:focus-visible {
+  outline: 2px solid var(--lustre);
+  outline-offset: -2px;
+}
+.archive[open] > .archive__summary {
+  border-bottom: 1px solid var(--hairline);
+}
