@@ -56,7 +56,7 @@ def test_make_compact_preserves_the_pairwise_distances_of_a_real_frame():
     # a structure that was never split. Shifting the real C40 frame by a fixed offset and
     # re-wrapping forces some atoms across the periodic boundary; make_compact should
     # recover exactly the original geometry, atom for atom.
-    positions_angstrom, edge_angstrom = boxprep.read_lammps_last_frame(
+    positions_angstrom, edge_angstrom, _ = boxprep.read_lammps_last_frame(
         FIXTURES / "c40-500K-two-frames.lammpstrj"
     )
     shifted = boxprep.wrap(positions_angstrom + np.array([30.0, 30.0, 30.0]), edge_angstrom)
@@ -71,9 +71,10 @@ def test_make_compact_preserves_the_pairwise_distances_of_a_real_frame():
 
 
 def test_read_lammps_last_frame_reads_the_second_frame_of_the_real_dump():
-    positions_angstrom, edge_angstrom = boxprep.read_lammps_last_frame(
+    positions_angstrom, edge_angstrom, timestep = boxprep.read_lammps_last_frame(
         FIXTURES / "c40-500K-two-frames.lammpstrj"
     )
+    assert timestep == 75  # the fixture's frames are timesteps 50 and 75
     # The cell scales with cluster size: 48.489 A for C40, 64.82 A for C1000.
     assert edge_angstrom == pytest.approx(48.489, abs=1e-3)
     assert positions_angstrom.shape == (40, 3)
@@ -102,6 +103,11 @@ def test_read_lammps_last_frame_rejects_a_truncated_frame(tmp_path):
     (tmp_path / "cut-header.lammpstrj").write_text("\n".join(lines[:-45]) + "\n")
     with pytest.raises(ValueError, match="truncated"):
         boxprep.read_lammps_last_frame(tmp_path / "cut-header.lammpstrj")
+
+    # A last block with no timestep value: the header is too short to parse.
+    (tmp_path / "no-timestep.lammpstrj").write_text(text + "ITEM: TIMESTEP\n")
+    with pytest.raises(ValueError, match="truncated"):
+        boxprep.read_lammps_last_frame(tmp_path / "no-timestep.lammpstrj")
 
     # Cut inside the last number, with no trailing newline: a write that stopped mid-token,
     # caught by the newline check rather than silently parsing a truncated float.
@@ -208,7 +214,7 @@ def test_periodic_bonds_and_make_whole_survive_a_bond_cut_by_the_boundary():
     # Adversarial real data: translate the C40 fixture frame so the midpoint of a known bond
     # sits exactly on the x = 0 face, then wrap. The bond's two atoms end up about one cell
     # edge apart in Cartesian space, the case the non-periodic search cuts.
-    positions_angstrom, edge_angstrom = boxprep.read_lammps_last_frame(
+    positions_angstrom, edge_angstrom, _ = boxprep.read_lammps_last_frame(
         FIXTURES / "c40-500K-two-frames.lammpstrj"
     )
     compact_angstrom = boxprep.make_compact(positions_angstrom, edge_angstrom)
@@ -238,7 +244,7 @@ def test_periodic_bonds_and_make_whole_survive_a_bond_cut_by_the_boundary():
 def test_make_whole_restores_the_distance_matrix_of_a_real_fragment_cut_by_the_boundary():
     # The same straddle on the fixture's 33-atom fragment alone: one fragment, so the whole
     # pairwise distance matrix must come back, not just the bonds.
-    positions_angstrom, edge_angstrom = boxprep.read_lammps_last_frame(
+    positions_angstrom, edge_angstrom, _ = boxprep.read_lammps_last_frame(
         FIXTURES / "c40-500K-two-frames.lammpstrj"
     )
     compact_angstrom = boxprep.make_compact(positions_angstrom, edge_angstrom)

@@ -339,10 +339,11 @@ def make_whole(
     return whole_angstrom
 
 
-def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
+def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float, int]:
     """Last frame of a LAMMPS `atom`-style dump with scaled `xs ys zs` columns.
 
-    Returns positions in angstrom ordered by atom id, and the cubic cell edge in angstrom.
+    Returns positions in angstrom ordered by atom id, the cubic cell edge in angstrom and
+    the frame's timestep.
     The whole file is read (they are about 22 MB) and the last `ITEM: TIMESTEP` block is
     parsed, so a dump that was cut off mid-frame raises rather than returning a partial
     cluster.
@@ -351,8 +352,9 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
         path: Path to the LAMMPS dump file.
 
     Returns:
-        A tuple of (positions, edge): positions is an (n_atoms, 3) array in angstrom,
-        ordered by atom id; edge is the cubic cell's edge length, in angstrom.
+        A tuple of (positions, edge, timestep): positions is an (n_atoms, 3) array in
+        angstrom, ordered by atom id; edge is the cubic cell's edge length, in angstrom;
+        timestep is the last frame's `ITEM: TIMESTEP` value.
 
     Raises:
         ValueError: If the file has no frames, does not end with a newline (a dump cut
@@ -367,6 +369,7 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
         raise ValueError(f"{path}: no frames found")
     lines = text[start:].splitlines()
     try:
+        timestep = int(lines[1])
         n_atoms = int(lines[3])
         bounds = np.array([line.split()[:2] for line in lines[5:8]], dtype=float)
         columns = lines[8].split()[2:]
@@ -385,7 +388,7 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float]:
     if not np.allclose(edges, edges[0], atol=1e-3):
         raise ValueError(f"{path}: cell is not cubic: {edges}")
     scaled = table[:, [x_col, y_col, z_col]]
-    return bounds[:, 0] + scaled * edges, float(edges[0])
+    return bounds[:, 0] + scaled * edges, float(edges[0]), timestep
 
 
 def write_pdb(path: Path, positions_angstrom: np.ndarray, bonds: list[tuple[int, int]]) -> None:
