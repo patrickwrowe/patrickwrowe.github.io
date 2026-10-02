@@ -31,19 +31,63 @@ MOLRENDER_NAMES = (
 
 
 @pytest.fixture
-def render_box_grid(monkeypatch):
-    """render_box_grid imported against a stand-in molrender, prepare and scene stubbed."""
+def render_box_grid_module(monkeypatch):
+    """render_box_grid imported against a stand-in molrender."""
     if "molrender" not in sys.modules:
         stand_in = types.ModuleType("molrender")
         for name in MOLRENDER_NAMES:
             setattr(stand_in, name, None)
         monkeypatch.setitem(sys.modules, "molrender", stand_in)
-    module = importlib.import_module("render_box_grid")
+    return importlib.import_module("render_box_grid")
+
+
+@pytest.fixture
+def render_box_grid(render_box_grid_module, monkeypatch):
+    """render_box_grid with `prepare` and `scene_for` stubbed, for render_panel."""
     monkeypatch.setattr(
-        module, "prepare", lambda spec, work_dir: (work_dir / "subject.pdb", None, 7)
+        render_box_grid_module,
+        "prepare",
+        lambda spec, work_dir: (work_dir / "subject.pdb", None, 7),
     )
-    monkeypatch.setattr(module, "scene_for", lambda spec, subject, cage, draft: None)
-    return module
+    monkeypatch.setattr(
+        render_box_grid_module, "scene_for", lambda spec, subject, cage, draft: None
+    )
+    return render_box_grid_module
+
+
+def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
+    render_box_grid_module, tmp_path
+):
+    lines = ["4", "four carbons in a 10 A cell"]
+    lines += [f"C {x:.1f} 5.0 {z:.1f}" for x, z in ((1.0, 5.0), (2.4, 5.0), (6.0, 5.0), (6.0, 9.5))]
+    source = tmp_path / "box.xyz"
+    source.write_text("\n".join(lines) + "\n")
+    # 4 carbons at 0.08 g cm^-3 fill a 9.99 A cell; tiled twice along x, a 3 A slab about
+    # the cell's mid-height keeps the three atoms at z = 5.0 of each image.
+    spec = {
+        "id": "box",
+        "source": str(source),
+        "density_g_cm3": 0.08,
+        "tile": [2, 1, 1],
+        "slab_angstrom": 3.0,
+        "cage_angstrom": None,
+        "sphere_radius_angstrom": 0.4,
+    }
+    work_dir = tmp_path / "work"
+    work_dir.mkdir()
+    subject, cage, n_atoms = render_box_grid_module.prepare(spec, work_dir)
+    hetatm = [line for line in subject.read_text().splitlines() if line.startswith("HETATM")]
+    assert cage is None
+    assert n_atoms == len(hetatm) == 6
+    assert all(line.endswith(" C") for line in hetatm)
+
+
+def test_prepare_refuses_a_frame_with_oxygen_naming_it(render_box_grid_module, tmp_path):
+    source = tmp_path / "co.xyz"
+    source.write_text("2\ncarbon monoxide\nC 0.0 0.0 0.0\nO 1.13 0.0 0.0\n")
+    spec = {"id": "co", "source": str(source), "cage_angstrom": None}
+    with pytest.raises(ValueError, match=r"carbon only, got \['O'\]"):
+        render_box_grid_module.prepare(spec, tmp_path)
 
 
 def _render_writing(resolution_px: tuple[int, int], ink_box: tuple[int, int, int, int]):

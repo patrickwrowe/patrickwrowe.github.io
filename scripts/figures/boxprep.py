@@ -388,24 +388,39 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float, int]:
     return bounds[:, 0] + scaled * edges, float(edges[0]), timestep
 
 
-def write_pdb(path: Path, positions_angstrom: np.ndarray, bonds: list[tuple[int, int]]) -> None:
+def write_pdb(
+    path: Path,
+    species: list[str],
+    positions_angstrom: np.ndarray,
+    bonds: list[tuple[int, int]],
+) -> None:
     """Carbon-only PDB: one HETATM per atom, serials from 1, and a CONECT line per atom.
 
     Fixed columns per the PDB format: serial 7-11, name 13-16, residue CBX, chain A,
     coordinates 31-54, element 77-78. Bonds are written in both directions so any
-    reader that trusts CONECT sees each once from either end.
+    reader that trusts CONECT sees each once from either end. Every record names
+    carbon, so the species are checked here rather than trusted to the caller: a
+    hydrogen or oxygen written as C would render, and bond, as carbon.
 
     Args:
         path: Output PDB file path.
+        species: Element symbol per atom; all must be "C".
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
         bonds: Zero-based (first, second) atom index pairs, written as CONECT records.
 
     Raises:
-        ValueError: If there are more than 99,999 atoms (the serial field is 5 wide), if
-            any coordinate falls outside the PDB's fixed (-999.999, 9999.999) field
-            width, or if a bond index falls outside range(len(positions_angstrom)).
+        ValueError: If any species is not carbon (the message names it), the species
+            and positions differ in number, there are more than 99,999 atoms (the
+            serial field is 5 wide), any coordinate falls outside the PDB's fixed
+            (-999.999, 9999.999) field width, or a bond index falls outside
+            range(len(positions_angstrom)).
     """
     n_atoms = len(positions_angstrom)
+    if len(species) != n_atoms:
+        raise ValueError(f"{path}: {len(species)} species for {n_atoms} positions")
+    non_carbon = sorted(set(species) - {"C"})
+    if non_carbon:
+        raise ValueError(f"{path}: write_pdb writes carbon only, got {non_carbon}")
     if n_atoms > 99_999:
         raise ValueError(f"{path}: {n_atoms} atoms exceeds the PDB's 99,999-atom serial limit")
     if np.any(positions_angstrom <= -999.999) or np.any(positions_angstrom >= 9999.999):

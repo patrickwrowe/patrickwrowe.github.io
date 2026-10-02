@@ -119,7 +119,7 @@ def test_read_lammps_last_frame_rejects_a_truncated_frame(tmp_path):
 def test_write_pdb_emits_fixed_columns_and_conect(tmp_path):
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [1.42, 0.0, 0.0], [-12.345, 6.0, 0.0]])
     out = tmp_path / "three.pdb"
-    boxprep.write_pdb(out, positions_angstrom, [(0, 1)])
+    boxprep.write_pdb(out, ["C"] * 3, positions_angstrom, [(0, 1)])
     lines = out.read_text().splitlines()
     assert (
         lines[0] == "HETATM    1  C   CBX A   1       0.000   0.000   0.000  1.00  0.00           C"
@@ -132,11 +132,22 @@ def test_write_pdb_emits_fixed_columns_and_conect(tmp_path):
 def test_write_pdb_rejects_malformed_input(tmp_path):
     out = tmp_path / "bad.pdb"
     with pytest.raises(ValueError, match="99,999"):
-        boxprep.write_pdb(out, np.zeros((100_000, 3)), [])
+        boxprep.write_pdb(out, ["C"] * 100_000, np.zeros((100_000, 3)), [])
     with pytest.raises(ValueError, match="field width"):
-        boxprep.write_pdb(out, np.array([[10000.0, 0.0, 0.0]]), [])
+        boxprep.write_pdb(out, ["C"], np.array([[10000.0, 0.0, 0.0]]), [])
     with pytest.raises(ValueError, match="bond index"):
-        boxprep.write_pdb(out, np.array([[0.0, 0.0, 0.0]]), [(0, 1)])
+        boxprep.write_pdb(out, ["C"], np.array([[0.0, 0.0, 0.0]]), [(0, 1)])
+    with pytest.raises(ValueError, match="2 species for 1 positions"):
+        boxprep.write_pdb(out, ["C", "C"], np.array([[0.0, 0.0, 0.0]]), [])
+
+
+def test_write_pdb_refuses_a_non_carbon_atom_and_names_it(tmp_path):
+    # Every record is written as carbon, so an oxygen must stop the write, not become C.
+    out = tmp_path / "co2.pdb"
+    positions_angstrom = np.array([[-1.16, 0.0, 0.0], [0.0, 0.0, 0.0], [1.16, 0.0, 0.0]])
+    with pytest.raises(ValueError, match=r"carbon only, got \['O'\]"):
+        boxprep.write_pdb(out, ["O", "C", "O"], positions_angstrom, [(0, 1), (1, 2)])
+    assert not out.exists()
 
 
 def test_real_dense_slab_has_sensible_coordination():

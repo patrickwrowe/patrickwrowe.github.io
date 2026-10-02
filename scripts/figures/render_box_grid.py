@@ -136,14 +136,12 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
 
     Raises:
         ValueError: If the frame's species are not all carbon (`boxprep.write_pdb` writes
-            carbon only), or the cage does not hold the subject with its spheres on every
-            axis, which would let the subject frame itself and break the plate's shared
-            scale (`panel_checks.assert_fits_cage`).
+            carbon only and names the element), or the cage does not hold the subject
+            with its spheres on every axis, which would let the subject frame itself and
+            break the plate's shared scale (`panel_checks.assert_fits_cage`).
     """
     structure = boxprep.read_xyz(Path(spec["source"]))
-    non_carbon = sorted(set(structure.species) - {"C"})
-    if non_carbon:
-        raise ValueError(f"panel {spec['id']}: source has non-carbon species {non_carbon}")
+    species = np.asarray(structure.species)
     positions_angstrom = structure.positions_angstrom
     if "density_g_cm3" in spec:
         edge_angstrom = boxprep.box_edge_from_density(
@@ -153,6 +151,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
         positions_angstrom = boxprep.tile(
             boxprep.wrap(positions_angstrom, edge_angstrom), edge_angstrom, repeats
         )
+        species = np.tile(species, int(np.prod(repeats)))  # boxprep.tile keeps atom order
         centre_angstrom = np.array(repeats, dtype=float) * edge_angstrom / 2.0
     else:
         centre_angstrom = positions_angstrom.mean(axis=0)
@@ -162,8 +161,14 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
             positions_angstrom[:, 2], centre_angstrom[2], thickness_angstrom
         )
         positions_angstrom = positions_angstrom[in_slab]
+        species = species[in_slab]
     subject = work_dir / f"{spec['id']}.pdb"
-    boxprep.write_pdb(subject, positions_angstrom, boxprep.find_bonds(positions_angstrom))
+    boxprep.write_pdb(
+        subject,
+        species.tolist(),
+        positions_angstrom,
+        boxprep.find_bonds(positions_angstrom, species.tolist()),
+    )
     extent_angstrom = spec.get("cage_angstrom")
     if not extent_angstrom:
         return subject, None, len(positions_angstrom)
@@ -177,7 +182,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
     half_extent_angstrom = np.asarray(extent_angstrom, dtype=float) / 2.0
     signs = np.array([(sx, sy, sz) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)])
     cage = work_dir / f"{spec['id']}-cage.pdb"
-    boxprep.write_pdb(cage, centre_angstrom + half_extent_angstrom * signs, [])
+    boxprep.write_pdb(cage, ["C"] * len(signs), centre_angstrom + half_extent_angstrom * signs, [])
     return subject, cage, len(positions_angstrom)
 
 
