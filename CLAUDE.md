@@ -100,6 +100,14 @@ Do not break these without asking first.
   box, placed with `<Image>` inside a `<Plate>`. Either way the producing script is
   committed under `scripts/figures/` and its input structures under
   `scripts/figures/data/`, so every figure regenerates. Never a screenshot of a viewer.
+- **Panel grids are `Grid.astro` matrices** (spec §6.2 as amended 2026-10-02): column
+  headings above, row headings left, the column count held at every width with a sideways
+  scroll under 1000 px, never a reflow; every panel is a thumbnail that opens its full render
+  in a native popover, zero JS. Panels that share a scale are caged (`cage_angstrom`) and
+  never cropped; a self-framed panel (`cage_angstrom: null`, square resolution) is cropped to
+  its ink plus 3%. A chart with a phone variant inlines both, the narrow one in
+  `div.chart.chart--narrow` whose `--chart-em` equals the SVG's `data-chart-em`
+  (`scripts/tests/test_article_figures.py` checks every wrapper in the article).
 - **Prose is British English** (—ise, —isation). Identifiers and library APIs stay as the
   library spells them.
 - **Internal links carry trailing slashes**: `/work/carbon/`.
@@ -140,6 +148,16 @@ Inside a sandboxed session `uv` cannot write its cache; `.venv/bin/python` and
 - **Export the single forward pass to ONNX, not the sampling loop.** Control flow exports
   badly. Drive the loop from JS.
 - **KaTeX CSS loads only on pages with `math: true`.** Don't move it into the base layout.
+- **Astro drops `:global()` written inside `:has()`.** `.a:has(:global(.b))` compiles to an
+  invalid selector and the rule vanishes with no warning; write `:global(.a:has(.b))`. Found
+  2026-10-01, when the chart-scroll rule turned out to have been inert since it was written.
+- **A component imported only from MDX gets its scoped `<style>` by a separate dev path**
+  that did not reach the dev server in 2026-10-01's sessions. CSS for such components lives
+  in `src/styles/` imported by the page (`grid.css` from `src/pages/work/[...slug].astro`),
+  and a selector that overrides `global.css`'s `.label` needs two classes, because the build
+  emits page CSS before the layout's.
+- **`astro dev` serves `/_image` with a one-year cache at unchanging URLs.** A re-rendered
+  PNG looks unchanged until a hard refresh; check the file's mtime before doubting the render.
 
 ## Definition of done
 
