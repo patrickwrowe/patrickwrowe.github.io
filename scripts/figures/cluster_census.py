@@ -25,12 +25,14 @@ Units: lengths in angstrom, number densities in atoms per cubic angstrom, areal
 densities in atoms per square angstrom, times in ps.
 
 Usage:
-    uv run scripts/figures/cluster_census.py
-        writes census.csv and radial_profiles.csv beside the frames.
+    uv run scripts/figures/cluster_census.py [--data-dir DIR] [--output-dir DIR]
+        reads the frames and provenance.json from --data-dir and writes census.csv and
+        radial_profiles.csv to --output-dir; both default to the frames' directory.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -100,11 +102,12 @@ def read_census_columns(data_dir: Path, columns: tuple[str, ...]) -> np.ndarray:
     )
 
 
-def load_frame(name: str) -> tuple[np.ndarray, float]:
+def load_frame(name: str, data_dir: Path = SPHERES_DIR) -> tuple[np.ndarray, float]:
     """One extracted frame and its run's cell edge.
 
     Args:
         name: Run name, `C<n>-<T>K`.
+        data_dir: Directory holding the frames and provenance.json.
 
     Returns:
         (positions, shape (n_atoms, 3), in angstrom; cubic cell edge, in angstrom, from
@@ -114,8 +117,8 @@ def load_frame(name: str) -> tuple[np.ndarray, float]:
         FileNotFoundError: If the frame or provenance.json is missing.
         KeyError: If provenance.json has no cell edge for the run.
     """
-    provenance = json.loads((SPHERES_DIR / "provenance.json").read_text())
-    positions_angstrom = boxprep.read_xyz(SPHERES_DIR / f"{name}.xyz").positions_angstrom
+    provenance = json.loads((data_dir / "provenance.json").read_text())
+    positions_angstrom = boxprep.read_xyz(data_dir / f"{name}.xyz").positions_angstrom
     return positions_angstrom, float(provenance[f"{name}.xyz"]["cell_edge_angstrom"])
 
 
@@ -752,14 +755,26 @@ def classify(record: dict[str, float | int | str]) -> str:
     return "disordered"
 
 
-def main() -> None:
-    """Census of all 48 frames: census.csv and radial_profiles.csv beside the frames."""
-    provenance = json.loads((SPHERES_DIR / "provenance.json").read_text())
+def main(argv: list[str] | None = None) -> None:
+    """Census of all 48 frames: census.csv and radial_profiles.csv.
+
+    Args:
+        argv: Command-line arguments; None reads `sys.argv`.
+    """
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--data-dir", type=Path, default=SPHERES_DIR, help="frames and provenance.json"
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=SPHERES_DIR, help="where the two CSVs are written"
+    )
+    args = parser.parse_args(argv)
+    provenance = json.loads((args.data_dir / "provenance.json").read_text())
     rows, profile_rows = [], []
     for temperature_kelvin in TEMPERATURES_KELVIN:
         for n_atoms in SIZES:
             name = f"C{n_atoms}-{temperature_kelvin}K"
-            positions_angstrom, edge_angstrom = load_frame(name)
+            positions_angstrom, edge_angstrom = load_frame(name, args.data_dir)
             source = provenance[f"{name}.xyz"]
             record = {
                 "run": name,
@@ -787,8 +802,9 @@ def main() -> None:
                     }
                 )
             print(f"{name}: {record['class']}", flush=True)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     for filename, table in (("census.csv", rows), ("radial_profiles.csv", profile_rows)):
-        with (SPHERES_DIR / filename).open("w", newline="") as handle:
+        with (args.output_dir / filename).open("w", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(table[0]))
             writer.writeheader()
             writer.writerows(table)

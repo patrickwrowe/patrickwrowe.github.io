@@ -312,3 +312,21 @@ def test_census_csv_numeric_columns_parse_with_their_nan_values():
     assert len(table) == 48
     assert np.isnan(table["radius_of_gyration_angstrom"]).sum() == 19
     assert not np.isnan(table["sp3_fraction"]).any()
+
+
+def test_the_census_regenerates_the_committed_csvs_byte_for_byte(tmp_path):
+    census.main(["--output-dir", str(tmp_path)])
+    for name in ("census.csv", "radial_profiles.csv"):
+        assert (tmp_path / name).read_bytes() == (census.SPHERES_DIR / name).read_bytes(), name
+
+
+def test_an_unknown_option_exits_before_writing_anything():
+    committed = {
+        name: (census.SPHERES_DIR / name).stat().st_mtime_ns
+        for name in ("census.csv", "radial_profiles.csv")
+    }
+    with pytest.raises(SystemExit) as exit_info:
+        census.main(["--definitely-not-an-option"])
+    assert exit_info.value.code == 2
+    for name, mtime_ns in committed.items():
+        assert (census.SPHERES_DIR / name).stat().st_mtime_ns == mtime_ns, name
