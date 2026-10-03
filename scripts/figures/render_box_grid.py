@@ -11,7 +11,7 @@ checks that do not need molrender (manifest loading, the cage containment guard,
 rendered-PNG whiteness check) live in `panel_checks.py` instead, so they can still be
 imported and tested from `.venv`.
 
-    MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
+    # MOLRENDER_PYTHON (required): the python of the environment that has molrender
     $MOLRENDER_PYTHON scripts/figures/render_box_grid.py \
         --manifest scripts/figures/data/graphitisation/manifest.json \
         [--only ID ...] [--draft] [--force]

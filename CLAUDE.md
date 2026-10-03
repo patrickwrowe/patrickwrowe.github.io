@@ -111,6 +111,12 @@ Do not break these without asking first.
 - **Prose is British English** (—ise, —isation). Identifiers and library APIs stay as the
   library spells them.
 - **Internal links carry trailing slashes**: `/work/carbon/`.
+- **A theme article goes live alone and retires its pages the same day** (restructure spec
+  §3.6 as ratified 2026-10-03): `git mv` each retiring MDX, and every figure no live page
+  still imports, to `archive/work/`, add a row to `archive/README.md`, and map the old URL
+  to its section in `src/data/redirects.json`; `scripts/check_links.py` checks each one.
+- **Tool locations are required environment variables** (`FFMPEG`, `MOLRENDER_PYTHON`),
+  never a home-directory path in a tracked file; `/data` provenance paths may stay.
 
 ## Commands
 
@@ -124,8 +130,7 @@ uv run scripts/check_links.py             # after npm run build: anchors, hrefs,
 uv run pytest scripts/tests               # the Python tests (link check, geometry, census, figures)
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...] [--base-url URL]
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
-MOLRENDER_PYTHON=/home/patrick/.local/share/mamba/envs/molrender/bin/python
-$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; env is not the venv
+$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv
 FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh   # Fig. 10's clip; FFMPEG is required, ffmpeg is not system-wide
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
