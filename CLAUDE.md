@@ -65,6 +65,11 @@ Do not break these without asking first.
   `scripts/check_links.py` fails otherwise.
 - **`→` is internal, `↗` is external.** Link text names the target, never "here"; a DOI is
   never the link text.
+- **Private documents never reach the site.** Certificates, award and reference letters,
+  cover letters, invoices and anything from Patrick's personal records are private to him:
+  a value may be taken from one (a year, a prize name, an amount), the file and its path
+  never go into `src/` or `public/`, a caption or a credit. Posters, prospectus or review
+  covers and submitted journal covers may be published (Patrick, 2026-10-03).
 - **Copy goes through the pipeline** in restructure spec §5: dossier, draft, Opus stylist,
   separate Opus fact audit, Patrick. Blurbs, captions, alt text and wall-label fields are
   part of the article and go through the same audit. The voice guide is
