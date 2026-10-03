@@ -183,7 +183,7 @@ The protocol, from the input files and logs rather than from my slides of the ti
     ]}
   />
   <Fragment slot="caption">
-    The annealed network at each density, 0.5 to 3.5 g cm⁻³, after 200 ps at 3500 K: a 10 Å slab through the final frame of replica one, every panel at the same scale, so the 61.5 Å cell at 0.5 g cm⁻³ is drawn larger than the 32.2 Å cell at 3.5. Frames are taken at the end of each run's cooling ramp, with no hold at 300 K.
+    The annealed network at each density, 0.5 to 3.5 g cm⁻³, after 200 ps at 3500 K: a 10 Å slab through the final frame of replica one. All seven panels share one scale, so each cell is drawn at its true relative size: the 61.5 Å cell at 0.5 g cm⁻³ is nearly twice the width of the 32.2 Å cell at 3.5. Frames are taken at the end of each run's cooling ramp, with no hold at 300 K.
     <span class="credit">Own work, not published elsewhere. Made with <code>scripts/figures/render_box_grid.py</code>.</span>
   </Fragment>
 </Plate>
@@ -392,6 +392,6 @@ Carbon is rarely found alone, and my thesis names hydrogen and oxygen as the nex
 
 The model was built the way the thesis says to build one, and one demonstration of it is worth the space. A 10 Å box held 8 CH₄ and 16 O₂ at 3000 K for 50 ps. At the end it held 7 CO₂, 1 CO, 12 H₂O, 3 OH, 3 H and 1 H₂O₂. That is combustion, complete with the radicals, from a potential that was fitted to energies and forces and was never told what a reaction is. It is a sanity check rather than a validation, since no one measured the reaction rates in the box against anything, but a potential that gets combustion qualitatively wrong would show it here, and this one does not. {/* Q: 2 */}
 
-The project ran with Carla de Tomas and Cedric Weber at Happy Electron and KCL, Jean-Marc Leyssale in Bordeaux, who analysed frames from lignin pyrolysis (the heating of lignin, a wood polymer, without oxygen) with it, and Gábor Csányi, and it stopped when a later version of the model regressed (performed worse) against an earlier one and the cause was never isolated. I would rather write that sentence than leave the section out. A potential that works is a model; finished work is a model, its failures understood, and a paper that says both, and CHO-GAP got one of the three. The lesson of the whole page, if it has one, is that the second of those is the part you cannot let the computer decide. {/* Q: 2 */}
+The project ran with Carla de Tomas and Cedric Weber at Happy Electron and KCL, Jean-Marc Leyssale in Bordeaux, who analysed frames from lignin pyrolysis (the heating of lignin, a wood polymer, without oxygen) with it, and Gábor Csányi. It ended because the technology moved on. In 2022 Csányi's group published MACE, a machine-learned potential built as a neural network rather than a Gaussian-process fit; it was clearly a step change in performance, and we chose to move to it rather than finish a model of the generation before. A potential that works is a model; finished work is a model, its limits understood, and a paper that says both, and CHO-GAP was set aside before its paper was finished. The lesson of the whole page, if it has one, is that the second of those is the part you cannot let the computer decide. {/* Q: 2 */}
 
 [Contents ↑](#contents)
