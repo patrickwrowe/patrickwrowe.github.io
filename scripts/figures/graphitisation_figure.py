@@ -21,7 +21,7 @@ three replicas of each run, as written by the project's own analysis notebook.
 Usage:
     uv run scripts/figures/graphitisation_figure.py \
         --data-dir scripts/figures/data/graphitisation \
-        --output src/content/work/figures/carbon-gap-20/graphitisation.svg
+        --output archive/work/figures/carbon-gap-20/graphitisation.svg
 """
 
 from __future__ import annotations

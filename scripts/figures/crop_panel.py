@@ -12,7 +12,7 @@ an image viewer without converting them.
 Usage (panel B of the graphene thermal-expansion figure, the lattice parameter
 normalised to each model's 60 K value):
     .venv/bin/python scripts/figures/crop_panel.py \\
-        --input src/content/work/figures/graphene-potential/fig2-thermal-expansion.png \\
+        --input archive/work/figures/graphene-potential/fig2-thermal-expansion.png \\
         --box 0 570 848 1110 \\
         --output src/content/work/figures/carbon/graphene-thermal-expansion-panel-b.png
 """

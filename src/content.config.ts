@@ -73,7 +73,7 @@ const work = defineCollection({
       stubNote: z.string().optional(),
     })
     // Wall-label cap is restructure spec §3.5. Theme-only: retiring `paper`/`project`
-    // pages (e.g. cho-gap's `result`) still exceed it and must keep building until archived.
+    // pages still exceed it and must keep building until archived.
     .superRefine((entry, ctx) => {
       if (entry.kind !== "theme") return;
       for (const field of ["method", "system", "result"] as const) {

@@ -6,12 +6,17 @@ import { unified } from "@astrojs/markdown-remark";
 import yaml from "@rollup/plugin-yaml";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import redirects from "./src/data/redirects.json";
 
 // Canonical origin for the custom domain (see public/CNAME); the sitemap and RSS feed
 // use this as their absolute base.
 export default defineConfig({
   site: "https://www.patrickwrowe.com",
   trailingSlash: "always",
+  // Retired pages, archived under archive/work/, land on their section of a theme article
+  // (restructure spec §3.6). GitHub Pages ignores _redirects, so Astro writes a
+  // meta-refresh page at each old URL; scripts/check_links.py checks every target.
+  redirects,
   integrations: [mdx(), sitemap()],
   // Self-hosted via the Astro 6 Fonts API — spec 01 §5.2. Three roles, three faces:
   // sans labels, serif reads, mono is data.
