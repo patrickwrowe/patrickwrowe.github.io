@@ -11,10 +11,13 @@ interface Props {
   entries: CollectionEntry<"publications">[];
   /** Show the blurb under the citation (the /work/ band). */
   blurbs?: boolean;
-  /** On a theme page: link "Section ↑" to the anchor here instead of "Read in <theme> →". */
-  onThemePage?: boolean;
+  /**
+   * On a theme page: its `##` headings. Each row then links up to its own section, by the
+   * heading's name, instead of "Read in <theme> →".
+   */
+  sections?: { slug: string; text: string }[];
 }
-const { entries, blurbs = false, onThemePage = false } = Astro.props;
+const { entries, blurbs = false, sections } = Astro.props;
 
 // Resolve every entry's theme in one call; getEntries keeps the order of its input.
 const themes = await getEntries(entries.map((entry) => entry.data.theme));
@@ -26,12 +29,18 @@ for (const index of entries.keys()) {
     );
   }
 }
-const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
+const rows = entries.map((pub, index) => {
+  const section = sections?.find((heading) => heading.slug === pub.data.anchor);
+  if (sections && !section) {
+    throw new Error(`PubList: publication "${pub.id}" has anchor "${pub.data.anchor}", which is no ## heading on this page`);
+  }
+  return { pub, theme: themes[index], section };
+});
 ---
 
 <ol class="pubs" role="list">
   {
-    rows.map(({ pub, theme }) => {
+    rows.map(({ pub, theme, section }) => {
       const marker = kindMarker(pub.data.kind);
       const external = externalLink(pub.data);
       const parts = listAuthors(pub.data.authors);
@@ -51,9 +60,9 @@ const rows = entries.map((pub, index) => ({ pub, theme: themes[index] }));
             </p>
             {blurbs && pub.data.blurb && <p class="pub__blurb">{pub.data.blurb}</p>}
             <p class="pub__links">
-              {onThemePage ? (
-                <a href={`#${pub.data.anchor}`}>
-                  Section <span aria-hidden="true">&uarr;</span>
+              {section ? (
+                <a href={`#${section.slug}`}>
+                  {section.text} <span aria-hidden="true">&uarr;</span>
                 </a>
               ) : (
                 // A draft theme has no built page in production, so the row shows only

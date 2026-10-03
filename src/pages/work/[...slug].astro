@@ -98,7 +98,7 @@ const publicationsHere = isTheme
     publicationsHere.length > 0 && (
       <section class="pubs-here">
         <h2 id="publications-in-this-article">Publications in this article</h2>
-        <PubList entries={publicationsHere} onThemePage />
+        <PubList entries={publicationsHere} sections={contents} />
       </section>
     )
   }
