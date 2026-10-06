@@ -299,15 +299,12 @@ def test_c60_at_5000k_is_dissociated():
 
 
 def test_census_csv_numeric_columns_parse_with_their_nan_values():
-    # The pattern a figure script should use: name the columns. Whole-file type detection
-    # (dtype=None without usecols) fails on the space-separated list columns
-    # fragment_sizes and shell_radii_angstrom, not on the literal nan values.
-    table = np.genfromtxt(
-        census.SPHERES_DIR / "census.csv",
-        delimiter=",",
-        names=True,
-        dtype=float,
-        usecols=("n_atoms", "radius_of_gyration_angstrom", "sp3_fraction", "core_atoms"),
+    # Through the reader every figure script uses, which names its columns. Whole-file type
+    # detection (no usecols) fails on the space-separated list columns fragment_sizes and
+    # shell_radii_angstrom, not on the literal nan values.
+    table = census.read_census_columns(
+        census.SPHERES_DIR,
+        ("n_atoms", "radius_of_gyration_angstrom", "sp3_fraction", "core_atoms"),
     )
     assert len(table) == 48
     assert np.isnan(table["radius_of_gyration_angstrom"]).sum() == 19
