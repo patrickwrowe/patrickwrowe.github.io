@@ -113,6 +113,13 @@ def test_load_panels_rejects_an_unknown_key(tmp_path):
         ("density_g_cm3", 0),
         ("tile", [0, -1, 1]),
         ("tile", [2, 1]),
+        ("margin", 0.5),
+        ("margin", "1.02"),
+        ("sphere_radius_angstrom", 0),
+        ("slab_angstrom", -1),
+        ("direction", [0, 0, 0]),
+        ("direction", [0, 1]),
+        ("direction", [float("nan"), 0, 1]),
     ],
 )
 def test_load_panels_rejects_a_bad_value_naming_manifest_panel_and_key(tmp_path, key, value):
@@ -121,6 +128,13 @@ def test_load_panels_rejects_a_bad_value_naming_manifest_panel_and_key(tmp_path,
         panel_checks.load_panels(manifest_path)
     assert str(manifest_path) in str(error.value)
     assert "panel a" in str(error.value) and key in str(error.value)
+
+
+def test_load_panels_accepts_a_negative_direction_a_margin_of_one_and_a_null_slab(tmp_path):
+    panel_spec = {"id": "a", "source": "a.xyz", "direction": [0, -1, 0], "margin": 1}
+    manifest_path = _manifest(tmp_path, [{**panel_spec, "slab_angstrom": None}])
+    panel = panel_checks.load_panels(manifest_path)[0]
+    assert panel["direction"] == [0, -1, 0] and panel["slab_angstrom"] is None
 
 
 def test_load_panels_accepts_null_cage_and_a_tile(tmp_path):

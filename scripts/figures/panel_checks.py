@@ -19,6 +19,7 @@ Units: lengths in angstrom, pixel values 0-255.
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 
@@ -65,10 +66,30 @@ def _positive_list(value: object, length: int, integers: bool = False) -> bool:
     )
 
 
+def _is_direction(value: object) -> bool:
+    """Three finite numbers with at least one non-zero; components may be negative."""
+    return (
+        isinstance(value, list)
+        and len(value) == 3
+        and all(_is_number(component) and math.isfinite(component) for component in value)
+        and any(component != 0 for component in value)
+    )
+
+
 # Value rules for load_panels, checked on each panel's merged dict wherever the key is
 # present: (test, what a valid value is). Paths are relative to the repository root,
 # where every command in CLAUDE.md runs.
 VALUE_RULES = {
+    "margin": (lambda value: _is_number(value) and value >= 1, "a margin of at least 1"),
+    "sphere_radius_angstrom": (
+        lambda value: _is_number(value) and value > 0,
+        "a positive radius in angstrom",
+    ),
+    "slab_angstrom": (
+        lambda value: value is None or (_is_number(value) and value > 0),
+        "null or a positive thickness in angstrom",
+    ),
+    "direction": (_is_direction, "three numbers, not all zero"),
     "resolution": (
         lambda value: _positive_list(value, 2, integers=True),
         "two positive integers, [width, height] in pixels",
@@ -122,7 +143,9 @@ def load_panels(manifest_path: Path) -> list[dict]:
             REQUIRED_KEYS, holds a key outside REQUIRED_KEYS and OPTIONAL_KEYS, has a
             value that breaks its VALUE_RULES entry (a resolution of two positive
             integers, a grey in [0, 1], a cage of null or three positive extents, a
-            positive density, a tile of three positive integers, a source that exists),
+            positive density, a tile of three positive integers, a source that exists, a
+            margin of at least 1, a positive sphere radius, a slab of null or a positive
+            thickness, a direction of three finite numbers that are not all zero),
             an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
             panels share an id. Every message names the manifest, the panel and the key.
     """
