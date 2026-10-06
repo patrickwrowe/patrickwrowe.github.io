@@ -210,7 +210,8 @@ def build(data_dir: Path) -> str:
     height = MARGIN_TOP + PANEL_HEIGHT + MARGIN_BOTTOM
 
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" role="img">\n'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
+        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n'
         f"  <g>\n    {left}\n    {right}\n  </g>\n"
         f"</svg>\n"
     )
@@ -253,7 +254,8 @@ def build_rings(data_dir: Path) -> str:
     width = MARGIN_LEFT + PANEL_WIDTH + 8.0
     height = MARGIN_TOP + PANEL_HEIGHT + MARGIN_BOTTOM
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" role="img">\n'
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
+        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n'
         f"  <g>\n    {panel}\n  </g>\n"
         f"</svg>\n"
     )
