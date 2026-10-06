@@ -36,6 +36,10 @@ import combustionSeriesNarrow from "./figures/cho-gap/combustion-series-narrow.s
 export const ARCHIVE_SIZES = [40, 60, 80, 120, 160, 373, 686, 1000];
 export const ARCHIVE_TEMPERATURES_KELVIN = [500, 1000, 2000, 3000, 4000, 5000];
 
+export const C60_CHART_LABEL = "A dot chart of the cohesive energy per atom of icosahedral C₆₀, one row per method: DFT at the top with a vertical reference line at its value, GAP-20 just beyond it on the more strongly bound side, and the six classical potentials spread out on the less strongly bound side.";
+export const CLUSTER_OUTCOMES_CHART_LABEL = "A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size and at 1000 K for most, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.";
+export const COMBUSTION_CHART_LABEL = "Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.";
+
 Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes, fullerenes, amorphous films and the hot liquid differ enough in their bonding that a model fitted to any one of them is usually wrong about the rest, and the standard models were fitted to a few of them by hand. Anyone who has simulated a carbon material with more than a few hundred atoms for longer than a few picoseconds has used one of those models, and has inherited its opinions. Some of the opinions are odd. Ask the classical carbon potentials of 2017 (fitted formulas that give the energy of a set of atoms, and the forces on them, from their positions) whether a free graphene sheet expands or contracts when you warm it, and they disagree on the sign: three of them switch sign somewhere between 500 and 1000 K, one tears the sheet apart above 1500 K, and none of them agrees with the quantum-mechanical answer across the whole range. Thermal expansion is about as basic as a property gets.
 
 This article is about the years from 2016 to 2022 that I spent replacing those opinions with a fitted one, first for graphene alone and then for every form of carbon at once, and about what happened when these potentials were run at scale, by other people and by me. The short version: one machine-learned model can cover the whole element while keeping graphene's vibrations within 4 meV of density functional theory (DFT, the quantum-mechanical method the machine-learned models are fitted to); a benchmark led by others later ranked it first of seven potentials on clusters it had not been trained for; and 5,832 atoms of hot carbon told me that whether a network graphitises (turns into sheets of hexagons, as in graphite) is decided by its density and hardly at all by its temperature. The long version follows in two halves: build the potentials, then use them.
@@ -143,10 +147,10 @@ Benchmarks written by a model's authors have a credibility problem, whatever the
 The search was ab initio random structure searching (AIRSS), the Pickard–Needs method: random clusters of 4 to 200 atoms inside a sphere, no two atoms closer than 1.4 Å, either with no symmetry or with up to 24 symmetry operations imposed, and the same random inputs handed to each method to relax. The reference was VASP with the PBE functional (a standard form of DFT). The potentials were GAP-20 and six classical ones, all in LAMMPS: Tersoff, C-EDIP (the environment-dependent interaction potential for carbon), LCBOP-I, ReaxFF, REBO-II and AIREBO. The first finding was about the relaxation itself: the default conjugate-gradient protocol left structures with residual pressures above 100 MPa, so a FIRE stage and a truncated-Newton stage (two further minimisers) were added until the pressure was effectively zero. After duplicates, dissociated and unconverged structures were removed, DFT had 3,500 disordered and 10,500 symmetric minima to compare against, and GAP-20 had 22,200 and 20,300 of its own. The comparison was on everything a search produces: which structure is lowest at each size and what symmetry it has, the distribution of cohesive energies (energy per atom relative to free atoms), the Boltzmann-weighted coordination (number of bonded neighbours, each structure counted by its thermal population) and ring statistics at 293 K, and the radial distribution function (the spread of interatomic distances) of C₆₀.
 
 <Plate n={7}>
-  <div class="chart" style="--chart-em: 45.7" role="img" aria-label="A dot chart of the cohesive energy per atom of icosahedral C₆₀, one row per method: DFT at the top with a vertical reference line at its value, GAP-20 just beyond it on the more strongly bound side, and the six classical potentials spread out on the less strongly bound side.">
+  <div class="chart" style="--chart-em: 45.7" role="img" aria-label={C60_CHART_LABEL}>
     <Fragment set:html={c60Energies} />
   </div>
-  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="A dot chart of the cohesive energy per atom of icosahedral C₆₀, one row per method: DFT at the top with a vertical reference line at its value, GAP-20 just beyond it on the more strongly bound side, and the six classical potentials spread out on the less strongly bound side.">
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label={C60_CHART_LABEL}>
     <Fragment set:html={c60EnergiesNarrow} />
   </div>
   <Fragment slot="caption">
@@ -291,10 +295,10 @@ I analysed the last frame of every run. Two atoms are bonded if they sit closer 
 The outcome depends on both variables, and the pattern is simple. At 500 K every cluster holds together and none is ordered: the largest, C₁₀₀₀, is 81.3% three-coordinated, with the least layered bonding of any intact run and no graphitic layers, a disordered ball. At 1000 K the first order appears, and only in the middle sizes: C₁₂₀ closes into a cage and C₁₆₀ into an onion. At 2000 and 3000 K the clusters that survive close up into sp² shells, 84–94% of atoms three-coordinated. The small ones become single closed cages, C₆₀ to C₁₂₀ at 2000 K and C₁₂₀ and C₁₆₀ at 3000 K, and the large ones become graphitic onions of two or three nested shells, C₁₆₀ to C₁₀₀₀ at 2000 K and C₃₇₃ to C₁₀₀₀ at 3000 K. C₁₀₀₀ at 3000 K has three shells, at mean radii of 4.0, 8.1 and 11.7 Å, and 247 of its 467 rings of 3 to 10 atoms are hexagons. Heat further and the clusters come apart into carbon chains, the smallest first: C₄₀ already by 2000 K, C₆₀ and C₈₀ by 3000 K, every size but one by 4000 K and all of them at 5000 K. The one exception, C₆₈₆ at 4000 K, still held 63.8% of its atoms in one piece when its run stopped at 32.9 ps, molten rather than dissociated. Of the 48 runs, 19 dissociated, 1 was molten, 8 formed onions, 6 formed cages and 14 stayed disordered.
 
 <Plate n={12}>
-  <div class="chart" style="--chart-em: 55.7" role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size and at 1000 K for most, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
+  <div class="chart" style="--chart-em: 55.7" role="img" aria-label={CLUSTER_OUTCOMES_CHART_LABEL}>
     <Fragment set:html={clusterOutcomes} />
   </div>
-  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="A map of cluster size against temperature with one symbol per run: disordered at 500 K for every size and at 1000 K for most, cages for clusters of 60 to 160 atoms and onions from 160 atoms between 1000 and 3000 K, and dissociation spreading from the smallest clusters at 2000 K to all sizes at 5000 K.">
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label={CLUSTER_OUTCOMES_CHART_LABEL}>
     <Fragment set:html={clusterOutcomesNarrow} />
   </div>
   <Fragment slot="caption">
@@ -335,10 +339,10 @@ The map has limits. Each cell is one frame of one trajectory, not an average and
 Carbon is rarely found alone, and my thesis names hydrogen and oxygen as the next step for that reason: the char in a furnace, the hard carbon in a battery anode and the soot in a flame all carry both. The GAP-20 paper lists hydrogenation and oxidation among the things it cannot do. So the last carbon potential I worked on was CHO-GAP (carbon, hydrogen and oxygen): the same method, three elements. This section is shorter than the work was, because the project ended without a paper and the numbers I would like to give you are in a draft and a set of status notes that as of September 2026 I have not put beside this page, so they stay off it. What I can show is what the data files on this site show. {/* Q: 2 */}
 
 <Plate n={14}>
-  <div class="chart" style="--chart-em: 48.1" role="img" aria-label="Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.">
+  <div class="chart" style="--chart-em: 48.1" role="img" aria-label={COMBUSTION_CHART_LABEL}>
     <Fragment set:html={combustionSeries} />
   </div>
-  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label="Four frames of a small periodic box of molecules drawn in monochrome ball-and-stick, at 0, 10, 20 and 50 ps: separate methane and oxygen molecules at the start, then a growing share of carbon dioxide, water and a few small radicals.">
+  <div class="chart chart--narrow" style="--chart-em: 31.5" role="img" aria-label={COMBUSTION_CHART_LABEL}>
     <Fragment set:html={combustionSeriesNarrow} />
   </div>
   <Fragment slot="caption">
