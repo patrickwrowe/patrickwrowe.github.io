@@ -18,6 +18,7 @@ import boxprep
 import numpy as np
 import panel_checks
 import pytest
+from constants import SIZES, TEMPERATURES_KELVIN
 from figure_style import NARROW_CHART_EM
 
 REPO = Path(__file__).resolve().parents[2]
@@ -133,3 +134,14 @@ def test_the_weight_floor_gives_the_smallest_weighted_panel_100_px():
     floor_px = float(re.search(r"--floor-per-weight: ([\d.]+)px", GRID_CSS).group(1))
     smallest = min(min(weights) for weights, _ in WEIGHTED_GRIDS)
     assert 100 <= floor_px * smallest < 101
+
+
+def test_the_archive_grid_is_generated_from_the_axes_the_census_runs_on():
+    # The 48-run grid names its panels from two arrays in the MDX; they must be the run
+    # matrix, or a panel is missing or a file that does not exist is asked for.
+    def exported_numbers(name: str) -> tuple[int, ...]:
+        body = re.search(rf"^export const {name} = \[([\d, ]+)\];$", MDX, re.M).group(1)
+        return tuple(int(number) for number in body.split(","))
+
+    assert exported_numbers("ARCHIVE_SIZES") == SIZES
+    assert exported_numbers("ARCHIVE_TEMPERATURES_KELVIN") == TEMPERATURES_KELVIN

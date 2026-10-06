@@ -179,12 +179,6 @@ const { title, description, section, math = false, meta, fields = [], documentTi
     font-variant-numeric: lining-nums tabular-nums;
   }
   .prose th {
-    font-family: var(--mono);
-    font-size: var(--t-label);
-    font-weight: 500;
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
-    color: var(--graphite);
     text-align: left;
     vertical-align: bottom;
     padding: 0 0.5rem 0.6rem;
@@ -198,9 +192,11 @@ const { title, description, section, math = false, meta, fields = [], documentTi
     background: var(--plate);
   }
   /* At phone width the tracked header words ("NEIGHBOURS") set the table's minimum
-   * width; untracked and with tighter cells, four columns fit in 350 px. */
+   * width; untracked and with tighter cells, four columns fit in 350 px. The header
+   * rule is `.prose table th` because global.css, emitted after this block, sets the
+   * tracking on `.prose th`, and an equal selector there would win on order. */
   @media (max-width: 640px) {
-    .prose th {
+    .prose table th {
       letter-spacing: normal;
     }
     .prose th,

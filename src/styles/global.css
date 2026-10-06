@@ -55,8 +55,10 @@ p {
 }
 
 /* The label primitive — spec 01 §5.2. Every metadata field on the site uses this,
- * and it is what makes a wall label read as a specification rather than a caption. */
-.label {
+ * and it is what makes a wall label read as a specification rather than a caption.
+ * A prose table's header cell is the same primitive (Prose.astro keeps the rest). */
+.label,
+.prose th {
   font-family: var(--mono);
   font-size: var(--t-label);
   font-weight: 500;

@@ -33,6 +33,9 @@ import clusterOutcomesNarrow from "./figures/carbon/cluster-outcomes-narrow.svg?
 import combustionSeries from "./figures/cho-gap/combustion-series.svg?raw";
 import combustionSeriesNarrow from "./figures/cho-gap/combustion-series-narrow.svg?raw";
 
+export const ARCHIVE_SIZES = [40, 60, 80, 120, 160, 373, 686, 1000];
+export const ARCHIVE_TEMPERATURES_KELVIN = [500, 1000, 2000, 3000, 4000, 5000];
+
 Carbon is several materials wearing one element. Diamond, graphite, graphene, nanotubes, fullerenes, amorphous films and the hot liquid differ enough in their bonding that a model fitted to any one of them is usually wrong about the rest, and the standard models were fitted to a few of them by hand. Anyone who has simulated a carbon material with more than a few hundred atoms for longer than a few picoseconds has used one of those models, and has inherited its opinions. Some of the opinions are odd. Ask the classical carbon potentials of 2017 (fitted formulas that give the energy of a set of atoms, and the forces on them, from their positions) whether a free graphene sheet expands or contracts when you warm it, and they disagree on the sign: three of them switch sign somewhere between 500 and 1000 K, one tears the sheet apart above 1500 K, and none of them agrees with the quantum-mechanical answer across the whole range. Thermal expansion is about as basic as a property gets.
 
 This article is about the years from 2016 to 2022 that I spent replacing those opinions with a fitted one, first for graphene alone and then for every form of carbon at once, and about what happened when these potentials were run at scale, by other people and by me. The short version: one machine-learned model can cover the whole element while keeping graphene's vibrations within 4 meV of density functional theory (DFT, the quantum-mechanical method the machine-learned models are fitted to); a benchmark led by others later ranked it first of seven potentials on clusters it had not been trained for; and 5,832 atoms of hot carbon told me that whether a network graphitises (turns into sheets of hexagons, as in graphite) is decided by its density and hardly at all by its temperature. The long version follows in two halves: build the potentials, then use them.
@@ -311,56 +314,9 @@ Four-coordinated, diamond-like carbon never amounts to much, and this is where t
       columnTitle="cluster size / atoms"
       columnLabels={["40", "60", "80", "120", "160", "373", "686", "1000"]}
       rowLabels={["500 K", "1000 K", "2000 K", "3000 K", "4000 K", "5000 K"]}
-      panels={[
-      "C40-500K.png",
-      "C60-500K.png",
-      "C80-500K.png",
-      "C120-500K.png",
-      "C160-500K.png",
-      "C373-500K.png",
-      "C686-500K.png",
-      "C1000-500K.png",
-      "C40-1000K.png",
-      "C60-1000K.png",
-      "C80-1000K.png",
-      "C120-1000K.png",
-      "C160-1000K.png",
-      "C373-1000K.png",
-      "C686-1000K.png",
-      "C1000-1000K.png",
-      "C40-2000K.png",
-      "C60-2000K.png",
-      "C80-2000K.png",
-      "C120-2000K.png",
-      "C160-2000K.png",
-      "C373-2000K.png",
-      "C686-2000K.png",
-      "C1000-2000K.png",
-      "C40-3000K.png",
-      "C60-3000K.png",
-      "C80-3000K.png",
-      "C120-3000K.png",
-      "C160-3000K.png",
-      "C373-3000K.png",
-      "C686-3000K.png",
-      "C1000-3000K.png",
-      "C40-4000K.png",
-      "C60-4000K.png",
-      "C80-4000K.png",
-      "C120-4000K.png",
-      "C160-4000K.png",
-      "C373-4000K.png",
-      "C686-4000K.png",
-      "C1000-4000K.png",
-      "C40-5000K.png",
-      "C60-5000K.png",
-      "C80-5000K.png",
-      "C120-5000K.png",
-      "C160-5000K.png",
-      "C373-5000K.png",
-      "C686-5000K.png",
-      "C1000-5000K.png",
-      ]}
+      panels={ARCHIVE_TEMPERATURES_KELVIN.flatMap((kelvin) =>
+        ARCHIVE_SIZES.map((atoms) => `C${atoms}-${kelvin}K.png`),
+      )}
     />
   </details>
   <Fragment slot="caption">
