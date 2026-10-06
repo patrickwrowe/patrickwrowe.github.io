@@ -20,7 +20,7 @@ ROUTES = {
     "work": "/work/",
     "work-entry": "/work/carbon-gap-20/",
     "writing": "/writing/",
-    "post": "/writing/smiles-is-a-strange-language/",
+    "post": "/writing/exploring-the-materials-genome/",
     "cv": "/cv/",
     "about": "/about/",
     "404": "/404",

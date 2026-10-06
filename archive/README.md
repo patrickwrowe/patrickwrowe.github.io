@@ -16,3 +16,15 @@ resolve.
 
 The carbon article went live on 2026-10-03, when its five pages were retired. Each later
 theme retires its own pages on the day it goes live.
+
+## Writing outlines, retired 2026-10-06
+
+Three notes under `/writing/` were outlines that were never written out. They moved here,
+not to the bin, so a draft can be picked up from them; their URLs redirect to the writing
+index. The section now holds the 2017 article for Science and Engineering South.
+
+| Archived page | Became | Retired |
+|---|---|---|
+| `writing/model-into-a-screening-pipeline.md` | `/writing/` | 2026-10-06 |
+| `writing/smiles-is-a-strange-language.md` | `/writing/` | 2026-10-06 |
+| `writing/what-a-potential-learns.md` | `/writing/` | 2026-10-06 |
