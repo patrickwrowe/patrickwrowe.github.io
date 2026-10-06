@@ -237,8 +237,8 @@ def main(argv: list[str] | None = None) -> int:
                 extracted[name] = extract_one(args.archive, out_dir, n_atoms, temperature_kelvin)
                 print(f"{name} ok", flush=True)
             except (OSError, ValueError) as error:
-                failures[name] = repr(error)
-                print(f"{name} FAILED {error!r}", file=sys.stderr, flush=True)
+                failures[name] = f"{type(error).__name__}: {error}"
+                print(f"{name} FAILED {failures[name]}", file=sys.stderr, flush=True)
     provenance_path = out_dir / PROVENANCE_NAME
     if extracted:
         previous = json.loads(provenance_path.read_text()) if provenance_path.exists() else {}

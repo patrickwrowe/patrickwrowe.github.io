@@ -7,7 +7,9 @@ directory, and builds whatever archive it needs from the C40 fixture dump.
 from __future__ import annotations
 
 import ast
+import errno
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -88,6 +90,28 @@ def test_a_clean_pass_removes_the_old_dead_letter_file(scratch, tmp_path, monkey
 
     assert extract_spheres.main(["--archive", str(archive), "--out-dir", str(scratch)]) == 0
     assert not (scratch / extract_spheres.FAILURES_NAME).exists()
+
+
+def test_a_failed_extraction_dead_letters_its_error_type_and_the_missing_path(
+    scratch, tmp_path, monkeypatch, capsys
+):
+    missing = tmp_path / "missing.lammpstrj"
+
+    def fail_to_open(*_args):
+        # The shape open() gives a missing file: the path is the filename, not in args[0].
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(missing))
+
+    monkeypatch.setattr(extract_spheres, "SIZES", (40,))
+    monkeypatch.setattr(extract_spheres, "TEMPERATURES_KELVIN", (500,))
+    monkeypatch.setattr(extract_spheres, "extract_one", fail_to_open)
+
+    status = extract_spheres.main(["--archive", str(tmp_path), "--out-dir", str(scratch)])
+
+    assert status == 1
+    failures = json.loads((scratch / extract_spheres.FAILURES_NAME).read_text())
+    assert failures["C40-500K.xyz"].startswith("FileNotFoundError: ")
+    assert str(missing) in failures["C40-500K.xyz"]
+    assert str(missing) in capsys.readouterr().err
 
 
 def test_the_archive_is_a_required_argument(capsys):
