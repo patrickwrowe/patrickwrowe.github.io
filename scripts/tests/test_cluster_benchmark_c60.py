@@ -3,11 +3,22 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import cluster_benchmark_c60
 import pytest
 
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
+FIGURES = Path(__file__).resolve().parents[2] / "src/content/work/figures/carbon"
+
+
+@pytest.mark.parametrize(
+    ("narrow", "committed"),
+    [(False, "cluster-benchmark-c60.svg"), (True, "cluster-benchmark-c60-narrow.svg")],
+)
+def test_the_committed_svg_is_byte_for_byte_what_the_script_writes(narrow, committed):
+    written = cluster_benchmark_c60.build(narrow=narrow).encode("utf-8")
+    assert (FIGURES / committed).read_bytes() == written, f"{committed} is stale"
 
 
 def test_svg_has_eight_data_markers_and_no_hex_colour():
