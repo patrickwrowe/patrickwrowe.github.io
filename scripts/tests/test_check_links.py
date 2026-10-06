@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import json
-import sys
 import textwrap
 from pathlib import Path
 
+import check_links
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import check_links  # noqa: E402
 
 THEME_BODY = textwrap.dedent(
     """\
