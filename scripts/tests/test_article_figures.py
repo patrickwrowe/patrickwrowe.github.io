@@ -111,9 +111,13 @@ def test_the_density_row_is_weighted_and_caged():
 @pytest.mark.parametrize(("weights", "files"), WEIGHTED_GRIDS)
 def test_each_weight_is_the_width_its_cage_is_framed_at(weights, files):
     # Equal angstrom per page pixel needs each column in proportion to the world width its
-    # square render spans, which is what molrender frames round the panel's cage.
+    # square render spans, which is what molrender frames round the panel's cage. The
+    # weights are then in the same units only if every render is square and every panel
+    # is framed with the same margin, so both are asserted here, not assumed.
+    assert len({MANIFEST_PANELS[file].get("margin") for file in files}) == 1
     for weight, file in zip(weights, files, strict=True):
         panel = MANIFEST_PANELS[file]
+        assert panel["resolution"][0] == panel["resolution"][1], f"{file} is not a square render"
         assert panel.get("cage_angstrom"), f"{file} shares a scale but has no cage"
         framed = framed_width_angstrom(panel["cage_angstrom"], panel["direction"])
         assert weight == round(framed, 1), f"{file}: weight {weight}, framed {framed:.3f} A"
