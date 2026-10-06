@@ -217,6 +217,12 @@ def fragment_sizes(adjacency: np.ndarray) -> np.ndarray:
     return np.sort(np.bincount(labels)[np.unique(labels)])[::-1]
 
 
+def largest_fragment_mask(labels: np.ndarray) -> np.ndarray:
+    """True for the atoms of the largest connected fragment; ties go to the lowest label."""
+    fragment_ids, counts = np.unique(labels, return_counts=True)
+    return labels == fragment_ids[np.argmax(counts)]
+
+
 def largest_fragment_centre(positions_angstrom: np.ndarray, adjacency: np.ndarray) -> np.ndarray:
     """Centre of mass of the largest bonded fragment (all atoms are carbon).
 
@@ -231,9 +237,7 @@ def largest_fragment_centre(positions_angstrom: np.ndarray, adjacency: np.ndarra
     Returns:
         Position, shape (3,), in angstrom. Ties go to the fragment with the lowest index.
     """
-    labels = fragment_labels(adjacency)
-    fragment_ids, counts = np.unique(labels, return_counts=True)
-    return positions_angstrom[labels == fragment_ids[np.argmax(counts)]].mean(axis=0)
+    return positions_angstrom[largest_fragment_mask(fragment_labels(adjacency))].mean(axis=0)
 
 
 def radial_density_profile(
@@ -371,7 +375,7 @@ def enclosed_shells(
         enclosed shell, smallest first.
     """
     fragment_ids, counts = np.unique(labels, return_counts=True)
-    largest = labels == fragment_ids[np.argmax(counts)]
+    largest = largest_fragment_mask(labels)
     outer_centre_angstrom = positions_angstrom[largest].mean(axis=0)
     outer_median_angstrom = np.median(
         np.linalg.norm(positions_angstrom[largest] - outer_centre_angstrom, axis=1)
@@ -416,9 +420,7 @@ def all_shells(
         count). Profile radii are about the largest fragment's centre; enclosed radii
         about each enclosed fragment's own centre.
     """
-    fragment_ids, counts = np.unique(labels, return_counts=True)
-    largest = labels == fragment_ids[np.argmax(counts)]
-    body_angstrom = positions_angstrom[largest]
+    body_angstrom = positions_angstrom[largest_fragment_mask(labels)]
     profile = shells(body_angstrom, body_angstrom.mean(axis=0))
     return profile, enclosed_shells(positions_angstrom, bonds, labels)
 

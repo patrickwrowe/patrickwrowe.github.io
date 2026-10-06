@@ -330,3 +330,13 @@ def test_an_unknown_option_exits_before_writing_anything():
     assert exit_info.value.code == 2
     for name, mtime_ns in committed.items():
         assert (census.SPHERES_DIR / name).stat().st_mtime_ns == mtime_ns, name
+
+
+def test_largest_fragment_mask_picks_the_biggest_fragment():
+    mask = census.largest_fragment_mask(np.array([0, 1, 1, 2]))
+    assert mask.tolist() == [False, True, True, False]
+
+
+def test_largest_fragment_mask_gives_a_tie_to_the_lowest_label():
+    mask = census.largest_fragment_mask(np.array([0, 0, 1, 1]))
+    assert mask.tolist() == [True, True, False, False]
