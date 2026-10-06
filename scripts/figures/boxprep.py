@@ -219,6 +219,19 @@ def slab_mask(
     return np.abs(depth_angstrom - centre_angstrom) <= thickness_angstrom / 2.0
 
 
+def minimum_image(delta_angstrom: np.ndarray, edge_angstrom: float) -> np.ndarray:
+    """Fold displacement vectors into the cubic cell's minimum image.
+
+    Args:
+        delta_angstrom: Displacements, any shape with the last axis of length 3, in Å.
+        edge_angstrom: Cubic cell edge in Å.
+
+    Returns:
+        The displacements with every component moved into (-edge/2, edge/2], in Å.
+    """
+    return delta_angstrom - edge_angstrom * np.round(delta_angstrom / edge_angstrom)
+
+
 def make_compact(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.ndarray:
     """Re-image a cluster that a periodic dump has split across the cell boundary.
 
@@ -235,25 +248,28 @@ def make_compact(positions_angstrom: np.ndarray, edge_angstrom: float) -> np.nda
         Positions re-imaged to their minimum image relative to the first atom and
         centred on the origin, same shape as the input.
     """
-    delta = positions_angstrom - positions_angstrom[0]
-    delta -= edge_angstrom * np.round(delta / edge_angstrom)
+    delta = minimum_image(positions_angstrom - positions_angstrom[0], edge_angstrom)
     return delta - delta.mean(axis=0)
 
 
 def find_bonds_periodic(
-    positions_angstrom: np.ndarray, edge_angstrom: float
+    positions_angstrom: np.ndarray,
+    edge_angstrom: float,
+    cutoff_angstrom: float = CARBON_BOND_CUTOFF_ANGSTROM,
 ) -> list[tuple[int, int]]:
-    """All carbon-carbon pairs closer than the site's cutoff, by minimum-image distance.
+    """All carbon-carbon pairs closer than the cutoff, by minimum-image distance.
 
-    The periodic counterpart of `find_bonds`: the same flat 1.824 A cutoff (strictly
-    less than), measured to the nearest periodic image in a cubic cell, so a bond that
-    crosses the cell boundary is found wherever the dump or a re-imaging put its two
-    atoms. Dense O(n^2) like `find_bonds`; fine to a few thousand atoms.
+    The periodic counterpart of `find_bonds`: by default the same flat 1.824 A cutoff
+    (strictly less than), measured to the nearest periodic image in a cubic cell, so a
+    bond that crosses the cell boundary is found wherever the dump or a re-imaging put
+    its two atoms. Dense O(n^2) like `find_bonds`; fine to a few thousand atoms.
 
     Args:
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom. Need not be
             wrapped into the cell.
         edge_angstrom: Cubic cell edge length, in angstrom. Must exceed twice the cutoff.
+        cutoff_angstrom: Bond cutoff, in angstrom; the site's carbon-carbon cutoff by
+            default.
 
     Returns:
         Zero-based (first, second) atom index pairs with first < second, in row-major
@@ -263,16 +279,17 @@ def find_bonds_periodic(
         ValueError: If the cell edge is not more than twice the bond cutoff, where the
             minimum image would miss bonds to a second image.
     """
-    if edge_angstrom <= 2 * CARBON_BOND_CUTOFF_ANGSTROM:
+    if edge_angstrom <= 2 * cutoff_angstrom:
         raise ValueError(
             f"cell edge {edge_angstrom} A must exceed twice the "
-            f"{CARBON_BOND_CUTOFF_ANGSTROM:.3f} A bond cutoff"
+            f"{cutoff_angstrom:.3f} A bond cutoff"
         )
-    delta_angstrom = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
-    delta_angstrom -= edge_angstrom * np.round(delta_angstrom / edge_angstrom)
+    delta_angstrom = minimum_image(
+        positions_angstrom[:, None, :] - positions_angstrom[None, :, :], edge_angstrom
+    )
     distance_angstrom = np.linalg.norm(delta_angstrom, axis=-1)
     upper = np.triu(np.ones_like(distance_angstrom, dtype=bool), k=1)
-    rows, cols = np.where(upper & (distance_angstrom < CARBON_BOND_CUTOFF_ANGSTROM))
+    rows, cols = np.where(upper & (distance_angstrom < cutoff_angstrom))
     return list(zip(rows.tolist(), cols.tolist(), strict=True))
 
 
@@ -324,8 +341,9 @@ def make_whole(
             # One parent per newly reached atom: the first bond in array order.
             reached, first = np.unique(target[step], return_index=True)
             parent = source[step][first]
-            delta_angstrom = positions_angstrom[reached] - whole_angstrom[parent]
-            delta_angstrom -= edge_angstrom * np.round(delta_angstrom / edge_angstrom)
+            delta_angstrom = minimum_image(
+                positions_angstrom[reached] - whole_angstrom[parent], edge_angstrom
+            )
             whole_angstrom[reached] = whole_angstrom[parent] + delta_angstrom
             placed[reached] = True
             frontier[:] = False

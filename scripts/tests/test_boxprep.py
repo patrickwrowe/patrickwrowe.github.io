@@ -307,3 +307,13 @@ def test_make_whole_rejects_a_chain_bonded_to_its_own_image():
     assert (0, 6) in bonds and len(bonds) == 7
     with pytest.raises(ValueError, match="own periodic image"):
         boxprep.make_whole(chain, edge_angstrom, bonds)
+
+
+def test_find_bonds_periodic_cutoff_argument_moves_the_cutoff():
+    positions = np.array([[0.0, 0.0, 0.0], [1.9, 0.0, 0.0], [0.0, 2.3, 0.0]])
+    assert set(boxprep.find_bonds_periodic(positions, 10.0)) == set()
+    assert set(boxprep.find_bonds_periodic(positions, 10.0, cutoff_angstrom=2.0)) == {(0, 1)}
+    assert set(boxprep.find_bonds_periodic(positions, 10.0, cutoff_angstrom=2.5)) == {
+        (0, 1),
+        (0, 2),
+    }

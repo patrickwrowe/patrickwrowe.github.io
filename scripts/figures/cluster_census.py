@@ -128,11 +128,8 @@ def bonds_at_cutoff(
 ) -> np.ndarray:
     """Carbon-carbon bonds shorter than `cutoff_angstrom` to the nearest periodic image.
 
-    `boxprep.find_bonds_periodic` has one fixed carbon cutoff (1.824 A). Scaling the
-    coordinates and the cell edge together by that cutoff over the one requested moves
-    the threshold to `cutoff_angstrom` without a second bond search, so the census and
-    the renderings share one bond definition and the archive's 1.85 A can still be
-    reproduced.
+    A thin wrapper over `boxprep.find_bonds_periodic`, so the census and the renderings
+    share one bond definition and the archive's 1.85 A can still be reproduced.
 
     Args:
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
@@ -144,11 +141,10 @@ def bonds_at_cutoff(
         Integer array, shape (n_bonds, 2), each row (first, second) with first < second.
 
     Raises:
-        ValueError: From `find_bonds_periodic`, if the scaled edge is not more than twice
-            the cutoff.
+        ValueError: From `find_bonds_periodic`, if the edge is not more than twice the
+            cutoff.
     """
-    scale = CARBON_BOND_CUTOFF_ANGSTROM / cutoff_angstrom
-    bonds = boxprep.find_bonds_periodic(positions_angstrom * scale, edge_angstrom * scale)
+    bonds = boxprep.find_bonds_periodic(positions_angstrom, edge_angstrom, cutoff_angstrom)
     return np.array(bonds, dtype=int).reshape(-1, 2)
 
 
