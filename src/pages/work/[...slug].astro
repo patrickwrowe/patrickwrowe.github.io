@@ -70,7 +70,7 @@ const publicationsHere = isTheme
           priority
         />
         <Fragment slot="caption">
-          {data.heroAlt}
+          {data.heroCaption ?? data.heroAlt}
           {data.heroCredit && <span class="credit">{data.heroCredit}</span>}
         </Fragment>
       </Plate>

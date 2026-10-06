@@ -57,6 +57,10 @@ const work = defineCollection({
         .default([]),
       hero: image().optional(),
       heroAlt: z.string().optional(),
+      // The hero plate's caption: what is shown, how it was produced, why it is here
+      // (restructure spec §4.4). heroAlt describes what is visible and never doubles as
+      // the caption; a theme with a hero must write both.
+      heroCaption: z.string().optional(),
       demo: z.string().optional(),
       // Hidden from production builds, visible in `astro dev`. A theme article carries
       // draft: true from creation until Patrick approves it.
@@ -99,6 +103,13 @@ const work = defineCollection({
           code: "custom",
           path: ["shortTitle"],
           message: 'a theme needs a shortTitle for "Read in … →" links',
+        });
+      }
+      if (entry.hero && !entry.heroCaption) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["heroCaption"],
+          message: "a theme with a hero needs a heroCaption; heroAlt is the alt text, not the caption",
         });
       }
       if (entry.published !== undefined) {
