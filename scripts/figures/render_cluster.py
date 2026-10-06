@@ -78,6 +78,7 @@ def _colour_attr(species: str, attribute: str) -> str:
     colour = DRAW_COLOUR[species]
     return "" if colour == GROUP_COLOUR else f' {attribute}="{colour}"'
 
+
 # Opacity at the back and front of the cluster. Never reaches 1.0 at the front:
 # a solid black silhouette loses the ball-and-stick reading at small sizes.
 OPACITY_FAR = 0.07
@@ -159,7 +160,7 @@ def _draw(
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
                 f'r="{radius - ring_width / 2:.3f}" fill="none"'
-                f'{_colour_attr(species[i], "stroke")} '
+                f"{_colour_attr(species[i], 'stroke')} "
                 f'stroke-width="{ring_width:.3f}" opacity="{opacity:.3f}"/>'
             )
         else:
@@ -169,7 +170,7 @@ def _draw(
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
                 f'r="{radius:.3f}" stroke="none"'
-                f'{_colour_attr(species[i], "fill")} '
+                f"{_colour_attr(species[i], 'fill')} "
                 f'opacity="{opacity:.3f}"/>'
             )
         drawables.append((zs[i] + 1e-6, shape))  # ties favour the atom, not the bond
@@ -195,7 +196,7 @@ def render(
         # order of magnitude fewer atoms keeps the O(n^2) distance matrix small.
         keep = boxprep.slab_mask(rotated[:, 2], float(np.median(rotated[:, 2])), slab_angstrom)
         rotated = rotated[keep]
-        species = [s for s, k in zip(species, keep) if k]
+        species = [s for s, k in zip(species, keep, strict=True) if k]
 
     margin = ATOM_RADIUS * radius_scale * 2.0
     min_x, max_x = rotated[:, 0].min() - margin, rotated[:, 0].max() + margin
@@ -242,8 +243,10 @@ def _formula_markup(label: str, label_size: float = 1.6) -> str:
     size = label_size * SUBSCRIPT_SIZE_RATIO
     drop = label_size * SUBSCRIPT_DROP_RATIO
     return _SUBSCRIPT_RE.sub(
-        lambda m: f'<tspan font-size="{size:.3f}" dy="{drop:.3f}">{m.group(1)}</tspan>'
-        f'<tspan dy="{-drop:.3f}"></tspan>',
+        lambda m: (
+            f'<tspan font-size="{size:.3f}" dy="{drop:.3f}">{m.group(1)}</tspan>'
+            f'<tspan dy="{-drop:.3f}"></tspan>'
+        ),
         label,
     )
 
@@ -290,7 +293,7 @@ def render_series(
             # depth, keeps the cross-section legible and the bond search affordable.
             keep = boxprep.slab_mask(rotated[:, 2], float(np.median(rotated[:, 2])), slab_angstrom)
             rotated = rotated[keep]
-            species = [s for s, k in zip(species, keep) if k]
+            species = [s for s, k in zip(species, keep, strict=True) if k]
         rotated_all.append(rotated)
         species_all.append(species)
         half_widths.append(float(np.abs(rotated[:, 0]).max()) + margin)
@@ -328,7 +331,7 @@ def render_series(
 
     placed: list[str] = []
     labels: list[tuple[float, float, str]] = []
-    for index, (label, structure) in enumerate(clusters):
+    for index, (label, _structure) in enumerate(clusters):
         row, column = divmod(index, n_columns)
         offset_x = column_centre_x[column]
         offset_y = row_centre_y[row]
@@ -357,7 +360,7 @@ def render_series(
         # The viewBox width in labels, the page wrapper's --chart-em.
         f'data-chart-em="{view_width / label_size:.1f}">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
-        f'    {"".join(placed)}\n'
+        f"    {''.join(placed)}\n"
         f"    {label_markup}\n"
         f"  </g>\n"
         f"</svg>\n"

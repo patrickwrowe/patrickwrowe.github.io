@@ -25,9 +25,9 @@ import numpy as np
 
 RNG = np.random.default_rng(20)
 
-R0 = 46.0                  # bond length in SVG units
-W, H = 1400.0, 470.0       # display frame
-NX, NY = 26, 14            # lattice cells (generously larger than the frame)
+R0 = 46.0  # bond length in SVG units
+W, H = 1400.0, 470.0  # display frame
+NX, NY = 26, 14  # lattice cells (generously larger than the frame)
 N_SWITCHES = 26
 RELAX_STEPS = 4000
 K_BOND, K_13 = 1.0, 0.35
@@ -79,8 +79,10 @@ def stone_wales(pos, bonds, n_switches):
     # a bond is a valid rotation site only if it and all its neighbours are
     # fully three-coordinate, i.e. genuinely in the bulk of the sheet
     interior = [
-        (u, v) for u, v in bonds
-        if len(adj[u]) == 3 and len(adj[v]) == 3
+        (u, v)
+        for u, v in bonds
+        if len(adj[u]) == 3
+        and len(adj[v]) == 3
         and all(len(adj[w]) == 3 for w in (adj[u] | adj[v]) - {u, v})
     ]
     RNG.shuffle(interior)
@@ -93,7 +95,7 @@ def stone_wales(pos, bonds, n_switches):
             continue
         nbrs = {u, v} | adj[u] | adj[v]
         if nbrs & touched:
-            continue                       # keep defects from overlapping
+            continue  # keep defects from overlapping
 
         d = pos[v] - pos[u]
         a_opts = [(cross(d, pos[w] - pos[u]), w) for w in adj[u] - {v}]
@@ -129,7 +131,7 @@ def relax(pos, bonds, adj):
     pos = pos.copy()
     b = np.array(bonds)
     pairs13 = set()
-    for centre, nbrs in adj.items():
+    for nbrs in adj.values():
         nl = sorted(nbrs)
         for x in range(len(nl)):
             for y in range(x + 1, len(nl)):
@@ -217,9 +219,7 @@ def main():
     bond_paths = []
     for i, j in bonds:
         if inside(pos[i], 60) or inside(pos[j], 60):
-            bond_paths.append(
-                f"M{pos[i][0]:.1f} {pos[i][1]:.1f}L{pos[j][0]:.1f} {pos[j][1]:.1f}"
-            )
+            bond_paths.append(f"M{pos[i][0]:.1f} {pos[i][1]:.1f}L{pos[j][0]:.1f} {pos[j][1]:.1f}")
 
     defect_polys, counts = [], {}
     for r in rings:

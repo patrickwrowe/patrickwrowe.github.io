@@ -43,7 +43,9 @@ DUMP_EVERY_STEPS = 20
 _FORMULA_ORDER = ["C", "H", "O"]
 
 
-def read_frames(path: Path, wanted_steps: set[int]) -> dict[int, tuple[list[str], np.ndarray, float]]:
+def read_frames(
+    path: Path, wanted_steps: set[int]
+) -> dict[int, tuple[list[str], np.ndarray, float]]:
     """Stream the dump, returning {timestep: (species, cartesian positions, box length)}.
 
     The file is tens of megabytes and only a handful of frames are wanted, so it
@@ -105,7 +107,7 @@ def minimum_image_bonds(
     cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
     upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
     rows, cols = np.where(upper & (distances < cutoffs))
-    return list(zip(rows.tolist(), cols.tolist()))
+    return list(zip(rows.tolist(), cols.tolist(), strict=True))
 
 
 def molecules(n_atoms: int, bonds: list[tuple[int, int]]) -> list[list[int]]:
@@ -135,7 +137,10 @@ def molecules(n_atoms: int, bonds: list[tuple[int, int]]) -> list[list[int]]:
 
 
 def unwrap(
-    positions_angstrom: np.ndarray, bonds: list[tuple[int, int]], groups: list[list[int]], box: float
+    positions_angstrom: np.ndarray,
+    bonds: list[tuple[int, int]],
+    groups: list[list[int]],
+    box: float,
 ) -> np.ndarray:
     """Rebuild each molecule contiguously, then re-centre it inside the box.
 
@@ -179,7 +184,9 @@ def formula(species: list[str], group: list[int]) -> str:
 
 def write_xyz(path: Path, species: list[str], positions_angstrom: np.ndarray, comment: str) -> None:
     lines = [str(len(species)), comment]
-    for element, (x, y, z) in zip(species, positions_angstrom):
+    # One frame's species and positions, so equal in length; a mismatch would write an
+    # XYZ whose atom count disagrees with its rows, so strict=True fails instead.
+    for element, (x, y, z) in zip(species, positions_angstrom, strict=True):
         lines.append(f"{element} {x:12.6f} {y:12.6f} {z:12.6f}")
     path.write_text("\n".join(lines) + "\n")
 

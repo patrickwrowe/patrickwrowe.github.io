@@ -59,9 +59,7 @@ def read_coordination(path: Path) -> dict[int, float]:
     return fractions
 
 
-def _series(
-    points: list[tuple[float, float]], filled: bool
-) -> str:
+def _series(points: list[tuple[float, float]], filled: bool) -> str:
     """A polyline with markers. Open markers read as a second series without colour."""
     path = " ".join(f"{x:.2f},{y:.2f}" for x, y in points)
     parts = [
@@ -123,7 +121,9 @@ def _panel(
             f'<line x1="{origin_x - TICK_LENGTH:.2f}" y1="{y:.2f}" x2="{origin_x:.2f}" '
             f'y2="{y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>'
         )
-        parts.append(svg_text(origin_x - TICK_LENGTH - 1.2, y + 1.0, str(percentage), LABEL_SIZE, "end"))
+        parts.append(
+            svg_text(origin_x - TICK_LENGTH - 1.2, y + 1.0, str(percentage), LABEL_SIZE, "end")
+        )
 
     for value, label in x_ticks:
         x = sx(value)
@@ -136,7 +136,8 @@ def _panel(
 
     end_labels: list[tuple[float, float, str]] = []
     for index, (percentages, filled, label) in enumerate(series):
-        points = [(sx(x), sy(p)) for x, p in zip(x_values, percentages)]
+        # Every caller builds each series over the same list as `x_values`.
+        points = [(sx(x), sy(p)) for x, p in zip(x_values, percentages, strict=True)]
         parts.append(_series(points, filled))
         if legend:
             # A keyed legend in the empty top-right. Series that both end near
@@ -164,20 +165,40 @@ def _panel(
         parts.append(svg_text(x, y, label, LABEL_SIZE, "start"))
 
     parts.append(
-        svg_text(origin_x + PANEL_WIDTH / 2, baseline + TICK_LENGTH + LABEL_SIZE * 2 + 3.2, x_title, AXIS_TITLE_SIZE)
+        svg_text(
+            origin_x + PANEL_WIDTH / 2,
+            baseline + TICK_LENGTH + LABEL_SIZE * 2 + 3.2,
+            x_title,
+            AXIS_TITLE_SIZE,
+        )
     )
     parts.append(svg_text(origin_x, MARGIN_TOP - 3.4, panel_title, PANEL_TITLE_SIZE, "start"))
     if show_y_title:
         parts.append(
-            svg_text(origin_x - 10.5, MARGIN_TOP + PANEL_HEIGHT / 2, y_title, AXIS_TITLE_SIZE, "middle", rotate=-90)
+            svg_text(
+                origin_x - 10.5,
+                MARGIN_TOP + PANEL_HEIGHT / 2,
+                y_title,
+                AXIS_TITLE_SIZE,
+                "middle",
+                rotate=-90,
+            )
         )
     return "\n    ".join(parts)
 
 
 def build(data_dir: Path) -> str:
-    density = {d: read_coordination(data_dir / f"density-{d}gcc-coordination.txt") for d in DENSITIES_GCC}
-    temp_low = {t: read_coordination(data_dir / f"temp-1.5gcc-{t}K-coordination.txt") for t in TEMPERATURES_K}
-    temp_high = {t: read_coordination(data_dir / f"temp-3.0gcc-{t}K-coordination.txt") for t in TEMPERATURES_K}
+    density = {
+        d: read_coordination(data_dir / f"density-{d}gcc-coordination.txt") for d in DENSITIES_GCC
+    }
+    temp_low = {
+        t: read_coordination(data_dir / f"temp-1.5gcc-{t}K-coordination.txt")
+        for t in TEMPERATURES_K
+    }
+    temp_high = {
+        t: read_coordination(data_dir / f"temp-3.0gcc-{t}K-coordination.txt")
+        for t in TEMPERATURES_K
+    }
 
     left = _panel(
         origin_x=MARGIN_LEFT,
@@ -227,7 +248,8 @@ def read_rings(path: Path) -> dict[int, float]:
     totals differ by a factor of four across the density series. Percentages are
     what makes the shapes comparable.
     """
-    counts = {int(float(a)): float(b) for a, b in (l.split() for l in path.read_text().splitlines() if l.strip())}
+    rows = (line.split() for line in path.read_text().splitlines() if line.strip())
+    counts = {int(float(size)): float(count) for size, count in rows}
     total = sum(counts.values())
     return {size: 100.0 * counts.get(size, 0.0) / total for size in RING_SIZES}
 
@@ -280,7 +302,10 @@ def main() -> None:
     if args.rings_output:
         args.rings_output.parent.mkdir(parents=True, exist_ok=True)
         args.rings_output.write_text(build_rings(args.data_dir))
-        for label, name in (("1.0", "density-1.0gcc-rings.txt"), ("3.5", "density-3.5gcc-rings.txt")):
+        for label, name in (
+            ("1.0", "density-1.0gcc-rings.txt"),
+            ("3.5", "density-3.5gcc-rings.txt"),
+        ):
             rings = read_rings(args.data_dir / name)
             share = " ".join(f"{s}:{rings[s]:.0f}%" for s in RING_SIZES if rings[s] >= 1)
             print(f"  rings at {label} g/cc   {share}")

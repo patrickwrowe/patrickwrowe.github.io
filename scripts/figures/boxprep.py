@@ -281,8 +281,7 @@ def find_bonds_periodic(
     """
     if edge_angstrom <= 2 * cutoff_angstrom:
         raise ValueError(
-            f"cell edge {edge_angstrom} A must exceed twice the "
-            f"{cutoff_angstrom:.3f} A bond cutoff"
+            f"cell edge {edge_angstrom} A must exceed twice the {cutoff_angstrom:.3f} A bond cutoff"
         )
     delta_angstrom = minimum_image(
         positions_angstrom[:, None, :] - positions_angstrom[None, :, :], edge_angstrom
