@@ -75,7 +75,9 @@ const tracks = weights
   : `repeat(${columns}, minmax(var(--floor), 1fr))`;
 
 // Thumbnail widths for `sizes`: the plate is at most --measure-figure (54rem = 864 px)
-// wide less its padding, and a column is never narrower than the 100 px floor.
+// wide less its padding, and a column is never narrower than the 100 px floor. Keep these
+// numbers in step with src/styles/grid.css; scripts/shoot_plates.py fails if they drift
+// far enough to put a phone thumbnail under 100 px.
 const plateWidth = 864 - 24;
 const weightSum = weights ? weights.reduce((sum, weight) => sum + weight, 0) : columns;
 const sizesFor = (column: number): string => {

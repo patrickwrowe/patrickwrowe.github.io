@@ -19,7 +19,7 @@
 .grid--rows {
   grid-template-columns: auto var(--tracks);
 }
-/* Panels in proportion to their cell edge stand on a common baseline. */
+/* Panels in proportion to the world width they are framed at stand on a common baseline. */
 .grid--weighted {
   align-items: end;
 }
