@@ -81,6 +81,9 @@ NARROW_LEGEND_GAP = LEGEND_GAP
 # wide chart's gap between its axis title baseline and BASELINE + MARGIN_BOTTOM.
 NARROW_BOTTOM_PAD = MARGIN_BOTTOM - TICK_LENGTH - 2 * LABEL_SIZE - 3.2
 
+# Vertical pitch of the legend rows, in both layouts.
+LEGEND_ROW_HEIGHT = LABEL_SIZE * 2.4
+
 
 def size_to_x(n_atoms: float) -> float:
     """Horizontal position of a cluster size on the log axis.
@@ -214,6 +217,49 @@ def _read_outcomes(data_dir: Path) -> dict[tuple[int, int], str]:
     return outcome
 
 
+def _legend(outcome: dict[tuple[int, int], str], legend_x: float, legend_top: float) -> list[str]:
+    """One glyph and label per outcome class, with the number of runs in it.
+
+    Args:
+        outcome: Every run's class, as from `_read_outcomes`.
+        legend_x: Horizontal centre of the glyphs, in viewBox units.
+        legend_top: Vertical centre of the first row, in viewBox units.
+
+    Returns:
+        The SVG elements of the legend, two per class, in `OutcomeClass` order.
+    """
+    counts = Counter(outcome.values())  # a class with no runs reads 0
+    parts = []
+    for index, class_name in enumerate(OutcomeClass):
+        row_y = legend_top + index * LEGEND_ROW_HEIGHT
+        label = f"{class_name} ({counts[class_name] or 'none'})"
+        parts.append(f'<g data-legend="{class_name}">{glyph(class_name, legend_x, row_y)}</g>')
+        parts.append(
+            svg_text(legend_x + GLYPH_RADIUS + 2.4, row_y + 1.0, label, LABEL_SIZE, "start")
+        )
+    return parts
+
+
+def _wrap_svg(width: float, height: float, body: str, chart_em: float) -> str:
+    """The SVG document around a chart's elements.
+
+    Args:
+        width: viewBox width, in viewBox units.
+        height: viewBox height, in viewBox units.
+        body: The chart's SVG elements, joined for indentation inside the group.
+        chart_em: The viewBox width in labels, written as `data-chart-em`, the page
+            wrapper's `--chart-em`.
+
+    Returns:
+        The SVG document as a string.
+    """
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
+        f'role="img" data-chart-em="{chart_em:.1f}">\n'
+        f"  <g>\n    {body}\n  </g>\n</svg>\n"
+    )
+
+
 def build(data_dir: Path) -> str:
     """The outcome diagram as an SVG document.
 
@@ -269,27 +315,13 @@ def build(data_dir: Path) -> str:
             f"{glyph(class_name, size_to_x(n_atoms), temperature_to_y(kelvin))}</g>"
         )
 
-    counts = Counter(outcome.values())  # a class with no runs reads 0
     legend_x = left + PLOT_WIDTH + LEGEND_GAP
-    row_height = LABEL_SIZE * 2.4
-    legend_top = top + (PLOT_HEIGHT - row_height * (len(OutcomeClass) - 1)) / 2
-    for index, class_name in enumerate(OutcomeClass):
-        row_y = legend_top + index * row_height
-        label = f"{class_name} ({counts[class_name] or 'none'})"
-        parts.append(f'<g data-legend="{class_name}">{glyph(class_name, legend_x, row_y)}</g>')
-        parts.append(
-            svg_text(legend_x + GLYPH_RADIUS + 2.4, row_y + 1.0, label, LABEL_SIZE, "start")
-        )
+    legend_top = top + (PLOT_HEIGHT - LEGEND_ROW_HEIGHT * (len(OutcomeClass) - 1)) / 2
+    parts.extend(_legend(outcome, legend_x, legend_top))
 
     width = left + PLOT_WIDTH + LEGEND_GAP + LEGEND_WIDTH
     height = BASELINE + MARGIN_BOTTOM
-    body = "\n    ".join(parts)
-    # data-chart-em: the viewBox width in labels, the page wrapper's --chart-em.
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
-        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n'
-        f"  <g>\n    {body}\n  </g>\n</svg>\n"
-    )
+    return _wrap_svg(width, height, "\n    ".join(parts), width / LABEL_SIZE)
 
 
 def build_narrow(data_dir: Path) -> str:
@@ -354,22 +386,11 @@ def build_narrow(data_dir: Path) -> str:
             f"{glyph(class_name, temperature_to_x_narrow(kelvin), size_to_y_narrow(n_atoms))}</g>"
         )
 
-    counts = Counter(outcome.values())  # a class with no runs reads 0
-    row_height = LABEL_SIZE * 2.4
     legend_top = title_y + NARROW_LEGEND_GAP
-    for index, class_name in enumerate(OutcomeClass):
-        row_y = legend_top + index * row_height
-        label = f"{class_name} ({counts[class_name] or 'none'})"
-        parts.append(f'<g data-legend="{class_name}">{glyph(class_name, left, row_y)}</g>')
-        parts.append(svg_text(left + GLYPH_RADIUS + 2.4, row_y + 1.0, label, LABEL_SIZE, "start"))
+    parts.extend(_legend(outcome, left, legend_top))
 
-    height = legend_top + (len(OutcomeClass) - 1) * row_height + NARROW_BOTTOM_PAD
-    body = "\n    ".join(parts)
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {NARROW_WIDTH:.2f} {height:.2f}" '
-        f'role="img" data-chart-em="{NARROW_WIDTH / LABEL_SIZE:.1f}">\n'
-        f"  <g>\n    {body}\n  </g>\n</svg>\n"
-    )
+    height = legend_top + (len(OutcomeClass) - 1) * LEGEND_ROW_HEIGHT + NARROW_BOTTOM_PAD
+    return _wrap_svg(NARROW_WIDTH, height, "\n    ".join(parts), NARROW_WIDTH / LABEL_SIZE)
 
 
 def main(argv: list[str] | None = None) -> None:
