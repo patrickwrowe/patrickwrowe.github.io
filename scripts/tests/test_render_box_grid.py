@@ -26,6 +26,7 @@ MOLRENDER_NAMES = (
     "Solid",
     "Structure",
     "View",
+    "find_blender",
     "render",
 )
 
@@ -52,7 +53,16 @@ def render_box_grid(render_box_grid_module, monkeypatch):
     monkeypatch.setattr(
         render_box_grid_module, "scene_for", lambda spec, subject, cage, draft: None
     )
+    monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
     return render_box_grid_module
+
+
+@pytest.fixture
+def tool_versions(render_box_grid_module):
+    """The real `tool_versions`, with its once-per-run cache emptied before and after."""
+    render_box_grid_module.tool_versions.cache_clear()
+    yield render_box_grid_module.tool_versions
+    render_box_grid_module.tool_versions.cache_clear()
 
 
 def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
@@ -147,4 +157,61 @@ def test_a_caged_panel_keeps_its_full_frame(render_box_grid, monkeypatch, tmp_pa
     spec = {"resolution": [800, 800], "cage_angstrom": [44.2, 44.2, 11.0]}
     output = _render_panel(render_box_grid, monkeypatch, tmp_path, spec, (300, 500, 350, 450))
     assert Image.open(output).size == (800, 800)
-    assert "crop none (caged)" in capsys.readouterr().out
+    summary = capsys.readouterr().out
+    assert "crop none (caged)" in summary
+    assert summary.rstrip().endswith("versions: VERSIONS")
+
+
+def _fake_blender(tmp_path: Path, body: str) -> Path:
+    """An executable shell script standing in for Blender."""
+    script = tmp_path / "blender"
+    script.write_text(f"#!/bin/sh\n{body}\n")
+    script.chmod(0o755)
+    return script
+
+
+@pytest.mark.parametrize(
+    ("blender_body", "molrender_installed", "expected"),
+    [
+        (
+            "printf 'Blender 9.9.9\\n\\tbuild date: 2026-01-01\\n'",
+            True,
+            "Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3",
+        ),
+        (
+            "printf 'Blender 9.9.9\\n'",
+            False,
+            "Blender 9.9.9, Molecular Nodes unknown, molrender unknown",
+        ),
+        (
+            "echo 'Blender 9.9.9'; exit 1",
+            True,
+            "Blender unknown, Molecular Nodes unknown, molrender 1.2.3",
+        ),
+        (None, True, "Blender unknown, Molecular Nodes unknown, molrender 1.2.3"),
+    ],
+    ids=["all found", "molrender not installed", "blender exits non-zero", "blender not found"],
+)
+def test_tool_versions_reads_each_version_or_says_unknown(
+    render_box_grid_module,
+    tool_versions,
+    monkeypatch,
+    tmp_path,
+    blender_body,
+    molrender_installed,
+    expected,
+):
+    def find_blender() -> Path:
+        if blender_body is None:
+            raise FileNotFoundError("Could not locate the Blender executable")
+        return _fake_blender(tmp_path, blender_body)
+
+    def installed_version(name: str) -> str:
+        if not molrender_installed:
+            raise render_box_grid_module.PackageNotFoundError(name)
+        return "1.2.3"
+
+    monkeypatch.setattr(render_box_grid_module, "find_blender", find_blender)
+    monkeypatch.setattr(render_box_grid_module, "version", installed_version)
+
+    assert tool_versions() == expected
