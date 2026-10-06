@@ -95,10 +95,13 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
 from dataclasses import replace
+from functools import cache
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import boxprep
@@ -114,10 +117,46 @@ from molrender import (
     Solid,
     Structure,
     View,
+    find_blender,
     render,
 )
 
 RENDER_TIMEOUT_S = 3600
+
+
+@cache
+def tool_versions() -> str:
+    """Blender, Molecular Nodes and molrender versions, for every render's summary line.
+
+    This script runs under the molrender interpreter, which cannot `import bpy` (the `bpy`
+    wheel is cp313-only and molrender's own README says its environment has none), so
+    Blender's version comes from asking the executable molrender itself would start
+    (`molrender.find_blender`: `BLENDER_PATH`, the macOS bundle, then `PATH`). molrender
+    records neither where Molecular Nodes is installed nor its version (the add-on is
+    imported only inside Blender, and its version sits in a `blender_manifest.toml` whose
+    location molrender never stores), so that one reads "unknown" until molrender exposes it.
+    Cached: Blender starts once per run, not once per panel.
+
+    Returns:
+        "Blender <version>, Molecular Nodes <version>, molrender <version>"; any version
+        that cannot be found reads "unknown".
+    """
+    try:
+        result = subprocess.run(
+            [str(find_blender()), "--version"], capture_output=True, text=True, check=False
+        )
+        blender_version = (
+            result.stdout.splitlines()[0].removeprefix("Blender ")
+            if result.returncode == 0 and result.stdout
+            else "unknown"
+        )
+    except OSError:  # no Blender located (FileNotFoundError), or it would not start
+        blender_version = "unknown"
+    try:
+        molrender_version = version("molrender")
+    except PackageNotFoundError:
+        molrender_version = "unknown"
+    return f"Blender {blender_version}, Molecular Nodes unknown, molrender {molrender_version}"
 
 
 def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
@@ -270,7 +309,8 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         f"{spec['id']}: {n_atoms} atoms, wall {elapsed_s:.0f} s, "
         f"blender exit {result.returncode}, {output}, "
         f"crop {crop}, "
-        f"border strays (row, column, rgb): {strays or 'none'}"
+        f"border strays (row, column, rgb): {strays or 'none'}, "
+        f"versions: {tool_versions()}"
     )
 
 
