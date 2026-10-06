@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94.50 94.00" role="img" data-chart-em="31.5">
   <g>
-  <line x1="31.645038" y1="6.00" x2="31.645038" y2="74.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="2 1.6" data-reference="DFT"/>
+  <line x1="31.65" y1="6.00" x2="31.65" y2="74.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="2 1.6" data-reference="DFT"/>
   <line x1="18.00" y1="74.00" x2="89.50" y2="74.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <line x1="24.55" y1="74.00" x2="24.55" y2="75.60" stroke="var(--graphite)" stroke-width="0.45"/>
   <text x="24.55" y="79.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">−7.6</text>

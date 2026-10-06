@@ -175,9 +175,8 @@ def build(narrow: bool = False) -> str:
 
     parts: list[str] = [
         # Vertical reference line for DFT, drawn first so the rows sit on top of it. Its x
-        # is printed to full float precision, not the usual .2f, so a test can check it
-        # against x_for_value() without a rounding error of its own to allow for.
-        f'<line x1="{reference_x:.6f}" y1="{MARGIN_TOP:.2f}" x2="{reference_x:.6f}" '
+        # is printed at the markers' precision, so it is the DFT marker's cx to the digit.
+        f'<line x1="{reference_x:.2f}" y1="{MARGIN_TOP:.2f}" x2="{reference_x:.2f}" '
         f'y2="{baseline_y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}" '
         f'stroke-dasharray="2 1.6" data-reference="DFT"/>',
         # Bottom axis.

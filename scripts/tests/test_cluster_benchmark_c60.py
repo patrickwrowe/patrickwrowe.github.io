@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import cluster_benchmark_c60
+import pytest
 
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 
@@ -16,15 +17,16 @@ def test_svg_has_eight_data_markers_and_no_hex_colour():
     assert not HEX_COLOUR.search(svg)
 
 
-def test_dft_reference_line_sits_at_the_mapped_dft_value():
-    svg = cluster_benchmark_c60.build()
-    match = re.search(r'<line ([^>]*data-reference="DFT"[^>]*)/>', svg)
-    assert match is not None
-    x1 = float(re.search(r'x1="([-\d.]+)"', match.group(1)).group(1))
-    x2 = float(re.search(r'x2="([-\d.]+)"', match.group(1)).group(1))
-    expected_x = cluster_benchmark_c60.x_for_value(cluster_benchmark_c60.DFT_REFERENCE_EV_PER_ATOM)
-    assert abs(x1 - expected_x) < 1e-6
-    assert abs(x2 - expected_x) < 1e-6
+@pytest.mark.parametrize("narrow", [False, True])
+def test_dft_reference_line_sits_on_the_dft_marker(narrow):
+    # Read both from the drawing, not from x_for_value: the line is meant to pass through
+    # the marker the reader sees, whatever function placed either.
+    svg = cluster_benchmark_c60.build(narrow=narrow)
+    dft_row = re.search(r'<g data-method="DFT" data-kind="reference">.*?</g>', svg, re.DOTALL)
+    marker_x = float(re.search(r'<circle cx="([-\d.]+)"', dft_row.group(0)).group(1))
+    line = re.search(r'<line ([^>]*data-reference="DFT"[^>]*)/>', svg).group(1)
+    assert abs(float(re.search(r'x1="([-\d.]+)"', line).group(1)) - marker_x) < 1e-6
+    assert abs(float(re.search(r'x2="([-\d.]+)"', line).group(1)) - marker_x) < 1e-6
 
 
 def test_gap20_is_filled_and_classical_potentials_are_open():
