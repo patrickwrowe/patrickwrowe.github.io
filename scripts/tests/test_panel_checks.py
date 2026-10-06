@@ -264,6 +264,38 @@ def test_an_agx_grey_world_fails(tmp_path):
         panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
 
 
+@pytest.mark.parametrize("case", ["size", "corner", "strays", "neighbour", "chroma"])
+def test_every_failed_check_names_the_label_given_not_the_scratch_file(tmp_path, case):
+    pixels = _white_pixels()
+    expected_size = (IMAGE_SIZE, IMAGE_SIZE)
+    if case == "size":
+        expected_size = (IMAGE_SIZE + 1, IMAGE_SIZE)
+    elif case == "corner":
+        pixels[:] = 207
+    elif case == "strays":
+        for column in (2, 14, 26):
+            pixels[0, column] = GREY_RGB
+    elif case == "neighbour":
+        pixels[0, 12] = pixels[1, 12] = GREY_RGB
+    else:
+        pixels[16, 16] = (255, 0, 0)
+    png = tmp_path / "scratch-file.png"
+    _write_image(png, pixels)
+
+    with pytest.raises(RuntimeError) as error:
+        panel_checks.check_and_flatten(png, expected_size, label="density-1.0")
+
+    assert str(error.value).startswith("density-1.0: ")
+    assert "scratch-file" not in str(error.value)
+
+
+def test_without_a_label_a_failed_check_names_the_png(tmp_path):
+    png = tmp_path / "scratch-file.png"
+    _write_image(png, np.full((IMAGE_SIZE, IMAGE_SIZE, 3), 207, dtype=np.uint8))
+    with pytest.raises(RuntimeError, match="scratch-file.png: corner block medians"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
 def _grey_panel(tmp_path, blob: tuple[int, int, int, int], strays: list[tuple[int, int]]):
     """A 200 x 200 white panel with a dark blob (top, bottom, left, right) and lone dark pixels."""
     pixels = np.full((200, 200), 255, dtype=np.uint8)

@@ -217,7 +217,7 @@ def assert_fits_cage(
 
 
 def check_and_flatten(
-    png: Path, expected_size: tuple[int, int]
+    png: Path, expected_size: tuple[int, int], label: str | None = None
 ) -> list[tuple[int, int, list[int]]]:
     """Assert size, a white world and near-zero chroma, then save as 8-bit grey.
 
@@ -232,6 +232,8 @@ def check_and_flatten(
     Args:
         png: The rendered PNG, overwritten in place as mode L.
         expected_size: (width, height) in pixels the file on disk must have.
+        label: What every error message names in place of `png`: the panel and its output
+            path, since the scratch file checked here is gone by the time anyone reads it.
 
     Returns:
         The tolerated border strays as (row, column, [r, g, b]) in pixels, 0-255.
@@ -241,9 +243,10 @@ def check_and_flatten(
             border has more than MAX_BORDER_STRAYS non-white pixels or one that is not
             isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA.
     """
+    name = label or png
     image = Image.open(png).convert("RGB")
     if image.size != expected_size:
-        raise RuntimeError(f"{png}: rendered {image.size}, expected {expected_size}")
+        raise RuntimeError(f"{name}: rendered {image.size}, expected {expected_size}")
     pixels = np.asarray(image, dtype=np.int16)
     block = CORNER_BLOCK_PX
     corner_blocks = [
@@ -255,7 +258,7 @@ def check_and_flatten(
     medians = [np.median(corner.reshape(-1, 3), axis=0) for corner in corner_blocks]
     if any((median != WHITE).any() for median in medians):
         raise RuntimeError(
-            f"{png}: corner block medians are not white: {[median.tolist() for median in medians]}"
+            f"{name}: corner block medians are not white: {[median.tolist() for median in medians]}"
         )
     non_white = (pixels < WHITE).any(axis=2)
     on_border = np.ones_like(non_white)
@@ -267,18 +270,19 @@ def check_and_flatten(
     ]
     if len(strays) > MAX_BORDER_STRAYS:
         raise RuntimeError(
-            f"{png}: {len(strays)} non-white border pixels, at most {MAX_BORDER_STRAYS}: "
+            f"{name}: {len(strays)} non-white border pixels, at most {MAX_BORDER_STRAYS}: "
             f"{strays[:8]}"
         )
     padded = np.pad(non_white, 1)
     for row, column, value in strays:
         if padded[row : row + 3, column : column + 3].sum() > 1:
             raise RuntimeError(
-                f"{png}: non-white border pixel ({row}, {column}) {value} has a non-white neighbour"
+                f"{name}: non-white border pixel ({row}, {column}) {value} "
+                "has a non-white neighbour"
             )
     chroma = int((pixels.max(axis=2) - pixels.min(axis=2)).max())
     if chroma > MAX_CHROMA:
-        raise RuntimeError(f"{png}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
+        raise RuntimeError(f"{name}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
     image.convert("L").save(png, optimize=True)
     return strays
 

@@ -250,7 +250,9 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
     strays = panel_checks.check_and_flatten(
-        rendered, (int(width_px * scale), int(height_px * scale))
+        rendered,
+        (int(width_px * scale), int(height_px * scale)),
+        label=f"{spec['id']} ({output})",
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
     # its empty ground away to a square; a panel with a cage shares a scale and keeps its
