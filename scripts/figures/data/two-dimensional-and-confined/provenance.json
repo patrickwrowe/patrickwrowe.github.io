@@ -18,6 +18,38 @@
       "original": "/media/patrick/PR_Backup/Vermiculite_Water_Structure/Paper/source data.xlsx (papers/vermiculite-membranes/originals/MANIFEST.md)",
       "extraction": "As fig4a-k-z-density.dat, sheet Fig.4b",
       "md5": "8a5f86b23498266b55a57b7b590db30f"
+    },
+    "k_oh_vector_angle_layer1_layer2_data.dat": {
+      "what": "Distribution of cos theta (O-H bond and the surface normal) in the first and second contact layers of water on K-vermiculite, columns cos, P(cos theta) layer 1, cos, P(cos theta) layer 2 in arbitrary units; 100 rows, cos between -0.76 and 0.76. Matches sheet Fig. 4c of the Source Data workbook to its rounding (5e-6).",
+      "source_path": "../papers/vermiculite-membranes/originals/k_oh_vector_angle_layer1_layer2_data.dat",
+      "source_md5": "46c1946ccaa43f853916052dc6b43fd3",
+      "original": "/media/patrick/PR_Backup/CP2K/AIMD/17_Keyed_Surface_Analysis/KV_theta_OH_angle_data.dat (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "Copied unchanged.",
+      "md5": "46c1946ccaa43f853916052dc6b43fd3"
+    },
+    "k_hoh_plane_angle_layer1_layer2_data.dat": {
+      "what": "Distribution of cos phi (H-O-H plane and the basal plane) in the first and second contact layers of water on K-vermiculite, columns cos, P(cos phi) layer 1, cos, P(cos phi) layer 2 in arbitrary units; 100 rows from cos -1 to 0.98, mirror-symmetric about 0; the rows from cos 0 up are the sheet's 50. Matches sheet Fig. 4d of the Source Data workbook to its rounding (5e-6).",
+      "source_path": "../papers/vermiculite-membranes/originals/k_hoh_plane_angle_layer1_layer2_data.dat",
+      "source_md5": "247520525119d8a7ebf36b078f629e0c",
+      "original": "/media/patrick/PR_Backup/CP2K/AIMD/17_Keyed_Surface_Analysis/KV_phi_plane_angle_data.dat (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "Copied unchanged.",
+      "md5": "247520525119d8a7ebf36b078f629e0c"
+    },
+    "li_oh_vector_angle_layer1_layer2_data.dat": {
+      "what": "Distribution of cos theta (O-H bond and the surface normal) in the first and second contact layers of water on Li-vermiculite, columns cos, P(cos theta) layer 1, cos, P(cos theta) layer 2 in arbitrary units; 100 rows, cos between -0.76 and 0.76. Matches sheet Fig. 4c of the Source Data workbook to its rounding (5e-6).",
+      "source_path": "../papers/vermiculite-membranes/originals/li_oh_vector_angle_layer1_layer2_data.dat",
+      "source_md5": "01acac37b6970992407a57739bee3d27",
+      "original": "/media/patrick/PR_Backup/CP2K/AIMD/17_Keyed_Surface_Analysis/LiV_theta_OH_angle_data.dat (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "Copied unchanged.",
+      "md5": "01acac37b6970992407a57739bee3d27"
+    },
+    "li_hoh_plane_angle_layer1_layer2_data.dat": {
+      "what": "Distribution of cos phi (H-O-H plane and the basal plane) in the first and second contact layers of water on Li-vermiculite, columns cos, P(cos phi) layer 1, cos, P(cos phi) layer 2 in arbitrary units; 100 rows from cos -1 to 0.98, mirror-symmetric about 0; the rows from cos 0 up are the sheet's 50. Matches sheet Fig. 4d of the Source Data workbook to its rounding (5e-6).",
+      "source_path": "../papers/vermiculite-membranes/originals/li_hoh_plane_angle_layer1_layer2_data.dat",
+      "source_md5": "75db1665566df970a3351e3ff896c7dc",
+      "original": "/media/patrick/PR_Backup/CP2K/AIMD/17_Keyed_Surface_Analysis/LiV_phi_plane_angle_data.dat (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "Copied unchanged.",
+      "md5": "75db1665566df970a3351e3ff896c7dc"
     }
   },
   "rejected": {

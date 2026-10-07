@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import vermiculite_z_density
+from chart_svg import assert_text_fits, panel_body, read_curves
 from figure_style import LABEL_SIZE, NARROW_CHART_EM
 from xlsx_source_data import read_sheet
 
@@ -22,63 +23,6 @@ COLUMNS = {"ion": 0, "oxygen": 2, "hydrogen": 4}
 LAYOUTS = [(False, "vermiculite-z-density.svg"), (True, "vermiculite-z-density-narrow.svg")]
 
 
-def read_numbers(svg_fragment: str, anchor: str) -> tuple[np.ndarray, np.ndarray]:
-    """Positions and values of the numeric tick labels with one text anchor.
-
-    Args:
-        svg_fragment: SVG text holding the `<text>` elements.
-        anchor: "middle" for the bottom axis's labels, "end" for the left axis's.
-
-    Returns:
-        (the labels' x for a bottom axis or baseline y for a left axis, in viewBox units;
-        the numbers they print). A left label's baseline sits 1.0 below its tick.
-    """
-    labels = re.findall(
-        rf'<text x="([\d.]+)" y="([\d.]+)" text-anchor="{anchor}" [^>]*>([^<]*)</text>',
-        svg_fragment,
-    )
-    numeric = [
-        (float(x), float(y), float(content.replace("−", "-")))
-        for x, y, content in labels
-        if re.fullmatch(r"−?[\d.]+", content)
-    ]
-    positions = [x if anchor == "middle" else y - 1.0 for x, y, _ in numeric]
-    return np.array(positions), np.array([value for _, _, value in numeric])
-
-
-def drawn_curves(svg: str, cation: str) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-    """Read each curve of a panel back into data units from the drawing alone.
-
-    The axes are calibrated from the printed tick labels and their positions, so this checks
-    what a reader would read, whatever function placed the points.
-
-    Args:
-        svg: The figure.
-        cation: The panel, "K" or "Li".
-
-    Returns:
-        Series key -> (density in a.u., height in angstrom) per drawn point.
-    """
-    panel = re.search(rf'<g data-panel="{cation}">(.*?)\n  </g>', svg, re.DOTALL).group(1)
-    x_units, densities = read_numbers(panel, "middle")
-    y_units, heights = read_numbers(panel, "end")
-    density_slope, density_offset = np.polyfit(densities, x_units, 1)
-    height_slope, height_offset = np.polyfit(heights, y_units, 1)
-    curves = {}
-    for series, body in re.findall(r'<g data-series="(\w+)">(.*?)</g>', panel, re.DOTALL):
-        points = np.array(
-            [
-                [float(number) for number in pair.split(",")]
-                for pair in re.search(r'points="([^"]+)"', body).group(1).split()
-            ]
-        )
-        curves[series] = (
-            (points[:, 0] - density_offset) / density_slope,
-            (points[:, 1] - height_offset) / height_slope,
-        )
-    return curves
-
-
 @pytest.mark.parametrize(("narrow", "committed"), LAYOUTS)
 def test_the_committed_svg_is_byte_for_byte_what_the_script_writes(narrow, committed):
     written = vermiculite_z_density.build(DATA, narrow=narrow).encode("utf-8")
@@ -90,7 +34,7 @@ def test_every_curve_is_its_column_of_the_data_to_the_precision_of_the_drawing(n
     svg = vermiculite_z_density.build(DATA, narrow=narrow)
     for cation, data_file in vermiculite_z_density.DATA_FILES.items():
         columns = np.loadtxt(DATA / data_file)
-        curves = drawn_curves(svg, cation)
+        curves = read_curves(panel_body(svg, panel=cation))
         assert set(curves) == set(COLUMNS)
         for series, first in COLUMNS.items():
             density_au, height_angstrom = curves[series]
@@ -105,7 +49,7 @@ def test_each_panel_draws_the_ion_in_its_own_colour_and_the_water_in_o_and_h_col
     svg = vermiculite_z_density.build(DATA)
     assert not HEX_COLOUR.search(svg)
     for cation, ion_token in (("K", "var(--species-k)"), ("Li", "var(--species-li)")):
-        panel = re.search(rf'<g data-panel="{cation}">(.*?)\n  </g>', svg, re.DOTALL).group(1)
+        panel = panel_body(svg, panel=cation)
         strokes = {
             series: re.search(r'stroke="([^"]+)"', body).group(1)
             for series, body in re.findall(r'<g data-series="(\w+)">(.*?)</g>', panel, re.DOTALL)
@@ -120,7 +64,7 @@ def test_each_panel_draws_the_ion_in_its_own_colour_and_the_water_in_o_and_h_col
 def test_the_legend_of_each_panel_names_the_colour_of_each_series():
     svg = vermiculite_z_density.build(DATA)
     for cation in vermiculite_z_density.DATA_FILES:
-        panel = re.search(rf'<g data-panel="{cation}">(.*?)\n  </g>', svg, re.DOTALL).group(1)
+        panel = panel_body(svg, panel=cation)
         entries = {
             species: (
                 re.search(r'stroke="([^"]+)"', body).group(1),
@@ -154,8 +98,8 @@ def test_the_highest_point_of_a_curve_is_where_the_caption_would_put_it(
     assert height_angstrom[density_au.argmax()] == pytest.approx(peak_height_angstrom, abs=5e-4)
     assert density_au.max() == pytest.approx(peak_density_au, abs=5e-5)
 
-    drawn_density_au, drawn_height_angstrom = drawn_curves(
-        vermiculite_z_density.build(DATA), cation
+    drawn_density_au, drawn_height_angstrom = read_curves(
+        panel_body(vermiculite_z_density.build(DATA), panel=cation)
     )[series]
     assert drawn_height_angstrom[drawn_density_au.argmax()] == pytest.approx(
         peak_height_angstrom, abs=5e-3
@@ -168,7 +112,7 @@ def test_li_has_two_ion_sites_where_k_has_one():
     svg = vermiculite_z_density.build(DATA)
     sites = {}
     for cation in vermiculite_z_density.DATA_FILES:
-        density_au, height_angstrom = drawn_curves(svg, cation)["ion"]
+        density_au, height_angstrom = read_curves(panel_body(svg, panel=cation))["ion"]
         interior = np.arange(1, len(density_au) - 1)
         is_peak = (
             (density_au[interior] > density_au[interior - 1])
@@ -244,7 +188,7 @@ def test_chart_em_is_the_viewbox_width_in_labels_and_the_narrow_one_fits_the_pho
     narrow, committed
 ):
     svg = vermiculite_z_density.build(DATA, narrow=narrow)
-    width, height = map(float, re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups())
+    width, _height = map(float, re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups())
     assert float(re.search(r'data-chart-em="([\d.]+)"', svg).group(1)) == pytest.approx(
         width / LABEL_SIZE, abs=0.05
     )
@@ -252,16 +196,4 @@ def test_chart_em_is_the_viewbox_width_in_labels_and_the_narrow_one_fits_the_pho
         assert width == NARROW_CHART_EM * LABEL_SIZE
     else:
         assert width / LABEL_SIZE * 11 <= 700, "wider than a 700 px plate"
-    texts = re.findall(
-        r'<text x="([\d.]+)" y="([\d.]+)" text-anchor="(\w+)" font-size="([\d.]+)"([^>]*)>([^<]*)<',
-        svg,
-    )
-    assert texts
-    for x, y, anchor, size, attributes, content in texts:
-        assert float(size) >= LABEL_SIZE, content
-        extent = 0.6 * len(content) * float(size)  # the mono face advances 0.6 em
-        reach = {"start": 0.0, "middle": 0.5, "end": 1.0}[anchor] * extent
-        if "rotate" in attributes:  # runs up the page from its anchor
-            assert float(y) - reach >= 0 and float(y) - reach + extent <= height, content
-        else:
-            assert float(x) - reach >= 0 and float(x) - reach + extent <= width, content
+    assert_text_fits(svg)
