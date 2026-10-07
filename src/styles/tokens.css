@@ -35,24 +35,25 @@
    * a ground rather than a foreground and carries no contrast burden. */
   --lustre-wash: rgba(255, 196, 0, 0.09);
 
-  /* Species colours, for a render of more than one species (Patrick, 2026-10-05): CPK
-   * hues desaturated to the site's register, hydrogen lightest, carbon the site's grey.
+  /* Species colours, for a render of more than one species (Patrick, 2026-10-05): low
+   * chroma, lightness between --graphite and --ink, told apart by lightness as well as
+   * hue; hydrogen lightest (oxygen just above graphite), carbon the site's grey.
    * The same values as SPECIES_COLOUR in scripts/figures/constants.py, which draws them
    * into the Blender panels; scripts/tests/test_palette.py fails if the two drift.
    * An element's identity, never state or anomaly, so never --lustre. */
   --species-c: #4a4a4a;
   --species-h: #a4a4a4;
   --species-o: #a55445;
-  --species-n: #4c6a9c;
-  --species-b: #b07a8a;
-  --species-s: #b89a3e;
-  --species-mo: #4f8a87;
-  --species-mg: #5f9a5f;
-  --species-li: #8a6fae;
-  --species-k: #7f66a8;
-  --species-na: #8a78b8;
-  --species-si: #8a8a6a;
-  --species-al: #9a9aa0;
+  --species-n: #405b88;
+  --species-b: #562b36;
+  --species-s: #53562a;
+  --species-mo: #143a39;
+  --species-mg: #1f3f21;
+  --species-li: #72598d;
+  --species-k: #394c76;
+  --species-na: #164547;
+  --species-si: #4a5c64;
+  --species-al: #5a3547;
 
   /* §5.2 Type — sans labels, serif reads, mono is data.
    * --font-* are injected by the Astro Fonts API (see astro.config.mjs) and already

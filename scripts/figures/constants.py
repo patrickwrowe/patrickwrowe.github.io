@@ -31,24 +31,26 @@ BOND_TOLERANCE = 1.2
 # The flat carbon-carbon cutoff: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 
-# Species colours for renders of more than one species (Patrick, 2026-10-05). CPK hues,
-# desaturated to the site's register; carbon is the site's grey and a single-species render
-# stays greyscale. The same values are the --species-* tokens in src/styles/tokens.css;
-# scripts/tests/test_palette.py fails if the two drift. sRGB hex.
+# Species colours for renders of more than one species (Patrick, 2026-10-05). Low chroma,
+# lightness between --graphite and --ink, told apart by lightness as well as hue; hydrogen
+# is the lightest (oxygen sits just above graphite), carbon is the site's grey, no species
+# takes --lustre's gold, and a single-species render stays greyscale. The same values are
+# the --species-* tokens in src/styles/tokens.css; scripts/tests/test_palette.py fails if
+# the two drift. sRGB hex.
 SPECIES_COLOUR: dict[str, str] = {
     "C": "#4a4a4a",
     "H": "#a4a4a4",
     "O": "#a55445",
-    "N": "#4c6a9c",
-    "B": "#b07a8a",
-    "S": "#b89a3e",
-    "Mo": "#4f8a87",
-    "Mg": "#5f9a5f",
-    "Li": "#8a6fae",
-    "K": "#7f66a8",
-    "Na": "#8a78b8",
-    "Si": "#8a8a6a",
-    "Al": "#9a9aa0",
+    "N": "#405b88",
+    "B": "#562b36",
+    "S": "#53562a",
+    "Mo": "#143a39",
+    "Mg": "#1f3f21",
+    "Li": "#72598d",
+    "K": "#394c76",
+    "Na": "#164547",
+    "Si": "#4a5c64",
+    "Al": "#5a3547",
 }
 
 # Weights of linear red, green and blue in relative luminance Y, which orders two colours by
