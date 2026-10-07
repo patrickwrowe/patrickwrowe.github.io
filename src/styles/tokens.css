@@ -41,8 +41,8 @@
    * into the Blender panels; scripts/tests/test_palette.py fails if the two drift.
    * An element's identity, never state or anomaly, so never --lustre. */
   --species-c: #4a4a4a;
-  --species-h: #c9c9c9;
-  --species-o: #b5533c;
+  --species-h: #a4a4a4;
+  --species-o: #a55445;
   --species-n: #4c6a9c;
   --species-b: #b07a8a;
   --species-s: #b89a3e;

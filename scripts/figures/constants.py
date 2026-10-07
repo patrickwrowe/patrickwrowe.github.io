@@ -37,8 +37,8 @@ CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 # scripts/tests/test_palette.py fails if the two drift. sRGB hex.
 SPECIES_COLOUR: dict[str, str] = {
     "C": "#4a4a4a",
-    "H": "#c9c9c9",
-    "O": "#b5533c",
+    "H": "#a4a4a4",
+    "O": "#a55445",
     "N": "#4c6a9c",
     "B": "#b07a8a",
     "S": "#b89a3e",
