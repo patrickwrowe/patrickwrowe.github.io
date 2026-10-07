@@ -1,0 +1,37 @@
+{
+  "note": "Data of the figures in src/content/work/figures/two-dimensional-and-confined/, one entry per file. md5 is of the committed file; source_md5 is of the file it was taken from.",
+  "files": {
+    "fig4a-k-z-density.dat": {
+      "what": "Fig. 4a of Huang et al., Nat. Commun. 11, 1097 (2020): probability density (a.u.) and height above the surface oxygen plane (angstrom) of the K ion, water oxygen and water hydrogen in K-vermiculite; 100 rows, six columns (density, height) x (ion, oxygen, hydrogen)",
+      "source_path": "../papers/vermiculite-membranes/originals/nature_commun_source_data.xlsx",
+      "source_sheet": "Fig. 4a",
+      "source_md5": "852213da5e1ed8259fece6fbedd2db9d",
+      "original": "/media/patrick/PR_Backup/Vermiculite_Water_Structure/Paper/source data.xlsx (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "Rows 2-101 of the sheet, columns A-F, each stored double written back with repr(); read with the standard library (zipfile and ElementTree) because openpyxl is not in the project environment; scripts/tests/test_vermiculite_z_density.py reads the workbook again and asserts the file equals the sheet",
+      "md5": "ef917a234ab321660fd78266211909f1"
+    },
+    "fig4b-li-z-density.dat": {
+      "what": "Fig. 4b of Huang et al., Nat. Commun. 11, 1097 (2020): the same three densities above Li-vermiculite",
+      "source_path": "../papers/vermiculite-membranes/originals/nature_commun_source_data.xlsx",
+      "source_sheet": "Fig.4b",
+      "source_md5": "852213da5e1ed8259fece6fbedd2db9d",
+      "original": "/media/patrick/PR_Backup/Vermiculite_Water_Structure/Paper/source data.xlsx (papers/vermiculite-membranes/originals/MANIFEST.md)",
+      "extraction": "As fig4a-k-z-density.dat, sheet Fig.4b",
+      "md5": "8a5f86b23498266b55a57b7b590db30f"
+    }
+  },
+  "rejected": {
+    "data_K.dat": {
+      "source_path": "../select-archive/2022-papers-private-symlink/Vermiculite/Data/Vermiculite_Ion_Data/data_K.dat",
+      "archive_path": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/UCL/Papers/Vermiculite/Data/Vermiculite_Ion_Data/data_K.dat",
+      "md5": "d4f9a0d4ebdd10edb77db72e88d4854e",
+      "why": "Not the data of Fig. 4a. The header names the columns the wrong way round (the first of each pair is the density, the second the height); 100 bins, but the heights run 5.2-11.2 A for the ion where the paper and the sheet have it at 0.7-1.9 A, the ion curve has two peaks 4.7 A apart where the sheet's has one, and the oxygen and hydrogen curves differ bin for bin from the sheet's. Checked 2026-10-07."
+    },
+    "data_Li.dat": {
+      "source_path": "../select-archive/2022-papers-private-symlink/Vermiculite/Data/Vermiculite_Ion_Data/data_Li.dat",
+      "archive_path": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/UCL/Papers/Vermiculite/Data/Vermiculite_Ion_Data/data_Li.dat",
+      "md5": "afcdb9a1132f9348ed1dfbbf03cd7bbd",
+      "why": "As data_K.dat, against Fig.4b: ion heights 4.0-11.4 A against -0.7-2.4 A in the sheet."
+    }
+  }
+}
