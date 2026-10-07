@@ -1,9 +1,10 @@
 """Constants of the carbon figure and analysis scripts, one home each, with sources.
 
 Physical constants, the bond rule every bond graph on the site uses, the radius the
-Blender renderer scales its spheres by, the outcome classes of the cluster census and the
-run grid of the 48 GAP sphere simulations. Stdlib only, so both the project `.venv` and
-the molrender Blender environment (render_box_grid.py) can import it.
+Blender renderer scales its spheres by, the species palette both renderers share, the
+outcome classes of the cluster census and the run grid of the 48 GAP sphere simulations.
+Stdlib only, so both the project `.venv` and the molrender Blender environment
+(render_box_grid.py) can import it.
 
 Units are in the names: lengths in angstrom, masses in g mol^-1, temperatures in kelvin.
 """
@@ -30,9 +31,50 @@ BOND_TOLERANCE = 1.2
 # The flat carbon-carbon cutoff: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 
+# Species colours for renders of more than one species (Patrick, 2026-10-05). CPK hues,
+# desaturated to the site's register; carbon is the site's grey and a single-species render
+# stays greyscale. The same values are the --species-* tokens in src/styles/tokens.css;
+# scripts/tests/test_palette.py fails if the two drift. sRGB hex.
+SPECIES_COLOUR: dict[str, str] = {
+    "C": "#4a4a4a",
+    "H": "#c9c9c9",
+    "O": "#b5533c",
+    "N": "#4c6a9c",
+    "B": "#b07a8a",
+    "S": "#b89a3e",
+    "Mo": "#4f8a87",
+    "Mg": "#5f9a5f",
+    "Li": "#8a6fae",
+    "K": "#7f66a8",
+    "Na": "#8a78b8",
+    "Si": "#8a8a6a",
+    "Al": "#9a9aa0",
+}
+
 # Molecular Nodes' van der Waals radius for carbon (molecularnodes assets/data.py). Its
 # BallAndStick style reads sphere_radius as a factor on this, not as a length.
 CARBON_VDW_RADIUS_ANGSTROM = 1.70
+
+
+def srgb_hex_to_linear(hex_colour: str) -> tuple[float, float, float]:
+    """sRGB hex ("#rrggbb") to linear RGB in 0-1, the space Blender's Solid material takes.
+
+    Under the Standard view transform a linear value renders back to the sRGB it came from,
+    so a token on the page and the same species in a PNG match.
+
+    Args:
+        hex_colour: Six hex digits after a "#".
+
+    Returns:
+        The red, green and blue channels in linear light, each 0-1 (dimensionless).
+    """
+    channels = tuple(
+        int(hex_colour.lstrip("#")[index : index + 2], 16) / 255 for index in (0, 2, 4)
+    )
+    return tuple(
+        channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+        for channel in channels
+    )
 
 
 class OutcomeClass(StrEnum):
