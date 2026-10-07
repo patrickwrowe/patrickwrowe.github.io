@@ -70,10 +70,12 @@ Do not break these without asking first.
   a value may be taken from one (a year, a prize name, an amount), the file and its path
   never go into `src/` or `public/`, a caption or a credit. Posters, prospectus or review
   covers and submitted journal covers may be published (Patrick, 2026-10-03).
-- **Copy goes through the pipeline** in restructure spec §5: dossier, draft, Opus stylist,
-  separate Opus fact audit, Patrick. Blurbs, captions, alt text and wall-label fields are
-  part of the article and go through the same audit. The voice guide is
-  `docs/voice/derek-lowe.md` and the terminology sheet `docs/voice/terminology.md`.
+- **Copy goes through the pipeline** in restructure spec §5: dossier, draft, stylist,
+  separate fact audit, edit pass, design review, Patrick. Blurbs, captions, alt text and
+  wall-label fields are part of the article and go through the same audit. The voice
+  guide is the `/pwr:in-my-voice` skill (its `SKILL.md`, `references/` and `samples/`);
+  `docs/voice/derek-lowe.md` holds only the site's own rules, and the terminology sheet
+  is `docs/voice/terminology.md`.
 
 ## Conventions that differ from the obvious default
 
