@@ -21,6 +21,8 @@ __all__ = [
     "AXIS_WIDTH",
     "DASHED_SERIES",
     "LABEL_SIZE",
+    "MARKER_RADIUS",
+    "MARKER_STROKE",
     "MINUS_SIGN",
     "NARROW_CHART_EM",
     "SERIES_WIDTH",
@@ -42,6 +44,9 @@ AXIS_TITLE_SIZE = 3.2
 # (graphitisation_figure.py's open-marker series dashes its line the same way).
 SERIES_WIDTH = 0.9
 DASHED_SERIES = "2.5 1.8"
+# A data marker: the circle's outer radius, and the stroke of an open one.
+MARKER_RADIUS = 1.7
+MARKER_STROKE = 0.7
 # The mono face draws U+2212 as a real minus; Python's float formatting uses hyphen-minus,
 # which reads shorter and sits high next to a digit.
 MINUS_SIGN = "−"

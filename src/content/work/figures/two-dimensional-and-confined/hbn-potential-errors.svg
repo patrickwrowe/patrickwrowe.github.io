@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 159.00 66.00" role="img" data-chart-em="53.0">
+  <g>
+  <g data-panel="force">
+    <line x1="25.00" y1="53.00" x2="81.00" y2="53.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="31.07" y1="53.00" x2="31.07" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="31.07" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0.1</text>
+    <line x1="51.23" y1="53.00" x2="51.23" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="51.23" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1</text>
+    <line x1="71.38" y1="53.00" x2="71.38" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="71.38" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">10</text>
+    <text x="53.00" y="63.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">force RMSE (eV/Å)</text>
+    <g data-potential="hBN-GAP" data-kind="gap">
+      <line x1="25.00" y1="9.00" x2="28.45" y2="9.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="30.15" cy="9.00" r="1.7" fill="var(--ink)" stroke="none"/>
+      <text x="33.15" y="10.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0.09</text>
+      <text x="22.00" y="10.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">hBN-GAP</text>
+    </g>
+    <g data-potential="Tersoff" data-kind="classical">
+      <line x1="25.00" y1="17.00" x2="50.28" y2="17.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="51.98" cy="17.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="54.98" y="18.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.09</text>
+      <text x="22.00" y="18.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Tersoff</text>
+    </g>
+    <g data-potential="ExTeP" data-kind="classical">
+      <line x1="25.00" y1="25.00" x2="51.05" y2="25.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="52.75" cy="25.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="55.75" y="26.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.19</text>
+      <text x="22.00" y="26.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">ExTeP</text>
+    </g>
+    <g data-potential="ReaxFF" data-kind="classical">
+      <line x1="25.00" y1="33.00" x2="65.46" y2="33.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="67.16" cy="33.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="70.16" y="34.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">6.17</text>
+      <text x="22.00" y="34.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">ReaxFF</text>
+    </g>
+    <g data-potential="Tersoff+ILP" data-kind="classical">
+      <line x1="25.00" y1="41.00" x2="50.44" y2="41.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="52.14" cy="41.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="55.14" y="42.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.11</text>
+      <text x="22.00" y="42.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">Tersoff+ILP</text>
+    </g>
+    <g data-potential="ExTeP+ILP" data-kind="classical">
+      <line x1="25.00" y1="49.00" x2="51.27" y2="49.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="52.97" cy="49.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="55.97" y="50.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1.22</text>
+      <text x="22.00" y="50.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">ExTeP+ILP</text>
+    </g>
+  </g>
+  <g data-panel="energy">
+    <line x1="95.00" y1="53.00" x2="151.00" y2="53.00" stroke="var(--graphite)" stroke-width="0.45"/>
+    <line x1="95.00" y1="53.00" x2="95.00" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="95.00" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
+    <line x1="107.44" y1="53.00" x2="107.44" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="107.44" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">20</text>
+    <line x1="119.89" y1="53.00" x2="119.89" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="119.89" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">40</text>
+    <line x1="132.33" y1="53.00" x2="132.33" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="132.33" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">60</text>
+    <line x1="144.78" y1="53.00" x2="144.78" y2="54.60" stroke="var(--graphite)" stroke-width="0.45"/>
+    <text x="144.78" y="58.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">80</text>
+    <text x="123.00" y="63.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">formation-energy RMSE (meV per atom)</text>
+    <g data-potential="hBN-GAP" data-kind="gap">
+      <line x1="95.00" y1="9.00" x2="95.17" y2="9.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="96.87" cy="9.00" r="1.7" fill="var(--ink)" stroke="none"/>
+      <text x="99.87" y="10.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3</text>
+    </g>
+    <g data-potential="Tersoff" data-kind="classical" data-bound="lower">
+      <line x1="95.00" y1="17.00" x2="126.90" y2="17.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="128.60" cy="17.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="131.60" y="18.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">&gt;54</text>
+    </g>
+    <g data-potential="ExTeP" data-kind="classical" data-bound="lower">
+      <line x1="95.00" y1="25.00" x2="134.99" y2="25.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="136.69" cy="25.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="139.69" y="26.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">&gt;67</text>
+    </g>
+    <g data-potential="ReaxFF" data-kind="classical">
+      <line x1="95.00" y1="33.00" x2="121.30" y2="33.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="123.00" cy="33.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="126.00" y="34.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">45</text>
+    </g>
+    <g data-potential="Tersoff+ILP" data-kind="classical">
+      <line x1="95.00" y1="41.00" x2="95.79" y2="41.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="97.49" cy="41.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="100.49" y="42.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4</text>
+    </g>
+    <g data-potential="ExTeP+ILP" data-kind="classical">
+      <line x1="95.00" y1="49.00" x2="109.48" y2="49.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
+      <circle cx="111.18" cy="49.00" r="1.35" fill="var(--plate)" stroke="var(--ink)" stroke-width="0.7"/>
+      <text x="114.18" y="50.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">26</text>
+    </g>
+  </g>
+  </g>
+</svg>

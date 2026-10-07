@@ -1,0 +1,60 @@
+{
+  "what": "RMSE of hBN-GAP and five classical potentials against DFT (PBE+D3(BJ)): forces on a validation set of 1450 structures, and formation energies of the optimised hBN phases per atom",
+  "paper": "Thiemann, Rowe, Muller and Michaelides, J. Phys. Chem. C 2020, doi 10.1021/acs.jpcc.0c05831 (papers/hbn-rippling/paper.pdf)",
+  "sources": {
+    "force_rmse_ev_per_angstrom": {
+      "paper_page": 7,
+      "dossier": "docs/dossiers/two-dimensional-and-confined/dossier.md",
+      "dossier_lines": [181, 182, 183]
+    },
+    "formation_energy_rmse_mev_per_atom": {
+      "paper_page": 8,
+      "dossier": "docs/dossiers/two-dimensional-and-confined/dossier.md",
+      "dossier_lines": [187, 188]
+    }
+  },
+  "potentials": [
+    {
+      "name": "hBN-GAP",
+      "kind": "gap",
+      "force_rmse_ev_per_angstrom": 0.09,
+      "formation_energy_rmse_mev_per_atom": 3,
+      "formation_energy_is_lower_bound": false
+    },
+    {
+      "name": "Tersoff",
+      "kind": "classical",
+      "force_rmse_ev_per_angstrom": 1.09,
+      "formation_energy_rmse_mev_per_atom": 54,
+      "formation_energy_is_lower_bound": true
+    },
+    {
+      "name": "ExTeP",
+      "kind": "classical",
+      "force_rmse_ev_per_angstrom": 1.19,
+      "formation_energy_rmse_mev_per_atom": 67,
+      "formation_energy_is_lower_bound": true
+    },
+    {
+      "name": "ReaxFF",
+      "kind": "classical",
+      "force_rmse_ev_per_angstrom": 6.17,
+      "formation_energy_rmse_mev_per_atom": 45,
+      "formation_energy_is_lower_bound": false
+    },
+    {
+      "name": "Tersoff+ILP",
+      "kind": "classical",
+      "force_rmse_ev_per_angstrom": 1.11,
+      "formation_energy_rmse_mev_per_atom": 4,
+      "formation_energy_is_lower_bound": false
+    },
+    {
+      "name": "ExTeP+ILP",
+      "kind": "classical",
+      "force_rmse_ev_per_angstrom": 1.22,
+      "formation_energy_rmse_mev_per_atom": 26,
+      "formation_energy_is_lower_bound": false
+    }
+  ]
+}

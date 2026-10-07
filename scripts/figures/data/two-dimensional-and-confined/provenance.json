@@ -50,6 +50,20 @@
       "original": "/media/patrick/PR_Backup/CP2K/AIMD/17_Keyed_Surface_Analysis/LiV_phi_plane_angle_data.dat (papers/vermiculite-membranes/originals/MANIFEST.md)",
       "extraction": "Copied unchanged.",
       "md5": "75db1665566df970a3351e3ff896c7dc"
+    },
+    "hbn-potential-errors.json": {
+      "what": "RMSE against DFT of hBN-GAP, Tersoff, ExTeP, ReaxFF, Tersoff+ILP and ExTeP+ILP: force RMSE in eV per angstrom (paper p.7, validation set of 1450 structures) and formation-energy RMSE in meV per atom (paper p.8); Tersoff's and ExTeP's energies are lower bounds",
+      "source_path": "docs/dossiers/two-dimensional-and-confined/dossier.md",
+      "source_lines": "181-183 (forces) and 187-188 (energies) of the table in the 'Boron nitride rippling' subsection; the plate row is line 628",
+      "dossier_md5_when_read": "2c4695ee59411a357bac3fa7cc64bcb1",
+      "paper_path": "../papers/hbn-rippling/paper.pdf",
+      "paper_pages": {
+        "force RMSE": 7,
+        "formation-energy RMSE": 8
+      },
+      "paper_md5": "0cd1f52ce9984ff368599ca306b1589f",
+      "extraction": "Typed from the dossier's table. The dossier gives Tersoff's and ExTeP's formation-energy RMSE as 54 and 67 without a qualifier; the paper's p.8 says 'more than 54 and 67 meV/atom', so the file marks those two as lower bounds. scripts/tests/test_hbn_potential_errors.py re-reads the dossier's table (if docs/ is present) and pages 7 and 8 of the paper (if pdftotext is present) and asserts every number",
+      "md5": "35edc832586ad1723412d1721726af97"
     }
   },
   "rejected": {

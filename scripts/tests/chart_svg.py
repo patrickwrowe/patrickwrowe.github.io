@@ -36,27 +36,40 @@ def panel_body(svg: str, **attributes: str) -> str:
     return re.search(rf"<g{opening}>(.*?)\n  </g>", svg, re.DOTALL).group(1)
 
 
-def read_curves(panel: str) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-    """Each curve of a panel in the units of its axes, read from the drawing alone.
+def numeric_labels(panel: str, anchor: str) -> tuple[np.ndarray, np.ndarray]:
+    """Where a panel's numeric tick labels sit, and the numbers they print.
 
-    A bottom axis's numeric labels are centred under their ticks; a left axis's end at the
-    tick with their baseline 1.0 below it (figure_style.svg_axis).
+    A bottom axis's labels are centred under their ticks ("middle"); a left axis's end at
+    the tick with their baseline 1.0 below it ("end") (figure_style.svg_axis).
 
     Args:
         panel: A panel's SVG text.
+        anchor: The labels' text-anchor, "middle" or "end".
+
+    Returns:
+        (the ticks' x for "middle" or y for "end", in viewBox units; the printed numbers).
+    """
+    positions, values = [], []
+    for x, y, text_anchor, _size, _attributes, content in TEXT.findall(panel):
+        if text_anchor == anchor and NUMBER.fullmatch(content):
+            positions.append(float(x) if anchor == "middle" else float(y) - 1.0)
+            values.append(float(content.replace("−", "-")))
+    return np.array(positions), np.array(values)
+
+
+def read_curves(panel: str) -> dict[str, tuple[np.ndarray, np.ndarray]]:
+    """Each curve of a panel in the units of its axes, read from the drawing alone.
+
+    Args:
+        panel: A panel's SVG text, with a numeric bottom axis and left axis.
 
     Returns:
         Series key -> (x values, y values) per drawn point.
     """
-    labels = [
-        (float(x), float(y), anchor, float(NUMBER.fullmatch(content).group(0).replace("−", "-")))
-        for x, y, anchor, _size, _attributes, content in TEXT.findall(panel)
-        if NUMBER.fullmatch(content)
-    ]
-    along = np.array([[x, value] for x, _y, anchor, value in labels if anchor == "middle"])
-    up = np.array([[y - 1.0, value] for _x, y, anchor, value in labels if anchor == "end"])
-    x_slope, x_offset = np.polyfit(along[:, 1], along[:, 0], 1)
-    y_slope, y_offset = np.polyfit(up[:, 1], up[:, 0], 1)
+    x_positions, x_values = numeric_labels(panel, "middle")
+    y_positions, y_values = numeric_labels(panel, "end")
+    x_slope, x_offset = np.polyfit(x_values, x_positions, 1)
+    y_slope, y_offset = np.polyfit(y_values, y_positions, 1)
     curves = {}
     for series, body in re.findall(r'<g data-series="(\w+)">(.*?)</g>', panel, re.DOTALL):
         points = np.array(
