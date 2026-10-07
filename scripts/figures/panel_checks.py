@@ -54,17 +54,19 @@ HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 def _is_number(value: object) -> bool:
-    """True for a finite int or float that is not a bool.
+    """True for a finite int or float that is not a bool, and that `float()` can hold.
 
     JSON `true` would otherwise pass as 1, and Python's json module reads `Infinity` and
-    `NaN`, which pass every `>= 1` or `> 0` rule that does not rule them out. The bounds
-    test, not `math.isfinite`, because it also holds for an integer too large for a float.
+    `NaN`, which pass every `>= 1` or `> 0` rule that does not rule them out. An integer
+    too large for a float (`10**400`) is refused too: the driver calls `float()` on these
+    values, which would raise a bare `OverflowError` with no panel or key in it.
     """
-    return (
-        isinstance(value, int | float)
-        and not isinstance(value, bool)
-        and -math.inf < value < math.inf
-    )
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def _positive_list(value: object, length: int, integers: bool = False) -> bool:

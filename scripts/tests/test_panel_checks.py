@@ -156,9 +156,12 @@ def test_load_panels_accepts_a_negative_direction_a_margin_of_one_and_a_null_sla
     assert panel["direction"] == [0, -1, 0] and panel["slab_angstrom"] is None
 
 
-def test_an_integer_too_large_for_a_float_is_a_number_not_a_crash(tmp_path):
+def test_an_integer_too_large_for_a_float_is_refused_naming_panel_and_key(tmp_path):
     manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", "margin": 10**400}])
-    assert panel_checks.load_panels(manifest_path)[0]["margin"] == 10**400
+    with pytest.raises(ValueError) as error:
+        panel_checks.load_panels(manifest_path)
+    assert str(manifest_path) in str(error.value)
+    assert "panel a" in str(error.value) and "margin" in str(error.value)
 
 
 def test_load_panels_accepts_a_species_colour_map_and_a_panel_map_replaces_the_plates(tmp_path):
