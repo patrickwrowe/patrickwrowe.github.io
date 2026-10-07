@@ -71,6 +71,7 @@
   doi: 10.1038/s41467-020-14854-4
   theme: two-dimensional-and-confined
   anchor: vermiculite-membranes
+  blurb: "Exchanging the cation between vermiculite's layers moves its water contact angle from 15° for lithium to 101° for tin, and lithium alone is far more hydrophilic than the trend allows. The AIMD says why: potassium has 1 adsorption site and orders the contact layer, lithium has 2 and lets it relax to bulk-like water bound at −0.89 eV per molecule. Second author."
 
 - id: hbn-rippling
   kind: paper
@@ -81,6 +82,7 @@
   doi: 10.1021/acs.jpcc.0c05831
   theme: two-dimensional-and-confined
   anchor: boron-nitride-rippling
+  blurb: "A Gaussian approximation potential for hexagonal boron nitride with a force error of 0.09 eV Å⁻¹, an order of magnitude below Tersoff, ExTeP and ReaxFF. On 7,200-atom sheets it gives hBN the same anomalous rippling exponent as graphene, 0.82 against 0.87, a bending rigidity of 1.09 eV, and a crossing to soliton-like ripples between −0.25% and −0.5% strain. Second author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2007.11448" }
     - { label: Data, url: "https://doi.org/10.17863/CAM.66112" }
@@ -95,6 +97,7 @@
   doi: 10.1073/pnas.2110077118
   theme: two-dimensional-and-confined
   anchor: aqueous-potentials
+  blurb: "Committee neural network potentials for 6 systems, water at ions, in nanotubes and on MoS₂ and TiO₂, each built from a single short AIMD run and converged at roughly 300 training structures. They cost 4 to 5 orders of magnitude less than the DFT they came from, and the TiO₂ model ran 1,728 atoms for 5 ns where its AIMD had 30 ps. Third author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2106.00048" }
     - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
@@ -109,6 +112,7 @@
   doi: 10.1021/acsnano.2c02784
   theme: two-dimensional-and-confined
   anchor: nanotube-water-flow
+  blurb: "Water's friction on boron nitride is about 4–5 times that on carbon at every curvature, from 16 nanotubes and 2 sheets run for over 40 ns on committee potentials trained to revPBE-D3. The radius dependence is oxygen's and the material dependence is hydrogen's, which docks on nitrogen and hops: oxygen makes water slip, hydrogen makes it stick. Third author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2202.04955" }
     - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
@@ -122,6 +126,7 @@
   doi: 10.1038/s41586-023-05849-4
   theme: two-dimensional-and-confined
   anchor: molybdenum-disulfide-membranes
+  blurb: "A restacked MoS₂ membrane shuts to water below about pH 4 and opens above about pH 11, remembers which, and collapses from 11.4 to 6.4 Å once its surface sulfur is protonated. AIMD at 2 lithium loadings found the same water bilayer and the same diffusion in both, so lithium alone does not set the permeation; classical MD showed it sets the entry. Third author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2301.10195" }
 
