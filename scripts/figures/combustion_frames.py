@@ -25,6 +25,7 @@ import argparse
 from collections import Counter, deque
 from pathlib import Path
 
+import boxprep
 import numpy as np
 from constants import BOND_TOLERANCE, COVALENT_RADIUS_ANGSTROM
 
@@ -100,8 +101,7 @@ def minimum_image_bonds(
 ) -> list[tuple[int, int]]:
     """Bonded pairs under the minimum-image convention."""
     deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
-    deltas -= box * np.round(deltas / box)
-    distances = np.linalg.norm(deltas, axis=-1)
+    distances = np.linalg.norm(boxprep.minimum_image(deltas, box), axis=-1)
 
     radii = np.array([COVALENT_RADIUS_ANGSTROM[s] for s in species])
     cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
@@ -164,7 +164,7 @@ def unwrap(
                 if neighbour in placed:
                     continue
                 offset = unwrapped[neighbour] - unwrapped[atom]
-                unwrapped[neighbour] -= box * np.round(offset / box)
+                unwrapped[neighbour] = unwrapped[atom] + boxprep.minimum_image(offset, box)
                 placed.add(neighbour)
                 queue.append(neighbour)
 

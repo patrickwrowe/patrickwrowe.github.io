@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy"]
 # ///
-"""Render a carbon cluster from an XYZ file as a monochrome ball-and-stick SVG.
+"""Render a cluster from an XYZ file as a ball-and-stick SVG.
 
 The structures are Patrick's own AIRSS structure-search output for Carbon 191,
 255-266 (2022). They ship as bare geometries with no renderings, so site figures
@@ -11,12 +11,15 @@ the site's own palette (spec 01 section 6.2, and the `scripts/figures/`
 convention in CLAUDE.md).
 
 Depth is encoded as opacity rather than as a grey ramp, and every stroke and fill
-resolves to a design token (`--ink` or `--graphite`) rather than a hard-coded
-palette. Far atoms fade towards whatever `--plate` happens to be.
+resolves to a design token rather than a hard-coded colour. Far atoms fade towards
+whatever `--plate` happens to be.
 
-Elements are told apart by size, by filled versus open, and by one coarse step
-down the ink ramp. There is no hue anywhere: the palette's only accent is
-reserved for state and anomaly.
+A figure of one species is monochrome: `--ink`, with `--graphite` for the one coarse step
+down the ramp. A figure of more than one species (the CHO combustion series) draws each
+species with its `--species-*` token, the palette defined once in constants.py's
+SPECIES_COLOUR and mirrored in src/styles/tokens.css. Species are also told apart by size
+and by filled versus open, so the figure still reads in greyscale. `--lustre` is never a
+species: it is reserved for state and anomaly.
 
 Usage:
     uv run scripts/figures/render_cluster.py <input.xyz> <output.svg> [--rotate X,Y,Z]
@@ -43,6 +46,7 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
+from constants import SPECIES_COLOUR
 from figure_style import NARROW_CHART_EM
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
@@ -51,9 +55,11 @@ from figure_style import NARROW_CHART_EM
 ATOM_RADIUS = 0.16
 BOND_WIDTH = 0.11
 
-# Species is carried by three cues at once: size, fill, and a step down the
-# ink-to-graphite ramp. No hue is involved. The palette's one accent, --lustre, is
-# reserved for state and anomaly (CLAUDE.md), and element identity is neither.
+# In a figure of one species, species is carried by three cues at once: size, fill, and a
+# step down the ink-to-graphite ramp. No hue is involved. In a figure of more than one,
+# the species' own colour (see _species_colour) replaces the ramp, and size and fill stay
+# as the cues that survive greyscale. The palette's one accent, --lustre, is reserved for
+# state and anomaly (CLAUDE.md), and element identity is neither.
 #
 # Size alone was not enough: carbon and hydrogen came out as two black discs a
 # little apart in radius, which is unreadable in a crowded frame. So hydrogen also
@@ -68,14 +74,29 @@ DRAW_RADIUS_FACTOR = {"C": 1.0, "H": 0.48, "O": 1.25}
 HOLLOW_SPECIES = frozenset({"O"})
 
 
-def _colour_attr(species: str, attribute: str) -> str:
+def _species_colour(species: str, multi_species: bool) -> str:
+    """The CSS paint for one species: its palette token in a multi-species figure, else the ramp.
+
+    Args:
+        species: Element symbol.
+        multi_species: Whether the figure draws more than one species.
+
+    Returns:
+        `var(--species-<symbol>)` when `multi_species`, otherwise DRAW_COLOUR's `var(--ink)` or
+        `var(--graphite)`.
+    """
+    return f"var(--species-{species.lower()})" if multi_species else DRAW_COLOUR[species]
+
+
+def _colour_attr(species: str, attribute: str, multi_species: bool) -> str:
     """`fill=`/`stroke=` for one species, omitted when it matches the group default.
 
-    Keeping the attribute off carbon means a carbon-only figure emits exactly the
-    markup it did before any of this existed, so the published cage figures are
-    untouched by adding elements.
+    Keeping the attribute off carbon in a single-species figure means a carbon-only figure
+    emits exactly the markup it did before any of this existed, so the published cage
+    figures are untouched by adding elements. A multi-species figure names every species,
+    carbon included, because carbon there is `--species-c`, not the group's `--ink`.
     """
-    colour = DRAW_COLOUR[species]
+    colour = _species_colour(species, multi_species)
     return "" if colour == GROUP_COLOUR else f' {attribute}="{colour}"'
 
 
@@ -104,9 +125,31 @@ def depth_opacity(depth: float, near: float, far: float) -> float:
     return OPACITY_FAR + t * (OPACITY_NEAR - OPACITY_FAR)
 
 
+def _is_multi_species(species: list[str]) -> bool:
+    """Whether a figure draws more than one species, which switches it to the palette.
+
+    Args:
+        species: Element symbol of every atom the figure draws.
+
+    Returns:
+        True for two or more distinct species.
+
+    Raises:
+        ValueError: If the figure has several species and one has no entry in SPECIES_COLOUR,
+            because its `--species-*` token would not exist and the browser would paint it
+            black without a warning.
+    """
+    symbols = set(species)
+    unknown = sorted(symbols - SPECIES_COLOUR.keys())
+    if len(symbols) > 1 and unknown:
+        raise ValueError(f"no colour for {unknown} in constants.SPECIES_COLOUR")
+    return len(symbols) > 1
+
+
 def _draw(
     rotated: np.ndarray,
     species: list[str],
+    multi_species: bool,
     offset_x: float = 0.0,
     offset_y: float = 0.0,
     radius_scale: float = 1.0,
@@ -115,6 +158,16 @@ def _draw(
 
     Bonds are found on the rotated coordinates; rotation is rigid, so distances
     are unchanged and this is equivalent to finding them beforehand.
+
+    Args:
+        rotated: Rotated, centred positions, shape (n_atoms, 3), in angstrom.
+        species: Element symbol per atom.
+        multi_species: Whether the figure this belongs to draws more than one species, so
+            every species takes its palette colour; a series decides this once for all its
+            panels so one species is one colour throughout.
+        offset_x: Shift of the cluster's centre in the figure, in angstrom.
+        offset_y: Shift of the cluster's centre in the figure, in angstrom.
+        radius_scale: Factor on the atom and bond sizes.
     """
     xs, ys, zs = rotated[:, 0] + offset_x, rotated[:, 1] - offset_y, rotated[:, 2]
     near, far = zs.max(), zs.min()
@@ -126,7 +179,7 @@ def _draw(
     for i, j in boxprep.find_bonds(rotated, species):
         opacity = depth_opacity(max(zs[i], zs[j]), near, far)
         width = BOND_WIDTH * radius_scale
-        if DRAW_COLOUR[species[i]] == DRAW_COLOUR[species[j]]:
+        if _species_colour(species[i], multi_species) == _species_colour(species[j], multi_species):
             segments = [(xs[i], ys[i], xs[j], ys[j], species[i])]
         else:
             # Split at the midpoint, each half taking its own atom's colour. A
@@ -143,7 +196,7 @@ def _draw(
                     max(zs[i], zs[j]),
                     f'<line x1="{x1:.3f}" y1="{-y1:.3f}" '
                     f'x2="{x2:.3f}" y2="{-y2:.3f}" '
-                    f'fill="none"{_colour_attr(element, "stroke")} '
+                    f'fill="none"{_colour_attr(element, "stroke", multi_species)} '
                     f'stroke-width="{width:.3f}" '
                     f'opacity="{opacity:.3f}"/>',
                 )
@@ -160,7 +213,7 @@ def _draw(
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
                 f'r="{radius - ring_width / 2:.3f}" fill="none"'
-                f"{_colour_attr(species[i], 'stroke')} "
+                f"{_colour_attr(species[i], 'stroke', multi_species)} "
                 f'stroke-width="{ring_width:.3f}" opacity="{opacity:.3f}"/>'
             )
         else:
@@ -170,7 +223,7 @@ def _draw(
             shape = (
                 f'<circle cx="{xs[i]:.3f}" cy="{-ys[i]:.3f}" '
                 f'r="{radius:.3f}" stroke="none"'
-                f"{_colour_attr(species[i], 'fill')} "
+                f"{_colour_attr(species[i], 'fill', multi_species)} "
                 f'opacity="{opacity:.3f}"/>'
             )
         drawables.append((zs[i] + 1e-6, shape))  # ties favour the atom, not the bond
@@ -207,7 +260,7 @@ def render(
         f'viewBox="{min_x:.3f} {-max_y:.3f} {max_x - min_x:.3f} {max_y - min_y:.3f}" '
         f'role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
-        f"    {_draw(rotated, species, radius_scale=radius_scale)}\n"
+        f"    {_draw(rotated, species, _is_multi_species(species), radius_scale=radius_scale)}\n"
         f"  </g>\n"
         f"</svg>\n"
     )
@@ -299,6 +352,9 @@ def render_series(
         half_widths.append(float(np.abs(rotated[:, 0]).max()) + margin)
         half_heights.append(float(np.abs(rotated[:, 1]).max()) + margin)
 
+    # One decision for the whole figure, so a species is one colour in every panel.
+    multi_species = _is_multi_species([symbol for panel in species_all for symbol in panel])
+
     n_rows = -(-len(clusters) // n_columns)
     column_half_width = [
         max(half_widths[i] for i in range(len(clusters)) if i % n_columns == c)
@@ -339,6 +395,7 @@ def render_series(
             _draw(
                 rotated_all[index],
                 species_all[index],
+                multi_species,
                 offset_x=offset_x,
                 offset_y=offset_y,
                 radius_scale=radius_scale,
@@ -481,26 +538,41 @@ def _self_check() -> None:
     # Every element must be distinguishable from every other. A regression here is
     # silent in the SVG and only visible once the figure is on the page.
     water = np.array([[0.0, 0, 0], [0.96, 0, 0], [-0.24, 0.93, 0]])
-    markup = _draw(water, ["O", "H", "H"])
+    water_species = ["O", "H", "H"]
+    assert _is_multi_species(water_species)
+    markup = _draw(water, water_species, True)
     assert markup.count("<circle") == 3, markup
-    # Oxygen is an open ring at ink; hydrogen is a filled disc at graphite.
-    assert markup.count('stroke="none" opacity') == 0, markup  # no ink-filled disc here
-    assert markup.count('stroke="none" fill="var(--graphite)"') == 2, markup
-    assert markup.count('fill="var(--graphite)"') == 2, markup
-    # Both O-H bonds are split, so four segments, the hydrogen half of each in graphite.
+    # Oxygen is an open ring in its own colour; hydrogen is a filled disc in its own.
+    assert len(re.findall(r'<circle[^>]*fill="none" stroke="var\(--species-o\)"', markup)) == 1
+    assert markup.count('stroke="none" fill="var(--species-h)"') == 2, markup
+    # Both O-H bonds are split, so four segments, one half of each in each species' colour.
     assert markup.count("<line") == 4, markup
-    assert markup.count('stroke="var(--graphite)"') == 2, markup
+    assert markup.count('stroke="var(--species-h)"') == 2, markup
+    assert markup.count('stroke="var(--species-o)"') == 3, markup  # two bond halves and the ring
+    assert "--ink" not in markup and "--graphite" not in markup, markup
 
     # Carbon on its own must emit no colour attributes at all, which is what keeps
     # the carbon-only figures byte-identical to the ones already published.
-    carbon_only = _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"])
+    assert not _is_multi_species(["C", "C"])
+    carbon_only = _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"], False)
     assert "var(--" not in carbon_only, carbon_only
     assert carbon_only.count("<line") == 1, carbon_only  # same-colour bonds stay whole
 
-    # A C-H bond is split in two; a C-C bond is not.
+    # A C-H bond is split in two, each half its own species' colour; a C-C bond is not.
     pair = np.array([[0.0, 0, 0], [1.1, 0, 0]])
-    assert _draw(pair, ["C", "H"]).count("<line") == 2
-    assert _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"]).count("<line") == 1
+    carbon_hydrogen = _draw(pair, ["C", "H"], True)
+    assert carbon_hydrogen.count("<line") == 2
+    assert 'stroke="var(--species-c)"' in carbon_hydrogen
+    assert 'stroke="var(--species-h)"' in carbon_hydrogen
+    assert _draw(np.array([[0.0, 0, 0], [1.4, 0, 0]]), ["C", "C"], False).count("<line") == 1
+
+    # A species with no palette entry is refused by name rather than painted black.
+    try:
+        _is_multi_species(["C", "Xe"])
+    except ValueError as error:
+        assert "Xe" in str(error), error
+    else:
+        raise AssertionError("an unpainted species was accepted")
 
     # Wrapping onto a grid. Four identical single atoms on two columns must give
     # two rows: a taller, narrower figure than the same four in one row.
