@@ -176,12 +176,16 @@ def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
     assert all(line.endswith(" C") for line in hetatm)
 
 
-def test_prepare_refuses_a_frame_with_oxygen_naming_it(render_box_grid_module, tmp_path):
+def test_prepare_writes_a_frame_of_two_species_with_its_bond(render_box_grid_module, tmp_path):
     source = tmp_path / "co.xyz"
     source.write_text("2\ncarbon monoxide\nC 0.0 0.0 0.0\nO 1.13 0.0 0.0\n")
     spec = {"id": "co", "source": str(source), "cage_angstrom": None}
-    with pytest.raises(ValueError, match=r"carbon only, got \['O'\]"):
-        render_box_grid_module.prepare(spec, tmp_path)
+    subject, cage, species = render_box_grid_module.prepare(spec, tmp_path)
+    lines = subject.read_text().splitlines()
+    assert cage is None
+    assert species == ["C", "O"]
+    assert [line[76:78] for line in lines if line.startswith("HETATM")] == [" C", " O"]
+    assert "CONECT    1    2" in lines and "CONECT    2    1" in lines
 
 
 def _render_writing(

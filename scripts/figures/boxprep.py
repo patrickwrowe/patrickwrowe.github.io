@@ -411,33 +411,40 @@ def write_pdb(
     positions_angstrom: np.ndarray,
     bonds: list[tuple[int, int]],
 ) -> None:
-    """Carbon-only PDB: one HETATM per atom, serials from 1, and a CONECT line per atom.
+    """PDB of any species the bond rule knows: one HETATM per atom and a CONECT line per atom.
 
     Fixed columns per the PDB format: serial 7-11, name 13-16, residue CBX, chain A,
-    coordinates 31-54, element 77-78. Bonds are written in both directions so any
-    reader that trusts CONECT sees each once from either end. Every record names
-    carbon, so the species are checked here rather than trusted to the caller: a
-    hydrogen or oxygen written as C would render, and bond, as carbon.
+    coordinates 31-54, element 77-78. The element symbol is upper case, as the wwPDB
+    writes it ("MO"), right-justified in 77-78, and is also the atom name: starting in
+    column 14 for a one-letter element and column 13 for a two-letter one. Bonds are
+    written in both directions so any reader that trusts CONECT sees each once from
+    either end. The species are checked here rather than trusted to the caller, so a
+    symbol the bond rule has no radius for stops the write instead of rendering as
+    something else.
 
     Args:
         path: Output PDB file path.
-        species: Element symbol per atom; all must be "C".
+        species: Element symbol per atom ("O", "Mo"); each must be a key of
+            COVALENT_RADIUS_ANGSTROM.
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
         bonds: Zero-based (first, second) atom index pairs, written as CONECT records.
 
     Raises:
-        ValueError: If any species is not carbon (the message names it), the species
-            and positions differ in number, there are more than 99,999 atoms (the
-            serial field is 5 wide), any coordinate falls outside the PDB's fixed
-            (-999.999, 9999.999) field width, or a bond index falls outside
+        ValueError: If any species has no entry in COVALENT_RADIUS_ANGSTROM (the message
+            names it), the species and positions differ in number, there are more than
+            99,999 atoms (the serial field is 5 wide), any coordinate falls outside the
+            PDB's fixed (-999.999, 9999.999) field width, or a bond index falls outside
             range(len(positions_angstrom)).
     """
     n_atoms = len(positions_angstrom)
     if len(species) != n_atoms:
         raise ValueError(f"{path}: {len(species)} species for {n_atoms} positions")
-    non_carbon = sorted(set(species) - {"C"})
-    if non_carbon:
-        raise ValueError(f"{path}: write_pdb writes carbon only, got {non_carbon}")
+    unknown = sorted(set(species) - COVALENT_RADIUS_ANGSTROM.keys())
+    if unknown:
+        raise ValueError(
+            f"{path}: write_pdb has no covalent radius for {unknown}. Add it to "
+            f"COVALENT_RADIUS_ANGSTROM in constants.py."
+        )
     if n_atoms > 99_999:
         raise ValueError(f"{path}: {n_atoms} atoms exceeds the PDB's 99,999-atom serial limit")
     if np.any(positions_angstrom <= -999.999) or np.any(positions_angstrom >= 9999.999):
@@ -447,9 +454,12 @@ def write_pdb(
     if any(not (0 <= first < n_atoms and 0 <= second < n_atoms) for first, second in bonds):
         raise ValueError(f"{path}: a bond index falls outside range(len(positions_angstrom))")
     lines = [
-        f"HETATM{index + 1:5d}  C   CBX A   1    "
-        f"{x_angstrom:8.3f}{y_angstrom:8.3f}{z_angstrom:8.3f}  1.00  0.00           C"
-        for index, (x_angstrom, y_angstrom, z_angstrom) in enumerate(positions_angstrom)
+        f"HETATM{index + 1:5d} {symbol.upper().rjust(2):<4} CBX A   1    "
+        f"{x_angstrom:8.3f}{y_angstrom:8.3f}{z_angstrom:8.3f}  1.00  0.00          "
+        f"{symbol.upper():>2}"
+        for index, (symbol, (x_angstrom, y_angstrom, z_angstrom)) in enumerate(
+            zip(species, positions_angstrom, strict=True)
+        )
     ]
     partners: dict[int, list[int]] = {}
     for first, second in bonds:

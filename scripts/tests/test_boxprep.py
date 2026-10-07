@@ -117,6 +117,41 @@ def test_read_lammps_last_frame_rejects_a_truncated_frame(tmp_path):
         boxprep.read_lammps_last_frame(tmp_path / "cut-number.lammpstrj")
 
 
+def test_read_xyz_bonds_a_boron_nitrogen_pair_at_the_hbn_bond_length(tmp_path):
+    # r(B-N) = 1.45 A in hexagonal boron nitride; the cutoff is 1.2 x (0.84 + 0.71) = 1.86 A.
+    source = tmp_path / "bn.xyz"
+    source.write_text("2\nB-N pair\nB 0.0 0.0 0.0\nN 1.45 0.0 0.0\n")
+    structure = boxprep.read_xyz(source)
+    assert structure.species == ["B", "N"]
+    assert boxprep.find_bonds(structure.positions_angstrom, structure.species) == [(0, 1)]
+
+
+def test_an_hbn_hexagon_has_six_bonds_and_none_between_second_neighbours(tmp_path):
+    # Alternating B and N on a ring of side 1.45 A: second neighbours are 1.45 * sqrt(3) =
+    # 2.51 A apart, beyond the B-B cutoff of 2.02 A and the N-N cutoff of 1.70 A.
+    angles = np.deg2rad(60.0 * np.arange(6))
+    ring_angstrom = 1.45 * np.column_stack([np.cos(angles), np.sin(angles), np.zeros(6)])
+    species = ["B", "N"] * 3
+    source = tmp_path / "ring.xyz"
+    source.write_text(
+        "6\nhBN ring\n"
+        + "".join(
+            f"{symbol} {x:.4f} {y:.4f} {z:.4f}\n"
+            for symbol, (x, y, z) in zip(species, ring_angstrom, strict=True)
+        )
+    )
+    structure = boxprep.read_xyz(source)
+    bonds = boxprep.find_bonds(structure.positions_angstrom, structure.species)
+    assert bonds == [(0, 1), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)]
+
+
+def test_read_xyz_refuses_a_symbol_without_a_covalent_radius_and_names_it(tmp_path):
+    source = tmp_path / "xx.xyz"
+    source.write_text("2\nunknown\nC 0.0 0.0 0.0\nXx 1.5 0.0 0.0\n")
+    with pytest.raises(ValueError, match=r"no covalent radius for \['Xx'\]"):
+        boxprep.read_xyz(source)
+
+
 def test_write_pdb_emits_fixed_columns_and_conect(tmp_path):
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [1.42, 0.0, 0.0], [-12.345, 6.0, 0.0]])
     out = tmp_path / "three.pdb"
@@ -142,13 +177,61 @@ def test_write_pdb_rejects_malformed_input(tmp_path):
         boxprep.write_pdb(out, ["C", "C"], np.array([[0.0, 0.0, 0.0]]), [])
 
 
-def test_write_pdb_refuses_a_non_carbon_atom_and_names_it(tmp_path):
-    # Every record is written as carbon, so an oxygen must stop the write, not become C.
-    out = tmp_path / "co2.pdb"
-    positions_angstrom = np.array([[-1.16, 0.0, 0.0], [0.0, 0.0, 0.0], [1.16, 0.0, 0.0]])
-    with pytest.raises(ValueError, match=r"carbon only, got \['O'\]"):
-        boxprep.write_pdb(out, ["O", "C", "O"], positions_angstrom, [(0, 1), (1, 2)])
+def test_write_pdb_refuses_a_symbol_without_a_covalent_radius_and_names_it(tmp_path):
+    # An unknown symbol must stop the write, not be written as some other element.
+    out = tmp_path / "xx.pdb"
+    positions_angstrom = np.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+    with pytest.raises(ValueError, match=r"no covalent radius for \['Xx'\]"):
+        boxprep.write_pdb(out, ["O", "Xx"], positions_angstrom, [(0, 1)])
     assert not out.exists()
+
+
+@pytest.mark.parametrize(
+    ("species", "positions_angstrom", "names", "elements"),
+    [
+        # Gas-phase water: r(O-H) = 0.9572 A, H-O-H = 104.52 degrees.
+        (
+            ["O", "H", "H"],
+            [[0.0, 0.0, 0.0], [0.9572, 0.0, 0.0], [-0.2399, 0.9266, 0.0]],
+            [" O  ", " H  ", " H  "],
+            [" O", " H", " H"],
+        ),
+        # A MoS2 fragment: r(Mo-S) = 2.41 A, S-Mo-S = 120 degrees; a two-letter element
+        # starts its name in column 13 and fills columns 77-78.
+        (
+            ["Mo", "S", "S"],
+            [[0.0, 0.0, 0.0], [2.41, 0.0, 0.0], [-1.205, 2.087, 0.0]],
+            ["MO  ", " S  ", " S  "],
+            ["MO", " S", " S"],
+        ),
+    ],
+    ids=["water", "MoS2 fragment"],
+)
+def test_write_pdb_round_trips_the_species_and_bonds_of_a_molecule(
+    tmp_path, species, positions_angstrom, names, elements
+):
+    positions_angstrom = np.array(positions_angstrom)
+    bonds = boxprep.find_bonds(positions_angstrom, species)
+    assert bonds == [(0, 1), (0, 2)]
+    out = tmp_path / "molecule.pdb"
+    boxprep.write_pdb(out, species, positions_angstrom, bonds)
+
+    lines = out.read_text().splitlines()
+    atoms = [line for line in lines if line.startswith("HETATM")]
+    assert [line[12:16] for line in atoms] == names
+    assert [line[76:78] for line in atoms] == elements
+    assert [line[30:54] for line in atoms] == [
+        "".join(f"{coordinate:8.3f}" for coordinate in position) for position in positions_angstrom
+    ]
+    # One CONECT line per atom, each bond written from both ends: two bonds in all.
+    conect = [line for line in lines if line.startswith("CONECT")]
+    recovered = {
+        frozenset((int(line[6:11]), int(partner)))
+        for line in conect
+        for partner in line[11:].split()
+    }
+    assert len(conect) == 3
+    assert recovered == {frozenset((1, 2)), frozenset((1, 3))}
 
 
 def test_real_dense_slab_has_sensible_coordination():

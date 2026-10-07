@@ -91,10 +91,8 @@ every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the o
 one-pixel border, each isolated, and reported in the summary line; residual chroma at most
 panel_checks.MAX_CHROMA, over the whole frame for one species and over the
 CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
-for more than one species; every subject is carbon only until `boxprep.write_pdb` writes
-other elements, so a frame of more than one species is refused by `prepare` today and the
-colour path in `scene_for` is exercised only through a stand-in molrender (the first
-multi-species draft render is its real check).
+for more than one species; the colour path in `scene_for` is exercised only through a
+stand-in molrender (the first multi-species draft render is its real check).
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -206,8 +204,8 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
         the element symbol of every atom drawn, in the order the subject PDB lists them.
 
     Raises:
-        ValueError: If the frame's species are not all carbon (`boxprep.write_pdb` writes
-            carbon only and names the element), or the cage does not hold the subject
+        ValueError: If a species has no entry in constants.COVALENT_RADIUS_ANGSTROM
+            (`boxprep.read_xyz` names it), or the cage does not hold the subject
             with its spheres on every axis, which would let the subject frame itself and
             break the plate's shared scale (`panel_checks.assert_fits_cage`).
     """
@@ -351,7 +349,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         draft: Use the DRAFT tier; the expected size is then half the resolution.
 
     Raises:
-        ValueError: From `prepare` when the source is not all carbon or the cage does
+        ValueError: From `prepare` when a species has no covalent radius or the cage does
             not hold the subject, or from `scene_for` when a species has no colour.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
             section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square

@@ -20,13 +20,28 @@ CARBON_MASS_G_PER_MOL = 12.011
 # 1 cm = 1e8 angstrom, by definition.
 CM_TO_ANGSTROM = 1.0e8
 
-# Covalent radii in angstrom (Cordero et al., Dalton Trans. 2008, 2832). A pair is bonded
+# Covalent radii in angstrom, every one from Cordero et al., "Covalent radii revisited",
+# Dalton Trans. 2008, 2832 (Table 1; carbon is the sp3 value). A pair is bonded
 # within BOND_TOLERANCE times the sum of its two radii, which puts C-C at 1.824 A: above
 # the 1.55 A single bond, below the 2.4 A second neighbour in every phase these searches
 # produce. It is the 1.8 A cutoff render_cluster.py drew its published cage figures with
 # before it was generalised beyond carbon, and the cutoff of the cluster census
 # (cluster_census.py), so the bonds counted are the bonds drawn.
-COVALENT_RADIUS_ANGSTROM = {"C": 0.76, "H": 0.31, "O": 0.66}
+COVALENT_RADIUS_ANGSTROM = {
+    "C": 0.76,
+    "H": 0.31,
+    "O": 0.66,
+    "B": 0.84,
+    "N": 0.71,
+    "S": 1.05,
+    "Mo": 1.54,
+    "Li": 1.28,
+    "K": 2.03,
+    "Mg": 1.41,
+    "Na": 1.66,
+    "Si": 1.11,
+    "Al": 1.21,
+}
 BOND_TOLERANCE = 1.2
 # The flat carbon-carbon cutoff: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
