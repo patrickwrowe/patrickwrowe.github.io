@@ -134,7 +134,9 @@ def render_box_grid(render_box_grid_module, monkeypatch):
         lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C"] * 7),
     )
     monkeypatch.setattr(
-        render_box_grid_module, "scene_for", lambda spec, subject, cage, species, draft: None
+        render_box_grid_module,
+        "scene_for",
+        lambda spec, subject, cage, species, multi_species, draft: None,
     )
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
     return render_box_grid_module
@@ -186,6 +188,18 @@ def test_prepare_writes_a_frame_of_two_species_with_its_bond(render_box_grid_mod
     assert species == ["C", "O"]
     assert [line[76:78] for line in lines if line.startswith("HETATM")] == [" C", " O"]
     assert "CONECT    1    2" in lines and "CONECT    2    1" in lines
+
+
+def test_prepare_refuses_a_slab_that_leaves_no_atoms_naming_the_panel(
+    render_box_grid_module, tmp_path
+):
+    # Two atoms 6 A apart in z: a 2 A slab about their mean z holds neither.
+    source = tmp_path / "pair.xyz"
+    source.write_text("2\ntwo carbons\nC 0.0 0.0 0.0\nC 0.0 0.0 6.0\n")
+    spec = {"id": "pair", "source": str(source), "slab_angstrom": 2.0, "cage_angstrom": None}
+    with pytest.raises(ValueError, match=r"panel pair: no atoms to draw from .*pair\.xyz"):
+        render_box_grid_module.prepare(spec, tmp_path)
+    assert not (tmp_path / "pair.pdb").exists()
 
 
 def _render_writing(
@@ -312,7 +326,12 @@ def _scene(module, tmp_path: Path, species: list[str], cage: bool = False, **spe
     subject = tmp_path / "subject.pdb"
     subject.write_text(f"HETATM stand-in for a PDB of {len(species)} atoms\n")
     scene = module.scene_for(
-        {**SCENE_SPEC, **spec_overrides}, subject, subject if cage else None, species, draft=False
+        {**SCENE_SPEC, **spec_overrides},
+        subject,
+        subject if cage else None,
+        species,
+        multi_species=len(set(species)) > 1,
+        draft=False,
     )
     return scene, subject
 

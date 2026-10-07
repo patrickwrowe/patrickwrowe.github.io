@@ -205,7 +205,8 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
 
     Raises:
         ValueError: If a species has no entry in constants.COVALENT_RADIUS_ANGSTROM
-            (`boxprep.read_xyz` names it), or the cage does not hold the subject
+            (`boxprep.read_xyz` names it), the frame has no atoms left after the slab is
+            cut (the panel is named), or the cage does not hold the subject
             with its spheres on every axis, which would let the subject frame itself and
             break the plate's shared scale (`panel_checks.assert_fits_cage`).
     """
@@ -231,6 +232,11 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
         )
         positions_angstrom = positions_angstrom[in_slab]
         species = species[in_slab]
+    if species.size == 0:
+        raise ValueError(
+            f"panel {spec['id']}: no atoms to draw from {spec['source']} "
+            f"(slab_angstrom {thickness_angstrom})"
+        )
     subject = work_dir / f"{spec['id']}.pdb"
     boxprep.write_pdb(
         subject,
@@ -256,20 +262,28 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
 
 
 def scene_for(
-    spec: dict, subject: Path, cage: Path | None, species: list[str], draft: bool
+    spec: dict,
+    subject: Path,
+    cage: Path | None,
+    species: list[str],
+    multi_species: bool,
+    draft: bool,
 ) -> Scene:
     """The molrender scene for one panel under the section 6.2 constraints.
 
-    A subject of one species is one grey `BallAndStick` layer. A subject of more than one
-    is a `Sticks` layer over every atom, in the darkest of the colours present, and one
-    `Spheres` layer per species, selected by an `AtomMask` against the subject PDB and
-    coloured from the manifest's `colour` map, then `constants.SPECIES_COLOUR`.
+    A subject of one species (`multi_species` False) is one grey `BallAndStick` layer. A
+    subject of more than one is a `Sticks` layer over every atom, in the darkest of the
+    colours present, and one `Spheres` layer per species, selected by an `AtomMask`
+    against the subject PDB and coloured from the manifest's `colour` map, then
+    `constants.SPECIES_COLOUR`.
 
     Args:
         spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
         subject: PDB of the atoms to draw.
         cage: PDB of the hidden cage that fixes the scale, or None to fit the subject.
         species: Element symbol of every atom in `subject`, in file order.
+        multi_species: Whether `species` holds more than one element, decided once by the
+            caller (`render_panel`), which also chooses the saved PNG's colour mode by it.
         draft: Use the DRAFT tier (EEVEE, half resolution) instead of PRODUCTION.
 
     Returns:
@@ -289,10 +303,10 @@ def scene_for(
         ),
         material=Solid(rgb=(grey, grey, grey)),
     )
-    symbols = sorted(set(species))
-    if len(symbols) == 1:
+    if not multi_species:
         subject_layers = (grey_layer,)
     else:
+        symbols = sorted(set(species))
         palette = {**SPECIES_COLOUR, **spec.get("colour", {})}
         unpainted = [symbol for symbol in symbols if symbol not in palette]
         if unpainted:
@@ -360,9 +374,12 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
     started_s = time.perf_counter()
     subject, cage, species = prepare(spec, work_dir)
+    multi_species = len(set(species)) > 1
     rendered = work_dir / output.name
     result = render(
-        scene_for(spec, subject, cage, species, draft), rendered, timeout=RENDER_TIMEOUT_S
+        scene_for(spec, subject, cage, species, multi_species, draft),
+        rendered,
+        timeout=RENDER_TIMEOUT_S,
     )
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
@@ -370,7 +387,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         rendered,
         (int(width_px * scale), int(height_px * scale)),
         label=f"{spec['id']} ({output})",
-        multi_species=len(set(species)) > 1,
+        multi_species=multi_species,
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
     # its empty ground away to a square; a panel with a cage shares a scale and keeps its
