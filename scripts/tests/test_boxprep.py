@@ -145,20 +145,51 @@ def test_an_hbn_hexagon_has_six_bonds_and_none_between_second_neighbours(tmp_pat
     assert bonds == [(0, 1), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)]
 
 
-@pytest.mark.parametrize(
-    ("species", "distance_angstrom", "bonds"),
-    [
-        (["Mo", "Mo"], 3.16, []),  # in-plane Mo-Mo in MoS2, inside the 3.70 A radius cutoff
-        (["Mo", "S"], 2.41, [(0, 1)]),
-        (["K", "O"], 2.80, []),  # inside the 3.23 A cutoff, but an ion is never bonded
-        (["Mg", "O"], 2.10, [(0, 1)]),
-        (["Mg", "Al"], 3.00, []),  # octahedral neighbours, inside the 3.14 A cutoff
-    ],
-    ids=["Mo-Mo", "Mo-S", "K-O", "Mg-O", "Mg-Al"],
-)
-def test_find_bonds_leaves_out_ions_and_metal_metal_contacts(species, distance_angstrom, bonds):
+def _bonds_at(species: list[str], distance_angstrom: float) -> list[tuple[int, int]]:
+    """`find_bonds` on two atoms `distance_angstrom` apart along x."""
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [distance_angstrom, 0.0, 0.0]])
-    assert boxprep.find_bonds(positions_angstrom, species) == bonds
+    return boxprep.find_bonds(positions_angstrom, species)
+
+
+@pytest.mark.parametrize(
+    ("ion", "distance_angstrom"),
+    # Each distance is inside the radius cutoff 1.2 x (r_ion + r_O): 2.33, 2.78, 3.23 A.
+    [("Li", 2.00), ("Na", 2.40), ("K", 2.80)],
+)
+@pytest.mark.parametrize("ion_first", [True, False], ids=["ion first", "ion second"])
+def test_find_bonds_never_bonds_a_bare_ion_whichever_atom_comes_first(
+    ion, distance_angstrom, ion_first
+):
+    species = [ion, "O"] if ion_first else ["O", ion]
+    assert _bonds_at(species, distance_angstrom) == []
+
+
+@pytest.mark.parametrize(
+    ("pair", "distance_angstrom"),
+    # Each distance is inside the radius cutoff 1.2 x (r_a + r_b): 3.70, 3.38, 2.90, 3.54,
+    # 3.30, 3.14 A.
+    [
+        (("Mo", "Mo"), 3.16),
+        (("Mg", "Mg"), 3.10),
+        (("Al", "Al"), 2.80),
+        (("Mo", "Mg"), 3.20),
+        (("Mo", "Al"), 3.10),
+        (("Mg", "Al"), 3.00),
+    ],
+    ids=lambda value: "-".join(value) if isinstance(value, tuple) else f"{value} A",
+)
+def test_find_bonds_never_bonds_two_layer_metals(pair, distance_angstrom):
+    assert _bonds_at(list(pair), distance_angstrom) == []
+    assert _bonds_at(list(reversed(pair)), distance_angstrom) == []
+
+
+@pytest.mark.parametrize(
+    ("species", "distance_angstrom"),
+    [(["Mo", "S"], 2.41), (["Mg", "O"], 2.10), (["Al", "O"], 1.90), (["Si", "O"], 1.62)],
+    ids=["Mo-S", "Mg-O", "Al-O", "Si-O"],
+)
+def test_find_bonds_still_bonds_a_layer_metal_to_its_anion(species, distance_angstrom):
+    assert _bonds_at(species, distance_angstrom) == [(0, 1)]
 
 
 def test_read_xyz_refuses_a_symbol_without_a_covalent_radius_and_names_it(tmp_path):

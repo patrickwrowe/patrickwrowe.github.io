@@ -126,18 +126,24 @@ def render_box_grid_module(monkeypatch):
 
 
 @pytest.fixture
-def render_box_grid(render_box_grid_module, monkeypatch):
+def scene_calls() -> list[dict]:
+    """The keyword arguments render_panel forwarded to the stand-in `scene_for`, in order."""
+    return []
+
+
+@pytest.fixture
+def render_box_grid(render_box_grid_module, monkeypatch, scene_calls):
     """render_box_grid with `prepare` and `scene_for` stubbed, for render_panel."""
     monkeypatch.setattr(
         render_box_grid_module,
         "prepare",
         lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C"] * 7),
     )
-    monkeypatch.setattr(
-        render_box_grid_module,
-        "scene_for",
-        lambda spec, subject, cage, species, multi_species, draft: None,
-    )
+
+    def record_scene(spec, subject, cage, species, *, multi_species, draft):
+        scene_calls.append({"multi_species": multi_species, "draft": draft})
+
+    monkeypatch.setattr(render_box_grid_module, "scene_for", record_scene)
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
     return render_box_grid_module
 
@@ -274,12 +280,15 @@ def test_a_caged_panel_keeps_its_full_frame(render_box_grid, monkeypatch, tmp_pa
 
 
 @pytest.mark.parametrize(
-    ("species", "ink_rgb", "mode"),
-    [(["C"] * 7, (90, 90, 90), "L"), (["C"] * 5 + ["O"] * 2, (200, 60, 40), "RGB")],
+    ("species", "ink_rgb", "mode", "multi_species"),
+    [
+        (["C"] * 7, (90, 90, 90), "L", False),
+        (["C"] * 5 + ["O"] * 2, (200, 60, 40), "RGB", True),
+    ],
     ids=["one species stays grey", "two species keep their colour"],
 )
 def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
-    render_box_grid, monkeypatch, tmp_path, species, ink_rgb, mode
+    render_box_grid, monkeypatch, tmp_path, scene_calls, species, ink_rgb, mode, multi_species
 ):
     monkeypatch.setattr(
         render_box_grid,
@@ -293,6 +302,8 @@ def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
     saved = Image.open(output)
     assert saved.mode == mode
     assert saved.convert("RGB").getpixel((400, 400)) == ink_rgb
+    # The one decision reaches the scene as well as the PNG's colour mode.
+    assert scene_calls == [{"multi_species": multi_species, "draft": False}]
 
 
 def test_a_coloured_panel_with_ink_in_its_border_is_refused_and_leaves_nothing_behind(

@@ -266,6 +266,7 @@ def scene_for(
     subject: Path,
     cage: Path | None,
     species: list[str],
+    *,
     multi_species: bool,
     draft: bool,
 ) -> Scene:
@@ -363,8 +364,9 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         draft: Use the DRAFT tier; the expected size is then half the resolution.
 
     Raises:
-        ValueError: From `prepare` when a species has no covalent radius or the cage does
-            not hold the subject, or from `scene_for` when a species has no colour.
+        ValueError: From `prepare` when a species has no covalent radius, the frame has no
+            atoms left, or the cage does not hold the subject, or from `scene_for` when a
+            species has no colour.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
             section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square
             panel has no ink; nothing is then written to
@@ -377,7 +379,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     multi_species = len(set(species)) > 1
     rendered = work_dir / output.name
     result = render(
-        scene_for(spec, subject, cage, species, multi_species, draft),
+        scene_for(spec, subject, cage, species, multi_species=multi_species, draft=draft),
         rendered,
         timeout=RENDER_TIMEOUT_S,
     )
