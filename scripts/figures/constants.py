@@ -43,6 +43,10 @@ COVALENT_RADIUS_ANGSTROM = {
     "Al": 1.21,
 }
 BOND_TOLERANCE = 1.2
+# Intercalated or interlayer ions, drawn as spheres and never bonded.
+BARE_IONS = frozenset({"Li", "K", "Na"})
+# Metals that bond to O or S only, never to each other.
+LAYER_METALS = frozenset({"Mo", "Mg", "Al"})
 # The flat carbon-carbon cutoff: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 

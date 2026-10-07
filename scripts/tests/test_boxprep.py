@@ -145,6 +145,22 @@ def test_an_hbn_hexagon_has_six_bonds_and_none_between_second_neighbours(tmp_pat
     assert bonds == [(0, 1), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)]
 
 
+@pytest.mark.parametrize(
+    ("species", "distance_angstrom", "bonds"),
+    [
+        (["Mo", "Mo"], 3.16, []),  # in-plane Mo-Mo in MoS2, inside the 3.70 A radius cutoff
+        (["Mo", "S"], 2.41, [(0, 1)]),
+        (["K", "O"], 2.80, []),  # inside the 3.23 A cutoff, but an ion is never bonded
+        (["Mg", "O"], 2.10, [(0, 1)]),
+        (["Mg", "Al"], 3.00, []),  # octahedral neighbours, inside the 3.14 A cutoff
+    ],
+    ids=["Mo-Mo", "Mo-S", "K-O", "Mg-O", "Mg-Al"],
+)
+def test_find_bonds_leaves_out_ions_and_metal_metal_contacts(species, distance_angstrom, bonds):
+    positions_angstrom = np.array([[0.0, 0.0, 0.0], [distance_angstrom, 0.0, 0.0]])
+    assert boxprep.find_bonds(positions_angstrom, species) == bonds
+
+
 def test_read_xyz_refuses_a_symbol_without_a_covalent_radius_and_names_it(tmp_path):
     source = tmp_path / "xx.xyz"
     source.write_text("2\nunknown\nC 0.0 0.0 0.0\nXx 1.5 0.0 0.0\n")

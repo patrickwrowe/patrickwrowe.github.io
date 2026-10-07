@@ -34,11 +34,13 @@ from typing import NamedTuple
 import numpy as np
 from constants import (
     AVOGADRO_PER_MOL,
+    BARE_IONS,
     BOND_TOLERANCE,
     CARBON_BOND_CUTOFF_ANGSTROM,
     CARBON_MASS_G_PER_MOL,
     CM_TO_ANGSTROM,
     COVALENT_RADIUS_ANGSTROM,
+    LAYER_METALS,
 )
 
 __all__ = [
@@ -128,6 +130,12 @@ def find_bonds(
 ) -> list[tuple[int, int]]:
     """All atom pairs closer than BOND_TOLERANCE times their summed covalent radii.
 
+    Two kinds of pair are never bonded, however close, because the radius rule would draw
+    contacts that are not covalent: any pair with a partner in constants.BARE_IONS
+    (intercalated or interlayer ions), and any pair of two constants.LAYER_METALS atoms
+    (the metal-metal distance in a layer, 3.16 A in MoS2, is inside the cutoff). The
+    radius rule decides every other pair.
+
     O(n^2) on the distance matrix. The largest cluster this renders is 720 atoms, so
     this is well under a second and a neighbour list would be premature.
 
@@ -148,7 +156,12 @@ def find_bonds(
     deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
     distances = np.linalg.norm(deltas, axis=-1)
     upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
-    rows, cols = np.where(upper & (distances < cutoffs))
+    is_ion = np.isin(species, list(BARE_IONS))
+    is_layer_metal = np.isin(species, list(LAYER_METALS))
+    never_bonded = (
+        is_ion[:, None] | is_ion[None, :] | (is_layer_metal[:, None] & is_layer_metal[None, :])
+    )
+    rows, cols = np.where(upper & (distances < cutoffs) & ~never_bonded)
     return list(zip(rows.tolist(), cols.tolist(), strict=True))
 
 
