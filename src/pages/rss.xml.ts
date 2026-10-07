@@ -12,8 +12,7 @@ export async function GET(context: APIContext) {
 
   return rss({
     title: "Patrick Rowe — Writing",
-    description:
-      "Notes on machine-learned potentials, generative models for chemistry, and getting models used.",
+    description: "Articles and notes by Patrick Rowe.",
     site: context.site!,
     items: notes.map((note) => ({
       title: note.data.title,

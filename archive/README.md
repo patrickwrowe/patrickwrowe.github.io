@@ -1,10 +1,10 @@
 # Archive
 
 Pages retired from the site, kept in git with their history but neither built nor hosted
-(they sit outside `src/`). Each became a section of a theme article, and its old URL
-redirects there through `src/data/redirects.json`. Figures that no live page uses moved
-with them, under `work/figures/`, so the relative imports in the archived MDX still
-resolve.
+(they sit outside `src/`). Each old URL redirects through `src/data/redirects.json`: a work
+page became a section of a theme article, and a writing outline, never written out, goes to
+the writing index. Figures that no live page uses moved with the work pages, under
+`work/figures/`, so the relative imports in the archived MDX still resolve.
 
 | Archived page | Became | Retired |
 |---|---|---|
@@ -19,9 +19,7 @@ theme retires its own pages on the day it goes live.
 
 ## Writing outlines, retired 2026-10-06
 
-Three notes under `/writing/` were outlines that were never written out. They moved here,
-not to the bin, so a draft can be picked up from them; their URLs redirect to the writing
-index. The section now holds the 2017 article for Science and Engineering South.
+These three notes were outlines that were never written out, kept so a draft can be picked up.
 
 | Archived page | Became | Retired |
 |---|---|---|
