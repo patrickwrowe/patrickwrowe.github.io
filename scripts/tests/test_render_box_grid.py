@@ -1,34 +1,117 @@
-"""Tests for render_box_grid.render_panel's crop decision, with Blender stubbed out.
+"""Tests for render_box_grid: render_panel's crop decision and scene_for's layers, without Blender.
 
 render_box_grid imports molrender, which exists only in the Blender environment, so a
-stand-in module takes its place and `render` writes a PNG of the requested size instead of
-calling Blender. Everything after the render (the whiteness check, the crop decision and
-the move into place) is the real code.
+stand-in module takes its place. Its scene classes are frozen dataclasses with the field
+names and defaults of molrender's own (molrender/scene/graph.py, styles.py, materials.py,
+view.py, quality.py), so `scene_for` builds a real, inspectable scene; `render` writes a PNG of
+the requested size instead of calling Blender. Everything after the render (the whiteness
+check, the crop decision and the move into place) is the real code.
 """
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import sys
 import types
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pytest
+from constants import SPECIES_COLOUR, srgb_hex_to_linear
 from PIL import Image
 
-MOLRENDER_NAMES = (
-    "DRAFT",
-    "PRODUCTION",
-    "BallAndStick",
-    "Layer",
-    "Scene",
-    "Solid",
-    "Structure",
-    "View",
-    "find_blender",
-    "render",
-)
+
+@dataclass(frozen=True)
+class StandInSolid:
+    rgb: tuple[float, float, float]
+
+
+@dataclass(frozen=True)
+class StandInSticks:
+    radius: float = 0.2
+
+
+@dataclass(frozen=True)
+class StandInSpheres:
+    radius: float = 0.8
+    geometry: str = "Instance"
+
+
+@dataclass(frozen=True)
+class StandInBallAndStick:
+    sphere_radius: float = 0.3
+    bond_radius: float = 0.3
+    sphere_geometry: str = "Instance"
+
+
+@dataclass(frozen=True)
+class StandInStructureId:
+    sha256: str
+    n_atoms: int
+
+
+@dataclass(frozen=True)
+class StandInAtomMask:
+    mask: tuple[bool, ...]
+    of: StandInStructureId
+
+
+@dataclass(frozen=True)
+class StandInLayer:
+    style: object
+    material: object
+    select: object = None
+
+
+@dataclass(frozen=True)
+class StandInStructure:
+    path: Path
+    layers: tuple[StandInLayer, ...]
+    name: str = ""
+    remove_solvent: bool = True
+    hide: bool = False
+
+
+@dataclass(frozen=True)
+class StandInView:
+    direction: tuple[float, float, float] | None = None
+    margin: float = 1.06
+
+
+@dataclass(frozen=True)
+class StandInQuality:
+    view_transform: str
+    look: str | None = None
+
+
+@dataclass(frozen=True)
+class StandInScene:
+    entities: tuple[StandInStructure, ...]
+    view: StandInView
+    quality: StandInQuality
+    resolution: tuple[int, int]
+    transparent: bool
+    shadow_catcher: bool
+
+
+MOLRENDER_STAND_INS = {
+    "DRAFT": StandInQuality("AgX"),
+    "PRODUCTION": StandInQuality("AgX"),
+    "AtomMask": StandInAtomMask,
+    "BallAndStick": StandInBallAndStick,
+    "Layer": StandInLayer,
+    "Scene": StandInScene,
+    "Solid": StandInSolid,
+    "Spheres": StandInSpheres,
+    "Sticks": StandInSticks,
+    "Structure": StandInStructure,
+    "StructureId": StandInStructureId,
+    "View": StandInView,
+    "find_blender": None,
+    "render": None,
+}
 
 
 @pytest.fixture
@@ -36,8 +119,8 @@ def render_box_grid_module(monkeypatch):
     """render_box_grid imported against a stand-in molrender."""
     if "molrender" not in sys.modules:
         stand_in = types.ModuleType("molrender")
-        for name in MOLRENDER_NAMES:
-            setattr(stand_in, name, None)
+        for name, stand_in_object in MOLRENDER_STAND_INS.items():
+            setattr(stand_in, name, stand_in_object)
         monkeypatch.setitem(sys.modules, "molrender", stand_in)
     return importlib.import_module("render_box_grid")
 
@@ -48,10 +131,10 @@ def render_box_grid(render_box_grid_module, monkeypatch):
     monkeypatch.setattr(
         render_box_grid_module,
         "prepare",
-        lambda spec, work_dir: (work_dir / "subject.pdb", None, 7),
+        lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C"] * 7),
     )
     monkeypatch.setattr(
-        render_box_grid_module, "scene_for", lambda spec, subject, cage, draft: None
+        render_box_grid_module, "scene_for", lambda spec, subject, cage, species, draft: None
     )
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
     return render_box_grid_module
@@ -85,10 +168,11 @@ def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
     }
     work_dir = tmp_path / "work"
     work_dir.mkdir()
-    subject, cage, n_atoms = render_box_grid_module.prepare(spec, work_dir)
+    subject, cage, species = render_box_grid_module.prepare(spec, work_dir)
     hetatm = [line for line in subject.read_text().splitlines() if line.startswith("HETATM")]
     assert cage is None
-    assert n_atoms == len(hetatm) == 6
+    assert species == ["C"] * 6
+    assert len(hetatm) == 6
     assert all(line.endswith(" C") for line in hetatm)
 
 
@@ -100,12 +184,17 @@ def test_prepare_refuses_a_frame_with_oxygen_naming_it(render_box_grid_module, t
         render_box_grid_module.prepare(spec, tmp_path)
 
 
-def _render_writing(resolution_px: tuple[int, int], ink_box: tuple[int, int, int, int]):
-    """A `render` stand-in that writes a white RGB frame with one grey block of ink.
+def _render_writing(
+    resolution_px: tuple[int, int],
+    ink_box: tuple[int, int, int, int],
+    ink_rgb: tuple[int, int, int] = (90, 90, 90),
+):
+    """A `render` stand-in that writes a white RGB frame with one block of ink.
 
     Args:
         resolution_px: (width, height) of the frame, in pixels.
         ink_box: (top, bottom, left, right) of the ink, in pixels.
+        ink_rgb: The ink's colour, 0-255; grey unless a test draws a coloured species.
 
     Returns:
         A function with molrender.render's signature.
@@ -115,16 +204,20 @@ def _render_writing(resolution_px: tuple[int, int], ink_box: tuple[int, int, int
         width_px, height_px = resolution_px
         pixels = np.full((height_px, width_px, 3), 255, dtype=np.uint8)
         top, bottom, left, right = ink_box
-        pixels[top:bottom, left:right] = 90
+        pixels[top:bottom, left:right] = ink_rgb
         Image.fromarray(pixels, mode="RGB").save(path)
         return types.SimpleNamespace(returncode=0)
 
     return render
 
 
-def _render_panel(module, monkeypatch, tmp_path: Path, spec: dict, ink_box) -> Path:
+def _render_panel(
+    module, monkeypatch, tmp_path: Path, spec: dict, ink_box, ink_rgb=(90, 90, 90)
+) -> Path:
     """Run render_panel on `spec` with the stand-in renderer; return the output PNG."""
-    monkeypatch.setattr(module, "render", _render_writing(tuple(spec["resolution"]), ink_box))
+    monkeypatch.setattr(
+        module, "render", _render_writing(tuple(spec["resolution"]), ink_box, ink_rgb)
+    )
     work_dir = tmp_path / "work"
     work_dir.mkdir()
     module.render_panel(
@@ -160,6 +253,144 @@ def test_a_caged_panel_keeps_its_full_frame(render_box_grid, monkeypatch, tmp_pa
     summary = capsys.readouterr().out
     assert "crop none (caged)" in summary
     assert summary.rstrip().endswith("versions: VERSIONS")
+
+
+@pytest.mark.parametrize(
+    ("species", "ink_rgb", "mode"),
+    [(["C"] * 7, (90, 90, 90), "L"), (["C"] * 5 + ["O"] * 2, (200, 60, 40), "RGB")],
+    ids=["one species stays grey", "two species keep their colour"],
+)
+def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
+    render_box_grid, monkeypatch, tmp_path, species, ink_rgb, mode
+):
+    monkeypatch.setattr(
+        render_box_grid,
+        "prepare",
+        lambda spec, work_dir: (work_dir / "subject.pdb", None, species),
+    )
+    spec = {"resolution": [800, 800], "cage_angstrom": [44.2, 44.2, 11.0]}
+    output = _render_panel(
+        render_box_grid, monkeypatch, tmp_path, spec, (300, 500, 350, 450), ink_rgb
+    )
+    saved = Image.open(output)
+    assert saved.mode == mode
+    assert saved.convert("RGB").getpixel((400, 400)) == ink_rgb
+
+
+def test_a_coloured_panel_with_ink_in_its_border_is_refused_and_leaves_nothing_behind(
+    render_box_grid, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(
+        render_box_grid,
+        "prepare",
+        lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C", "O"]),
+    )
+    spec = {"resolution": [800, 800], "cage_angstrom": [44.2, 44.2, 11.0]}
+    with pytest.raises(RuntimeError, match="in the 8 px border"):
+        _render_panel(
+            render_box_grid, monkeypatch, tmp_path, spec, (400, 500, 3, 100), (200, 60, 40)
+        )
+    assert not (tmp_path / "out" / "panel.png").exists()
+
+
+SCENE_SPEC = {
+    "id": "water",
+    "grey": 0.35,
+    "sphere_radius_angstrom": 0.4,
+    "bond_radius_angstrom": 0.2,
+    "direction": [0.0, 0.0, 1.0],
+    "resolution": [100, 100],
+}
+
+
+def _scene(module, tmp_path: Path, species: list[str], cage: bool = False, **spec_overrides):
+    """`scene_for` on a subject PDB of `species`; returns the scene and the PDB's path."""
+    subject = tmp_path / "subject.pdb"
+    subject.write_text(f"HETATM stand-in for a PDB of {len(species)} atoms\n")
+    scene = module.scene_for(
+        {**SCENE_SPEC, **spec_overrides}, subject, subject if cage else None, species, draft=False
+    )
+    return scene, subject
+
+
+def test_one_species_is_one_grey_ball_and_stick_layer_whatever_the_colour_map_says(
+    render_box_grid_module, tmp_path
+):
+    scene, _ = _scene(
+        render_box_grid_module, tmp_path, ["C"] * 4, cage=True, colour={"C": "#ff0000"}
+    )
+    grey_layer = StandInLayer(
+        style=StandInBallAndStick(
+            sphere_radius=0.4 / 1.70, bond_radius=0.2, sphere_geometry="Point"
+        ),
+        material=StandInSolid(rgb=(0.35, 0.35, 0.35)),
+    )
+    subject, cage = scene.entities
+    assert subject.layers == (grey_layer,) and not subject.hide
+    assert cage.layers == (grey_layer,) and cage.hide
+
+
+def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_species(
+    render_box_grid_module, tmp_path
+):
+    species = ["O", "H", "H", "O", "H"]
+    scene, subject = _scene(render_box_grid_module, tmp_path, species, cage=True)
+    layers = scene.entities[0].layers
+    structure_id = StandInStructureId(
+        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=5
+    )
+
+    sticks, *spheres = layers
+    # The darker of the two colours present, in linear light: oxygen's, not hydrogen's.
+    assert sticks == StandInLayer(
+        style=StandInSticks(radius=0.2),
+        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["O"])),
+    )
+    assert spheres == [
+        StandInLayer(
+            style=StandInSpheres(radius=0.4 / 1.70, geometry="Point"),
+            material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR[symbol])),
+            select=StandInAtomMask(mask=mask, of=structure_id),
+        )
+        for symbol, mask in (
+            ("H", (False, True, True, False, True)),
+            ("O", (True, False, False, True, False)),
+        )
+    ]
+    # The hidden cage that fixes the scale is not recoloured.
+    assert scene.entities[1].layers[0].style.sphere_geometry == "Point"
+    assert scene.entities[1].hide
+
+
+def test_the_sticks_take_the_darkest_colour_present(render_box_grid_module, tmp_path):
+    scene, _ = _scene(render_box_grid_module, tmp_path, ["O", "H", "C", "C"])
+    sticks = scene.entities[0].layers[0]
+    assert sticks.material.rgb == srgb_hex_to_linear(SPECIES_COLOUR["C"])
+
+
+def test_the_manifest_colour_map_beats_the_palette_and_can_add_a_species(
+    render_box_grid_module, tmp_path
+):
+    scene, _ = _scene(
+        render_box_grid_module,
+        tmp_path,
+        ["C", "O", "Xx"],
+        colour={"O": "#112233", "Xx": "#aabbcc"},
+    )
+    sticks, *spheres = scene.entities[0].layers
+    rgb_by_mask = {layer.select.mask: layer.material.rgb for layer in spheres}
+    assert rgb_by_mask[(True, False, False)] == srgb_hex_to_linear(SPECIES_COLOUR["C"])
+    assert rgb_by_mask[(False, True, False)] == srgb_hex_to_linear("#112233")
+    assert rgb_by_mask[(False, False, True)] == srgb_hex_to_linear("#aabbcc")
+    # #112233 is now the darkest of the three, so the sticks follow it.
+    assert sticks.material.rgb == srgb_hex_to_linear("#112233")
+
+
+def test_a_species_in_neither_the_colour_map_nor_the_palette_is_refused_naming_it(
+    render_box_grid_module, tmp_path
+):
+    with pytest.raises(ValueError, match=r"panel water: no colour for \['Xx'\]"):
+        _scene(render_box_grid_module, tmp_path, ["C", "Xx", "O"], colour={"O": "#112233"})
 
 
 def _fake_blender(tmp_path: Path, body: str) -> Path:

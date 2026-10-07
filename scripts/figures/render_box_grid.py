@@ -1,4 +1,8 @@
-"""Render periodic carbon boxes and free clusters as greyscale PNG panels through molrender.
+"""Render periodic carbon boxes and free clusters as PNG panels through molrender.
+
+A frame of one species is greyscale; a frame of more than one is coloured from the species
+palette (`constants.SPECIES_COLOUR`), the same colours the SVG renderer reads from the
+`--species-*` tokens.
 
 One PNG per panel. The page lays panels out with `src/components/Grid.astro`, so labels
 are real text in the site's mono face rather than pixels (restructure spec section 6.2, 7).
@@ -50,10 +54,21 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            Molecular Nodes reads BallAndStick.sphere_radius as a factor on
                            each atom's vdW radius, not a length, so the sphere radius is
                            divided by constants.CARBON_VDW_RADIUS_ANGSTROM (1.70 A, Molecular
-                           Nodes' carbon); every atom drawn is carbon. bond_radius is a length.
+                           Nodes' carbon, so each species is drawn at that factor of its own van
+                           der Waals radius). bond_radius is a length.
     grey                   the material's linear RGB value, 0-1, on all three channels (what
                            Solid(rgb=...) receives); not a display value, since the Standard
-                           view transform applies the sRGB curve on output
+                           view transform applies the sRGB curve on output. Used for a frame
+                           of one species (and the hidden cage); a frame of more than one is
+                           coloured instead.
+    colour                 optional {"O": "#rrggbb", ...}: sRGB hex per element symbol, which
+                           beats constants.SPECIES_COLOUR for that species on every panel of the
+                           plate (a panel's own map replaces the plate's whole map). A frame of
+                           more than one species draws a Sticks layer over every atom in the
+                           darkest colour present (by relative luminance) and one Spheres
+                           layer per species in its own colour, each converted to linear RGB
+                           with constants.srgb_hex_to_linear; a species with no colour in
+                           either place is refused by name before Blender starts.
     panels[].id, .source   an XYZ file readable by boxprep.read_xyz
     panels[].density_g_cm3 present for a periodic box: the cell edge follows from it and the
                            frame is wrapped; absent for a free cluster
@@ -64,17 +79,22 @@ own entry, and no key outside panel_checks.ALLOWED_KEYS (a typo such as "slab_an
 would otherwise fall back to a default rather than failing); ids are unique and use only
 letters, digits, "_", "." and "-", because each names a file. Values are checked too
 (panel_checks.VALUE_RULES): resolution two positive integers, grey in [0, 1], cage null or
-three positive extents, density positive, tile three positive integers, and a source that
-exists, relative to the repository root where this command runs. `panel_checks.load_panels`
-enforces all of this, naming the manifest, panel and key of the first value it refuses.
+three positive extents, density positive, tile three positive integers, colour a map of
+element symbol to "#rrggbb", every number finite, and a source that exists, relative to the
+repository root where this command runs. `panel_checks.load_panels` enforces all of this,
+naming the manifest, panel and key of the first value it refuses.
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
 corner white (the median of each panel_checks.CORNER_BLOCK_PX square corner block is 255 on
 every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the outer
 one-pixel border, each isolated, and reported in the summary line; residual chroma at most
-panel_checks.MAX_CHROMA; output saved as 8-bit greyscale; every subject is carbon only,
-since `boxprep.write_pdb` writes carbon.
+panel_checks.MAX_CHROMA, over the whole frame for one species and over the
+CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
+for more than one species; every subject is carbon only until `boxprep.write_pdb` writes
+other elements, so a frame of more than one species is refused by `prepare` today and the
+colour path in `scene_for` is exercised only through a stand-in molrender (the first
+multi-species draft render is its real check).
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -93,6 +113,7 @@ panel with `--force` then.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import shutil
 import subprocess
@@ -107,15 +128,24 @@ from pathlib import Path
 import boxprep
 import numpy as np
 import panel_checks
-from constants import CARBON_VDW_RADIUS_ANGSTROM
+from constants import (
+    CARBON_VDW_RADIUS_ANGSTROM,
+    RELATIVE_LUMINANCE_WEIGHTS,
+    SPECIES_COLOUR,
+    srgb_hex_to_linear,
+)
 from molrender import (
     DRAFT,
     PRODUCTION,
+    AtomMask,
     BallAndStick,
     Layer,
     Scene,
     Solid,
+    Spheres,
+    Sticks,
     Structure,
+    StructureId,
     View,
     find_blender,
     render,
@@ -159,7 +189,7 @@ def tool_versions() -> str:
     return f"Blender {blender_version}, Molecular Nodes unknown, molrender {molrender_version}"
 
 
-def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
+def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
     """Write the subject PDB and, when the panel shares a scale, the cage PDB.
 
     A periodic box is wrapped into its cell, tiled and centred on the tiled cell's
@@ -173,7 +203,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
 
     Returns:
         The subject PDB path, the cage PDB path (None when `cage_angstrom` is null), and
-        the number of atoms drawn.
+        the element symbol of every atom drawn, in the order the subject PDB lists them.
 
     Raises:
         ValueError: If the frame's species are not all carbon (`boxprep.write_pdb` writes
@@ -212,7 +242,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
     )
     extent_angstrom = spec.get("cage_angstrom")
     if not extent_angstrom:
-        return subject, None, len(positions_angstrom)
+        return subject, None, species.tolist()
     panel_checks.assert_fits_cage(
         positions_angstrom,
         centre_angstrom,
@@ -224,34 +254,82 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, int]:
     signs = np.array([(sx, sy, sz) for sx in (-1, 1) for sy in (-1, 1) for sz in (-1, 1)])
     cage = work_dir / f"{spec['id']}-cage.pdb"
     boxprep.write_pdb(cage, ["C"] * len(signs), centre_angstrom + half_extent_angstrom * signs, [])
-    return subject, cage, len(positions_angstrom)
+    return subject, cage, species.tolist()
 
 
-def scene_for(spec: dict, subject: Path, cage: Path | None, draft: bool) -> Scene:
+def scene_for(
+    spec: dict, subject: Path, cage: Path | None, species: list[str], draft: bool
+) -> Scene:
     """The molrender scene for one panel under the section 6.2 constraints.
+
+    A subject of one species is one grey `BallAndStick` layer. A subject of more than one
+    is a `Sticks` layer over every atom, in the darkest of the colours present, and one
+    `Spheres` layer per species, selected by an `AtomMask` against the subject PDB and
+    coloured from the manifest's `colour` map, then `constants.SPECIES_COLOUR`.
 
     Args:
         spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
         subject: PDB of the atoms to draw.
         cage: PDB of the hidden cage that fixes the scale, or None to fit the subject.
+        species: Element symbol of every atom in `subject`, in file order.
         draft: Use the DRAFT tier (EEVEE, half resolution) instead of PRODUCTION.
 
     Returns:
         A scene with view transform Standard, opaque film and no shadow catcher.
+
+    Raises:
+        ValueError: If the subject has more than one species and one has a colour neither in
+            the panel's `colour` map nor in `constants.SPECIES_COLOUR`.
     """
     grey = float(spec["grey"])
-    layer = Layer(
+    sphere_radius = float(spec["sphere_radius_angstrom"]) / CARBON_VDW_RADIUS_ANGSTROM
+    grey_layer = Layer(
         style=BallAndStick(
-            sphere_radius=float(spec["sphere_radius_angstrom"]) / CARBON_VDW_RADIUS_ANGSTROM,
+            sphere_radius=sphere_radius,
             bond_radius=float(spec["bond_radius_angstrom"]),
             sphere_geometry="Point",
         ),
         material=Solid(rgb=(grey, grey, grey)),
     )
-    entities = [Structure(path=subject, name="subject", layers=(layer,), remove_solvent=False)]
+    symbols = sorted(set(species))
+    if len(symbols) == 1:
+        subject_layers = (grey_layer,)
+    else:
+        palette = {**SPECIES_COLOUR, **spec.get("colour", {})}
+        unpainted = [symbol for symbol in symbols if symbol not in palette]
+        if unpainted:
+            raise ValueError(
+                f"panel {spec['id']}: no colour for {unpainted}; add it to "
+                "constants.SPECIES_COLOUR or to the manifest's colour map"
+            )
+        rgb = {symbol: srgb_hex_to_linear(palette[symbol]) for symbol in symbols}
+        atom_symbols = np.asarray(species)
+        subject_id = StructureId(
+            sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=len(species)
+        )
+        darkest = min(
+            rgb.values(), key=lambda channels: np.dot(RELATIVE_LUMINANCE_WEIGHTS, channels)
+        )
+        subject_layers = (
+            Layer(
+                style=Sticks(radius=float(spec["bond_radius_angstrom"])),
+                material=Solid(rgb=darkest),
+            ),
+            *(
+                Layer(
+                    style=Spheres(radius=sphere_radius, geometry="Point"),
+                    material=Solid(rgb=rgb[symbol]),
+                    select=AtomMask(mask=tuple((atom_symbols == symbol).tolist()), of=subject_id),
+                )
+                for symbol in symbols
+            ),
+        )
+    entities = [
+        Structure(path=subject, name="subject", layers=subject_layers, remove_solvent=False)
+    ]
     if cage is not None:
         entities.append(
-            Structure(path=cage, name="cage", layers=(layer,), remove_solvent=False, hide=True)
+            Structure(path=cage, name="cage", layers=(grey_layer,), remove_solvent=False, hide=True)
         )
     tier = DRAFT if draft else PRODUCTION
     return Scene(
@@ -274,7 +352,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
 
     Raises:
         ValueError: From `prepare` when the source is not all carbon or the cage does
-            not hold the subject.
+            not hold the subject, or from `scene_for` when a species has no colour.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
             section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square
             panel has no ink; nothing is then written to
@@ -283,15 +361,18 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     """
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
     started_s = time.perf_counter()
-    subject, cage, n_atoms = prepare(spec, work_dir)
+    subject, cage, species = prepare(spec, work_dir)
     rendered = work_dir / output.name
-    result = render(scene_for(spec, subject, cage, draft), rendered, timeout=RENDER_TIMEOUT_S)
+    result = render(
+        scene_for(spec, subject, cage, species, draft), rendered, timeout=RENDER_TIMEOUT_S
+    )
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
     strays = panel_checks.check_and_flatten(
         rendered,
         (int(width_px * scale), int(height_px * scale)),
         label=f"{spec['id']} ({output})",
+        multi_species=len(set(species)) > 1,
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
     # its empty ground away to a square; a panel with a cage shares a scale and keeps its
@@ -306,7 +387,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     shutil.move(rendered, output)
     elapsed_s = time.perf_counter() - started_s
     print(
-        f"{spec['id']}: {n_atoms} atoms, wall {elapsed_s:.0f} s, "
+        f"{spec['id']}: {len(species)} atoms, wall {elapsed_s:.0f} s, "
         f"blender exit {result.returncode}, {output}, "
         f"crop {crop}, "
         f"border strays (row, column, rgb): {strays or 'none'}, "

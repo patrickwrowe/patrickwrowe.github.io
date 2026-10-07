@@ -44,14 +44,27 @@ REQUIRED_KEYS = (
 # docstring, beyond REQUIRED_KEYS. Anything else in a panel's merged dict is a typo
 # (a plate-level key misspelled, e.g. "slab_angstorm" for "slab_angstrom") that would
 # otherwise render the whole panel at its default rather than failing loudly.
-OPTIONAL_KEYS = frozenset({"margin", "cage_angstrom", "slab_angstrom", "density_g_cm3", "tile"})
+OPTIONAL_KEYS = frozenset(
+    {"margin", "cage_angstrom", "slab_angstrom", "density_g_cm3", "tile", "colour"}
+)
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
+ELEMENT_SYMBOL = re.compile(r"[A-Z][a-z]?")
+HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 
 
 def _is_number(value: object) -> bool:
-    """True for an int or float that is not a bool (JSON true would otherwise pass)."""
-    return isinstance(value, int | float) and not isinstance(value, bool)
+    """True for a finite int or float that is not a bool.
+
+    JSON `true` would otherwise pass as 1, and Python's json module reads `Infinity` and
+    `NaN`, which pass every `>= 1` or `> 0` rule that does not rule them out. The bounds
+    test, not `math.isfinite`, because it also holds for an integer too large for a float.
+    """
+    return (
+        isinstance(value, int | float)
+        and not isinstance(value, bool)
+        and -math.inf < value < math.inf
+    )
 
 
 def _positive_list(value: object, length: int, integers: bool = False) -> bool:
@@ -67,12 +80,22 @@ def _positive_list(value: object, length: int, integers: bool = False) -> bool:
 
 
 def _is_direction(value: object) -> bool:
-    """Three finite numbers with at least one non-zero; components may be negative."""
+    """Three numbers with at least one non-zero; components may be negative."""
     return (
         isinstance(value, list)
         and len(value) == 3
-        and all(_is_number(component) and math.isfinite(component) for component in value)
+        and all(_is_number(component) for component in value)
         and any(component != 0 for component in value)
+    )
+
+
+def _is_colour_map(value: object) -> bool:
+    """A dict of element symbol ("O", "Mo") to sRGB hex ("#rrggbb"), possibly empty."""
+    return isinstance(value, dict) and all(
+        ELEMENT_SYMBOL.fullmatch(symbol)
+        and isinstance(hex_colour, str)
+        and HEX_COLOUR.fullmatch(hex_colour)
+        for symbol, hex_colour in value.items()
     )
 
 
@@ -107,6 +130,7 @@ VALUE_RULES = {
         lambda value: _positive_list(value, 3, integers=True),
         "three positive integers [nx, ny, nz]",
     ),
+    "colour": (_is_colour_map, "a map of element symbol to sRGB hex"),
     "source": (
         lambda value: isinstance(value, str) and Path(value).is_file(),
         "the path of an existing XYZ file",
@@ -120,6 +144,8 @@ MAX_BORDER_STRAYS = 2  # compositor artefacts, see render_box_grid.py's module d
 # grey neutral, so this does not catch it; render_box_grid.scene_for's
 # view_transform="Standard" enforces that.) The residual is HDRI specular on sphere
 # highlights, measured 14-16/255 on 2026-09-27; the output is saved as 8-bit grey anyway.
+# A panel of more than one species is coloured on purpose, so there the limit judges the
+# world instead: the CORNER_BLOCK_PX border round the frame, where no species is drawn.
 MAX_CHROMA = 32
 INK_THRESHOLD = 245  # pixels darker than this are drawn atoms or bonds
 # Border round the ink of a self-framed panel, per side, as a fraction of its square.
@@ -145,7 +171,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
             integers, a grey in [0, 1], a cage of null or three positive extents, a
             positive density, a tile of three positive integers, a source that exists, a
             margin of at least 1, a positive sphere radius, a slab of null or a positive
-            thickness, a direction of three finite numbers that are not all zero),
+            thickness, a direction of three numbers that are not all zero, a colour map
+            of element symbol to "#rrggbb"; every number must be finite),
             an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
             panels share an id. Every message names the manifest, the panel and the key.
     """
@@ -217,9 +244,12 @@ def assert_fits_cage(
 
 
 def check_and_flatten(
-    png: Path, expected_size: tuple[int, int], label: str | None = None
+    png: Path,
+    expected_size: tuple[int, int],
+    label: str | None = None,
+    multi_species: bool = False,
 ) -> list[tuple[int, int, list[int]]]:
-    """Assert size, a white world and near-zero chroma, then save as 8-bit grey.
+    """Assert size, a white world and near-zero chroma, then save as 8-bit grey or RGB.
 
     The world is judged by blocks, not single pixels, because the Molecular Nodes
     compositor can leave a stray pixel on the border (render_box_grid.py's module
@@ -229,11 +259,18 @@ def check_and_flatten(
     single-pixel tangential graze of a sphere against the border would pass as one of
     those strays; anything wider is a run of non-white pixels and still fails.
 
+    A panel of one species is grey, so the chroma limit holds over the whole frame and the
+    file is saved as mode L. A panel of more than one species is coloured on purpose: the
+    limit then holds only over the CORNER_BLOCK_PX border round the frame, and the file
+    keeps its three channels.
+
     Args:
-        png: The rendered PNG, overwritten in place as mode L.
+        png: The rendered PNG, overwritten in place as mode L, or as mode RGB when
+            `multi_species`.
         expected_size: (width, height) in pixels the file on disk must have.
         label: What every error message names in place of `png`: the panel and its output
             path, since the scratch file checked here is gone by the time anyone reads it.
+        multi_species: Whether the panel draws more than one species.
 
     Returns:
         The tolerated border strays as (row, column, [r, g, b]) in pixels, 0-255.
@@ -241,7 +278,8 @@ def check_and_flatten(
     Raises:
         RuntimeError: If the size differs, a corner block's median is not white, the
             border has more than MAX_BORDER_STRAYS non-white pixels or one that is not
-            isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA.
+            isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA (over
+            the whole frame, or over the CORNER_BLOCK_PX border when `multi_species`).
     """
     name = label or png
     image = Image.open(png).convert("RGB")
@@ -280,15 +318,21 @@ def check_and_flatten(
                 f"{name}: non-white border pixel ({row}, {column}) {value} "
                 "has a non-white neighbour"
             )
-    chroma = int((pixels.max(axis=2) - pixels.min(axis=2)).max())
+    spread = pixels.max(axis=2) - pixels.min(axis=2)
+    if multi_species:
+        ring = np.ones_like(non_white)
+        ring[block:-block, block:-block] = False
+        spread = spread[ring]
+    chroma = int(spread.max())
     if chroma > MAX_CHROMA:
-        raise RuntimeError(f"{name}: max chroma {chroma}/255 exceeds {MAX_CHROMA}")
-    image.convert("L").save(png, optimize=True)
+        where = f" in the {block} px border" if multi_species else ""
+        raise RuntimeError(f"{name}: max chroma {chroma}/255{where} exceeds {MAX_CHROMA}")
+    (image if multi_species else image.convert("L")).save(png, optimize=True)
     return strays
 
 
 def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
-    """Crop a flattened grey panel, in place, to a square round its ink.
+    """Crop a flattened panel, grey or RGB, in place, to a square round its ink.
 
     For a panel framed to its own subject (`cage_angstrom` null) molrender fits the
     camera to the subject's three-dimensional box, so the drawn atoms fill a median 77%
@@ -299,14 +343,15 @@ def crop_to_ink(png: Path, margin_fraction: float = CROP_MARGIN) -> int:
     square frame gives up margin only; it raises when the ink's box itself exceeds that
     side, so a panel is never cut to its short side. Only a square render is cropped
     this way; render_box_grid.py leaves a non-square one (the hero) at its full frame.
-    Isolated dark pixels do not count: the
+    The ink is judged on luminance, so a coloured panel crops exactly as a grey one of the
+    same lightness does, and keeps its mode. Isolated dark pixels do not count: the
     Molecular Nodes compositor leaves one at the centre and sometimes one on the border
     (render_box_grid.py's module docstring), and a border stray would otherwise pin the
     crop to the edge. A panel that shares a cage must never be cropped, or the shared
     angstrom per pixel is lost; render_box_grid.py enforces that.
 
     Args:
-        png: An 8-bit grey PNG written by `check_and_flatten`, overwritten in place.
+        png: An 8-bit grey or RGB PNG written by `check_and_flatten`, overwritten in place.
         margin_fraction: Border added on each side, as a fraction of the square's side.
 
     Returns:

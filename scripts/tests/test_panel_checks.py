@@ -120,6 +120,25 @@ def test_load_panels_rejects_an_unknown_key(tmp_path):
         ("direction", [0, 0, 0]),
         ("direction", [0, 1]),
         ("direction", [float("nan"), 0, 1]),
+        # Python's json module reads Infinity and NaN, which pass every `>= 1` or `> 0` rule.
+        ("margin", float("inf")),
+        ("margin", float("nan")),
+        ("sphere_radius_angstrom", float("inf")),
+        ("slab_angstrom", float("inf")),
+        ("density_g_cm3", float("inf")),
+        ("cage_angstrom", [44.2, float("inf"), 11.0]),
+        ("direction", [float("inf"), 0, 1]),
+        ("direction", [0, -float("inf"), 1]),
+        # A species colour is a map of element symbol to six hex digits.
+        ("colour", "#123456"),
+        ("colour", ["#123456"]),
+        ("colour", {"O": "red"}),
+        ("colour", {"O": "#b5533"}),
+        ("colour", {"O": "#123456ff"}),
+        ("colour", {"O": "123456"}),
+        ("colour", {"O": 0x123456}),
+        ("colour", {"o": "#123456"}),
+        ("colour", {"Oxygen": "#123456"}),
     ],
 )
 def test_load_panels_rejects_a_bad_value_naming_manifest_panel_and_key(tmp_path, key, value):
@@ -135,6 +154,23 @@ def test_load_panels_accepts_a_negative_direction_a_margin_of_one_and_a_null_sla
     manifest_path = _manifest(tmp_path, [{**panel_spec, "slab_angstrom": None}])
     panel = panel_checks.load_panels(manifest_path)[0]
     assert panel["direction"] == [0, -1, 0] and panel["slab_angstrom"] is None
+
+
+def test_an_integer_too_large_for_a_float_is_a_number_not_a_crash(tmp_path):
+    manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", "margin": 10**400}])
+    assert panel_checks.load_panels(manifest_path)[0]["margin"] == 10**400
+
+
+def test_load_panels_accepts_a_species_colour_map_and_a_panel_map_replaces_the_plates(tmp_path):
+    plate_colour = {"O": "#123456", "H": "#ABCDEF"}
+    manifest_path = _manifest(
+        tmp_path,
+        [{"id": "a", "source": "a.xyz"}, {"id": "b", "source": "b.xyz", "colour": {}}],
+        colour=plate_colour,
+    )
+    panels = panel_checks.load_panels(manifest_path)
+    assert panels[0]["colour"] == plate_colour
+    assert panels[1]["colour"] == {}
 
 
 def test_load_panels_accepts_null_cage_and_a_tile(tmp_path):
@@ -296,6 +332,115 @@ def test_without_a_label_a_failed_check_names_the_png(tmp_path):
         panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
 
 
+# ---------------------------------------------------------------------------
+# check_and_flatten: a panel of more than one species is coloured on purpose
+# ---------------------------------------------------------------------------
+
+RED_RGB = (200, 60, 40)
+PALE_RGB = (150, 150, 150)
+
+
+def _coloured_panel(
+    tmp_path: Path, extra: dict[tuple[int, int], tuple[int, int, int]] | None = None
+):
+    """A 32 x 32 white RGB panel with a red centre, a pale-grey one beside it and `extra`.
+
+    Args:
+        tmp_path: Directory for the PNG.
+        extra: Pixel (row, column) to RGB, set after the two blobs.
+
+    Returns:
+        The path of the saved PNG.
+    """
+    pixels = _white_pixels()
+    pixels[12:20, 10:16] = RED_RGB
+    pixels[12:20, 16:20] = PALE_RGB
+    for (row, column), rgb in (extra or {}).items():
+        pixels[row, column] = rgb
+    png = tmp_path / "coloured.png"
+    _write_image(png, pixels)
+    return png
+
+
+def test_a_coloured_centre_in_a_white_world_passes_and_keeps_its_colour(tmp_path):
+    png = _coloured_panel(tmp_path)
+    strays = panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+    assert strays == []
+    saved = Image.open(png)
+    assert saved.mode == "RGB"
+    assert saved.getpixel((12, 15)) == RED_RGB and saved.getpixel((18, 17)) == PALE_RGB
+
+
+def test_the_same_coloured_panel_fails_the_chroma_limit_when_it_is_one_species(tmp_path):
+    png = _coloured_panel(tmp_path)
+    with pytest.raises(RuntimeError, match=r"max chroma 160/255 exceeds 32"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE))
+
+
+def test_a_coloured_corner_block_fails_naming_the_corner_blocks(tmp_path):
+    pixels = _white_pixels()
+    pixels[: panel_checks.CORNER_BLOCK_PX, : panel_checks.CORNER_BLOCK_PX] = RED_RGB
+    png = tmp_path / "coloured-corner.png"
+    _write_image(png, pixels)
+    with pytest.raises(RuntimeError, match="corner block medians are not white"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+
+
+def test_one_coloured_pixel_in_a_corner_block_fails_the_border_chroma_limit(tmp_path):
+    # One pixel does not move a corner block's median, and (3, 3) is not on the outer
+    # border, so only the chroma limit over the 8 px border can catch it.
+    png = _coloured_panel(tmp_path, {(3, 3): RED_RGB})
+    with pytest.raises(RuntimeError, match=r"max chroma 160/255 in the 8 px border"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+
+
+def test_the_border_chroma_limit_is_the_same_32_as_a_grey_panels(tmp_path):
+    # Pale tints in the border are the HDRI residual a grey panel tolerates (it is
+    # measured at 14-16/255); a tint past MAX_CHROMA is a coloured world.
+    tint = (255, 255, 255 - panel_checks.MAX_CHROMA)
+    png = _coloured_panel(tmp_path, {(4, 16): tint})
+    panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+    png = _coloured_panel(tmp_path, {(4, 16): (255, 255, 255 - panel_checks.MAX_CHROMA - 1)})
+    with pytest.raises(RuntimeError, match="in the 8 px border"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+
+
+def test_a_coloured_panel_still_fails_the_stray_rule_on_its_outer_border(tmp_path):
+    png = _coloured_panel(tmp_path, {(0, 12): RED_RGB, (0, 13): RED_RGB})
+    with pytest.raises(RuntimeError, match="non-white neighbour"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+    png = _coloured_panel(tmp_path, {(0, 2): RED_RGB, (0, 14): RED_RGB, (0, 26): RED_RGB})
+    with pytest.raises(RuntimeError, match="non-white border pixels"):
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+
+
+SMALLEST_COMMITTED_PANEL = (
+    Path(__file__).resolve().parents[2] / "src/content/work/figures/carbon/density-0.5gcc-3500K.png"
+)
+
+
+@pytest.mark.parametrize("source", ["synthetic", "committed render"])
+def test_a_grey_panel_is_flattened_to_the_same_bytes_as_before_species_colour(tmp_path, source):
+    # What check_and_flatten wrote for a grey panel before it knew about species: the
+    # renderer's RGB frame, converted to mode L and saved with `optimize`.
+    if source == "synthetic":
+        pixels = _white_pixels()
+        pixels[10:22, 10:22] = 90
+        pixels[12:20, 12:20] = 140
+        frame = Image.fromarray(pixels, mode="RGB")
+    else:
+        frame = Image.open(SMALLEST_COMMITTED_PANEL).convert("RGB")
+    png = tmp_path / "grey.png"
+    frame.save(png)
+    reference = tmp_path / "reference.png"
+    frame.convert("L").save(reference, optimize=True)
+
+    panel_checks.check_and_flatten(png, frame.size)
+
+    assert png.read_bytes() == reference.read_bytes()
+    assert Image.open(png).mode == "L"
+
+
 def _grey_panel(tmp_path, blob: tuple[int, int, int, int], strays: list[tuple[int, int]]):
     """A 200 x 200 white panel with a dark blob (top, bottom, left, right) and lone dark pixels."""
     pixels = np.full((200, 200), 255, dtype=np.uint8)
@@ -354,3 +499,20 @@ def test_crop_to_ink_refuses_an_empty_panel(tmp_path):
     png = _grey_panel(tmp_path, (0, 0, 0, 0), strays=[(100, 100)])
     with pytest.raises(RuntimeError, match="no connected ink"):
         panel_checks.crop_to_ink(png)
+
+
+def test_crop_to_ink_crops_a_coloured_panel_as_it_does_a_grey_one_and_keeps_its_colour(tmp_path):
+    grey = _grey_panel(tmp_path, (50, 90, 120, 150), strays=[(0, 10), (100, 100), (199, 199)])
+    grey_side = panel_checks.crop_to_ink(grey)
+
+    pixels = np.full((200, 200, 3), 255, dtype=np.uint8)
+    pixels[50:90, 120:150] = RED_RGB
+    for row, column in [(0, 10), (100, 100), (199, 199)]:
+        pixels[row, column] = (0, 0, 0)
+    coloured = tmp_path / "coloured-panel.png"
+    _write_image(coloured, pixels)
+
+    assert panel_checks.crop_to_ink(coloured) == grey_side == round(40 * 1.06)
+    cropped = Image.open(coloured)
+    assert cropped.mode == "RGB" and cropped.size == (grey_side, grey_side)
+    assert (np.asarray(cropped) == RED_RGB).all(axis=2).any(), "the crop lost the colour"
