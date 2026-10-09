@@ -51,7 +51,7 @@
     },
     "table1-short-range-share.json": {
       "source_path": "../papers/excitonic-interactions/paper.pdf (the WRAP accepted manuscript of the JCTC paper, outside the archive; PDF page = manuscript page + 1)",
-      "source_pointer": "Table 1, manuscript p.11 (PDF p.12); the 7 A threshold is on manuscript p.9. Tabulated in docs/dossiers/excited-states/dossier.md section 2.1.",
+      "source_pointer": "JCTC paper (Fornari, Rowe, Padula and Troisi, J. Chem. Theory Comput. 13, 3754 (2017)), Table 1, manuscript p.11 (PDF p.12); the 7 A threshold is on manuscript p.9.",
       "what": "The fifteen own-data rows of Table 1 of Fornari, Rowe, Padula and Troisi, J. Chem. Theory Comput. 13, 3754 (2017): system (FMO, LH2, PCP), pair, minimum distance D in angstrom, coupled states, J_TOT and J_short in meV and the printed share J_short/J_TOT. FMO's D equal the all-atom minima of the archive's chromophore files (pair 1-2: 2.261 A).",
       "edit": "Typed from the page into JSON; not a copy of a file. The two Scholes et al. comparison rows of LH2 are left out.",
       "md5": "89093def10ff5d205f5ee30bacc23a37",

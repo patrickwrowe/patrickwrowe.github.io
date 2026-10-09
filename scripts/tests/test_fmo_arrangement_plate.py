@@ -1,9 +1,10 @@
 """Plate M1 of the excited-states article, the natural FMO arrangement beside a generated one.
 
-Two panels of one render_cluster.py series, hydrogens hidden, in one view and at one scale. The
-plate is regenerated through the real command line and compared byte for byte with the
-committed SVG; the structures it draws are checked from the staged files. Nothing here reads
-docs/, which is gitignored.
+Two panels of one render_cluster.py series, hydrogens hidden, in one view and at one scale,
+both centred on the natural structure's mean (`--shared-centre`) so that the two fixed
+chromophores, BChl 1 and 3, sit at the same place in both. The plate is regenerated through
+the real command line and compared byte for byte with the committed SVG; the structures it
+draws are checked from the staged files. Nothing here reads docs/, which is gitignored.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from pathlib import Path
 import boxprep
 import numpy as np
 import pytest
-from cluster_svg import run_cli
+from cluster_svg import circle_centres, panel_centres, run_cli
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/excited-states"
@@ -30,6 +31,7 @@ ARRANGEMENT_ARGV = [
     "--hide-hydrogens",
     "--radius-scale",
     "2.0",
+    "--shared-centre",
     f"--rotate={ARRANGEMENT_ROTATION}",
 ]
 
@@ -77,3 +79,27 @@ def test_the_generated_structure_moves_six_chromophores_and_keeps_source_and_dra
     )
     assert (shift_angstrom < 1e-6).sum() == 2  # BChl 1 and 3, the fixed source and drain
     assert (shift_angstrom > 1.0).sum() == 6
+
+
+def test_the_two_fixed_chromophores_are_drawn_at_the_same_place_in_both_panels_and_no_other():
+    natural = boxprep.read_xyz(DATA / "fmo-natural.xyz")
+    generated = boxprep.read_xyz(DATA / "fmo-generated-00300.xyz")
+    magnesium = np.array(natural.species) == "Mg"
+    unmoved = (
+        np.linalg.norm(
+            natural.positions_angstrom[magnesium] - generated.positions_angstrom[magnesium], axis=1
+        )
+        < 1e-6
+    )
+    svg = (FIGURES / "fmo-natural-vs-generated.svg").read_text()
+    left_centre, right_centre = panel_centres(svg)
+    # The eight magnesium of the natural panel come first in the drawing, then the generated.
+    drawn = circle_centres(svg, "Mg")
+    natural_drawn = drawn[:8] - [left_centre, 0.0]
+    generated_drawn = drawn[8:] - [right_centre, 0.0]
+    nearest_angstrom = np.linalg.norm(
+        natural_drawn[:, None, :] - generated_drawn[None, :, :], axis=-1
+    ).min(axis=1)
+    registered = nearest_angstrom < 0.01
+    assert registered.sum() == unmoved.sum() == 2
+    assert nearest_angstrom[~registered].min() > 0.5  # the six that move are well apart

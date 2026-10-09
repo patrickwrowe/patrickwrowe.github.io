@@ -11,7 +11,7 @@ import boxprep
 import numpy as np
 import pytest
 import render_cluster
-from cluster_svg import run_cli
+from cluster_svg import circle_centres, panel_centres, run_cli
 from constants import COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR
 
 REPO = Path(__file__).resolve().parents[2]
@@ -190,8 +190,8 @@ def test_a_figure_of_one_new_species_draws_in_ink_like_any_single_species_figure
 def write_xyz(path: Path, species: list[str], positions: np.ndarray) -> Path:
     """An XYZ file of the species at these positions in angstrom, in the archive's tab format."""
     rows = [
-        f"{symbol} \t{x:.6f}\t{y:.6f}\t{z:.6f}\t"
-        for symbol, (x, y, z) in zip(species, positions, strict=True)
+        f"{symbol} \t{position[0]:.6f}\t{position[1]:.6f}\t{position[2]:.6f}\t"
+        for symbol, position in zip(species, positions, strict=True)
     ]
     path.write_text("\n".join([f"{len(species)}\t", "", *rows]) + "\n")
     return path
@@ -244,15 +244,7 @@ def test_together_draws_two_files_as_one_cluster_each_atom_where_its_file_puts_i
     run_cli(monkeypatch, capsys, str(first), str(second), "--together", "--output", str(together))
     run_cli(monkeypatch, capsys, str(first), str(second), "--output", str(apart))
 
-    def circles(svg: str) -> np.ndarray:
-        return np.array(
-            [
-                [float(x), float(y)]
-                for x, y in re.findall(r'<circle cx="([-\d.]+)" cy="([-\d.]+)"', svg)
-            ]
-        )
-
-    drawn = circles(together.read_text())
+    drawn = circle_centres(together.read_text())
     assert drawn.shape == (4, 2)
     # Centred on the cluster's mean, 3.9 A from the first atom, and the 5 A gap is kept.
     assert sorted(drawn[:, 0]) == pytest.approx([-3.9, -2.5, 2.5, 3.9], abs=1e-3)
@@ -262,11 +254,14 @@ def test_together_draws_two_files_as_one_cluster_each_atom_where_its_file_puts_i
 
 
 def test_two_structures_in_a_series_share_one_scale_and_one_view(tmp_path, monkeypatch, capsys):
+    # The one Mg-N bond (2.1 A along x) both files hold, seen through one rotation: drawn in
+    # angstrom in a single viewBox, it is the same vector in the picture's plane in both panels.
     small = write_xyz(tmp_path / "small.xyz", ["Mg", "N"], np.array([[0.0, 0, 0], [2.1, 0, 0]]))
     large = write_xyz(
         tmp_path / "large.xyz", ["Mg", "N", "N"], np.array([[0.0, 0, 0], [2.1, 0, 0], [-6.0, 0, 0]])
     )
     written = tmp_path / "pair.svg"
+    rotation_degrees = (30.0, 40.0, 10.0)
     run_cli(
         monkeypatch,
         capsys,
@@ -274,10 +269,60 @@ def test_two_structures_in_a_series_share_one_scale_and_one_view(tmp_path, monke
         str(large),
         "--labels",
         "small,large",
+        "--rotate=" + ",".join(map(str, rotation_degrees)),
         "--output",
         str(written),
     )
     svg = written.read_text()
     assert svg.count("<svg") == 1  # one document, one viewBox, hence one scale
+    magnesium, nitrogen = circle_centres(svg, "Mg"), circle_centres(svg, "N")
+    assert len(magnesium) == 2 and len(nitrogen) == 3  # one Mg per panel; two N in the large one
     assert len(set(re.findall(r'r="([\d.]+)" stroke="none" fill="var\(--species-mg\)"', svg))) == 1
-    assert "var(--species-mg)" in svg
+    expected_bond_angstrom = (render_cluster.rotation_matrix(rotation_degrees) @ [2.1, 0, 0])[:2]
+    # Each panel's Mg and the N nearest it (the bonded one; the other is 6 A away).
+    for metal, ions in ((magnesium[0], nitrogen[:1]), (magnesium[1], nitrogen[1:])):
+        bonded = ions[np.linalg.norm(ions - metal, axis=1).argmin()]
+        assert bonded - metal == pytest.approx(expected_bond_angstrom, abs=2e-3)
+    assert np.hypot(*expected_bond_angstrom) < 2.1  # the view is tilted, not along the bond
+
+
+def toy_shared_atom_offsets(tmp_path, monkeypatch, capsys, *flags: str) -> np.ndarray:
+    """Where the atom both files hold is drawn from its own panel's centre, in each panel.
+
+    The first file is two carbons 1.4 A apart; the second is the same two and a third carbon
+    9 A away, so its mean is elsewhere.
+    """
+    first = write_xyz(tmp_path / "first.xyz", ["C", "C"], np.array([[0.0, 0, 0], [1.4, 0, 0]]))
+    second = write_xyz(
+        tmp_path / "second.xyz",
+        ["C", "C", "C"],
+        np.array([[0.0, 0, 0], [1.4, 0, 0], [9.0, 0, 0]]),
+    )
+    written = tmp_path / "series.svg"
+    run_cli(
+        monkeypatch,
+        capsys,
+        str(first),
+        str(second),
+        "--labels",
+        "first,second",
+        *flags,
+        "--output",
+        str(written),
+    )
+    svg = written.read_text()
+    drawn = circle_centres(svg)
+    assert len(drawn) == 5
+    left_centre, right_centre = panel_centres(svg)
+    # The shared atom is the leftmost of each panel's circles (x = 0 in both files).
+    return np.array([drawn[:2, 0].min() - left_centre, drawn[2:, 0].min() - right_centre])
+
+
+def test_a_series_centres_each_panel_on_its_own_atoms_unless_asked_to_share_the_centre(
+    tmp_path, monkeypatch, capsys
+):
+    own = toy_shared_atom_offsets(tmp_path, monkeypatch, capsys)
+    assert own == pytest.approx([-0.7, -10.4 / 3], abs=1e-3)  # minus each own mean, in A
+    shared = toy_shared_atom_offsets(tmp_path, monkeypatch, capsys, "--shared-centre")
+    # Both panels centred on the first file's mean (0.7 A): the shared atom is -0.7 A from it.
+    assert shared == pytest.approx([-0.7, -0.7], abs=1e-3)

@@ -17,7 +17,7 @@ import boxprep
 import numpy as np
 import pytest
 import render_cluster
-from cluster_svg import run_cli
+from cluster_svg import circle_centres, run_cli
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/excited-states"
@@ -34,16 +34,6 @@ PAIR_ARGV = [
     "2.2",
     f"--rotate={PAIR_ROTATION}",
 ]
-
-
-def circle_centres(svg: str) -> np.ndarray:
-    """Every drawn disc and ring: (cx, -cy) in angstrom, in the figure's own frame (y up)."""
-    return np.array(
-        [
-            [float(x), -float(y)]
-            for x, y in re.findall(r'<circle cx="([-\d.]+)" cy="([-\d.]+)"', svg)
-        ]
-    )
 
 
 def test_the_committed_pair_plate_is_byte_for_byte_what_the_documented_command_writes(
@@ -90,7 +80,9 @@ def test_the_view_has_the_closest_contact_side_on_so_the_2_26_angstrom_is_drawn_
         first.positions_angstrom[:, None, :] - second.positions_angstrom[None, :, :], axis=-1
     )
     oxygen, hydrogen = np.unravel_index(separations_angstrom.argmin(), separations_angstrom.shape)
-    rotation = render_cluster.rotation_matrix(tuple(float(v) for v in PAIR_ROTATION.split(",")))
+    rotation = render_cluster.rotation_matrix(
+        tuple(float(degrees) for degrees in PAIR_ROTATION.split(","))
+    )
     rotated = (positions_angstrom - positions_angstrom.mean(axis=0)) @ rotation.T
     contact = rotated[len(first) + hydrogen] - rotated[oxygen]
     # In the picture's plane (x, y) and not along the view (z): the whole distance is drawn.

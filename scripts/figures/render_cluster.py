@@ -31,10 +31,13 @@ Usage:
 `--hide-hydrogens` leaves every hydrogen out before the cluster is centred, bonded and drawn.
 Two or more inputs are a series: panels on one grid at one scale and one rotation, which is
 how two structures are drawn side by side in one view, e.g. the natural FMO arrangement and
-a generated one (608 atoms each, hydrogens hidden):
+a generated one (608 atoms each, hydrogens hidden). Each panel is centred on its own atoms'
+mean; `--shared-centre` centres every panel on the mean of the FIRST input instead, so an atom
+the inputs share (two geometries of one system, here the two fixed chromophores) is drawn at
+the same place in every panel:
     D=scripts/figures/data/excited-states
     uv run scripts/figures/render_cluster.py $D/fmo-natural.xyz $D/fmo-generated-00300.xyz \
-        --labels "natural,generated" --hide-hydrogens --radius-scale 2.0 \
+        --labels "natural,generated" --hide-hydrogens --radius-scale 2.0 --shared-centre \
         --rotate=39.92,21.6,162.07 \
         --output src/content/work/figures/excited-states/fmo-natural-vs-generated.svg
 `--together` instead draws all the inputs as ONE cluster, each atom where its file puts it, so
@@ -341,11 +344,17 @@ def render_series(
     columns: int | None = None,
     slab_angstrom: float | None = None,
     label_em: float | None = None,
+    shared_centre: bool = False,
 ) -> str:
     """Lay several clusters out on a grid at one shared scale.
 
     `label_em`, when given, sizes the labels so the viewBox is that many labels wide (the
     page's `--chart-em`); otherwise a label is LABEL_SIZE_FRACTION of the drawing's width.
+
+    Each cluster is centred on its own mean, unless `shared_centre`: then every cluster is
+    centred on the first one's mean, so an atom that two clusters share sits at the same
+    place in both panels (a panel's drawn extent is then no longer symmetric about its centre,
+    which the panel's half width, the largest distance from it, still bounds).
 
     The viewBox is in Angstrom throughout, so the clusters are drawn true to
     relative size — which is the point of the figure. Scaling each to fit its
@@ -367,9 +376,10 @@ def render_series(
     species_all: list[list[str]] = []
     half_widths: list[float] = []
     half_heights: list[float] = []
+    shared_origin = clusters[0][1].positions_angstrom.mean(axis=0)
     for _label, structure in clusters:
-        centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
-        rotated = centred @ rot.T
+        origin = shared_origin if shared_centre else structure.positions_angstrom.mean(axis=0)
+        rotated = (structure.positions_angstrom - origin) @ rot.T
         species = structure.species
         if slab_angstrom is not None:
             # See render(): a slab perpendicular to the view, centred on its own median
@@ -499,6 +509,12 @@ def main() -> None:
         help="Leave every hydrogen out before the cluster is centred, bonded and drawn.",
     )
     parser.add_argument(
+        "--shared-centre",
+        action="store_true",
+        help="Series mode: centre every panel on the mean of the first input, not on its own, so "
+        "an atom the inputs share is drawn at the same place in every panel.",
+    )
+    parser.add_argument(
         "--together",
         action="store_true",
         help="Draw all the inputs as one cluster, each atom where its file puts it, instead of "
@@ -557,6 +573,7 @@ def main() -> None:
             args.columns,
             args.slab,
             NARROW_CHART_EM if args.narrow else None,
+            args.shared_centre,
         )
         for label, structure in clusters:
             print(f"  {label}: {len(structure)} atoms, {describe(structure)}")

@@ -207,8 +207,10 @@ def test_a_render_entry_records_the_manifests_direction_and_radii_and_chose_one_
     entry, panel = RENDERS[panel_id], PANELS[panel_id]
     assert entry["source"] == Path(panel["source"]).name
     assert entry["direction"] == panel["direction"]
-    chosen = [c for c in entry["candidates"] if c["verdict"].startswith("Chosen.")]
-    assert [c["direction"] for c in chosen] == [panel["direction"]]
+    chosen = [
+        candidate for candidate in entry["candidates"] if candidate["verdict"].startswith("Chosen.")
+    ]
+    assert [candidate["direction"] for candidate in chosen] == [panel["direction"]]
     assert len(entry["candidates"]) >= 3  # directions tried, each with its verdict
     assert entry["why"] and entry["limits"]
     assert entry["radii"]["sphere_radius_angstrom"] == panel["sphere_radius_angstrom"]

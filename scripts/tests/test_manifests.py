@@ -6,10 +6,15 @@ and a non-square one keep their full `resolution`; an uncaged square panel is cr
 square round its ink (panel_checks.crop_to_ink), which is smaller than the frame unless
 the ink plus its margin fills it to the pixel. A full-size uncaged square panel is
 therefore a render from before the crop that nobody has re-rendered.
+
+No JSON under `scripts/figures/data/` points into `docs/`, which is gitignored and absent from
+the public remote: a provenance record must stand on the committed files and the paper.
 """
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 import boxprep
@@ -57,3 +62,26 @@ PROTEIN_PANELS = [param for param in PANELS if param.values[0].get("kind") == "p
 def test_a_protein_panel_names_exactly_the_chains_its_file_draws(panel):
     chains = set(boxprep.read_pdb(REPO / panel["source"]).chain_ids.tolist())
     assert chains == set(panel["cartoon_chains"]) | set(panel["stick_chains"])
+
+
+def strings_in(value) -> list[str]:
+    """Every string in a parsed JSON document, keys included."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [text for key, item in value.items() for text in [key, *strings_in(item)]]
+    if isinstance(value, list):
+        return [text for item in value for text in strings_in(item)]
+    return []
+
+
+def test_no_json_under_the_figure_data_points_into_docs():
+    files = sorted((REPO / "scripts" / "figures" / "data").glob("**/*.json"))
+    assert len(files) >= 11  # the provenance records, tables and manifests of every theme
+    pointing = {
+        str(file.relative_to(REPO)): text[:80]
+        for file in files
+        for text in strings_in(json.loads(file.read_text()))
+        if re.search(r"(?<![\w-])docs/", text)
+    }
+    assert not pointing, f"a path into the gitignored docs/: {pointing}"
