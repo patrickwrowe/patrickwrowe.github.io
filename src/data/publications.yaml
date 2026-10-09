@@ -139,7 +139,7 @@
   doi: 10.1021/acs.jctc.7b00328
   theme: excited-states
   anchor: excitonic-interactions
-  blurb: "Two chromophores in van der Waals contact have a short-range coupling the Coulombic formulas discard: up to 28% of the total in the FMO complex and 66% in a stacked zinc phthalocyanine column. Beyond 7 Å the Coulombic coupling is the coupling to about 10%, the licence every cheap transport model lives on; the point-dipole formula misses 67% of it at 6 Å. Second author."
+  blurb: "Two chromophores in van der Waals contact have a short-range coupling the Coulombic formulas discard: up to 28% of the total in the FMO complex and 66% in a stacked zinc phthalocyanine column. Beyond 7 Å the Coulombic coupling is the coupling to about 10%, the licence every cheap transport model lives on; the point-dipole formula misses 67% of it at 6 Å. Second author."
   links:
     - { label: Preprint, url: "http://wrap.warwick.ac.uk/98549" }
 
@@ -152,7 +152,7 @@
   doi: 10.1021/acs.jpclett.7b00829
   theme: excited-states
   anchor: multichromophore-dynamics
-  blurb: "Nature's arrangement of the FMO complex's 8 bacteriochlorophylls ranks 466th of 50,000 physically plausible rearrangements for exciton transport at 4 ps, of the order of 20 percentage points above the ensemble. Compact structures with a pigment between source and drain do best; perturbing the Hamiltonian element by element, the earlier method, ranks nature's as generic because it builds no alternative. Second author."
+  blurb: "Nature's arrangement of the FMO complex's 8 bacteriochlorophylls ranks 466th of 50,000 physically plausible rearrangements for exciton transport at 4 ps, of the order of 20 percentage points above the ensemble. Compact structures with a pigment between source and drain do best; perturbing the Hamiltonian element by element, the earlier method, ranks nature's as generic because it builds no alternative. Second author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/1704.01795" }
     - { label: Data, url: "https://doi.org/10.6084/m9.figshare.c.3784874.v1" }
