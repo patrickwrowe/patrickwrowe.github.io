@@ -26,8 +26,8 @@ densities in atoms per square angstrom, times in ps.
 
 Usage:
     uv run scripts/figures/cluster_census.py [--data-dir DIR] [--output-dir DIR]
-        reads the frames and provenance.json from --data-dir and writes census.csv and
-        radial_profiles.csv to --output-dir; both default to the frames' directory.
+        reads the frames and provenance.json from --data-dir and writes census.csv to
+        --output-dir; both default to the frames' directory.
 """
 
 from __future__ import annotations
@@ -753,7 +753,7 @@ def classify(record: dict[str, float | int | str]) -> OutcomeClass:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Census of all 48 frames: census.csv and radial_profiles.csv.
+    """Census of all 48 frames: census.csv.
 
     Args:
         argv: Command-line arguments; None reads `sys.argv`.
@@ -763,11 +763,11 @@ def main(argv: list[str] | None = None) -> None:
         "--data-dir", type=Path, default=SPHERES_DIR, help="frames and provenance.json"
     )
     parser.add_argument(
-        "--output-dir", type=Path, default=SPHERES_DIR, help="where the two CSVs are written"
+        "--output-dir", type=Path, default=SPHERES_DIR, help="where census.csv is written"
     )
     args = parser.parse_args(argv)
     provenance = json.loads((args.data_dir / "provenance.json").read_text())
-    rows, profile_rows = [], []
+    rows = []
     for temperature_kelvin in TEMPERATURES_KELVIN:
         for n_atoms in SIZES:
             name = f"C{n_atoms}-{temperature_kelvin}K"
@@ -784,27 +784,12 @@ def main(argv: list[str] | None = None) -> None:
             }
             record["class"] = classify(record)
             rows.append(record)
-            adjacency = adjacency_matrix(
-                n_atoms, bonds_at_cutoff(positions_angstrom, edge_angstrom)
-            )
-            centre_angstrom = largest_fragment_centre(positions_angstrom, adjacency)
-            for radius_angstrom, density in zip(
-                *radial_density_profile(positions_angstrom, centre_angstrom), strict=True
-            ):
-                profile_rows.append(
-                    {
-                        "run": name,
-                        "shell_inner_radius_angstrom": f"{radius_angstrom:.1f}",
-                        "number_density_per_angstrom3": f"{density:.5f}",
-                    }
-                )
             print(f"{name}: {record['class']}", flush=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    for filename, table in (("census.csv", rows), ("radial_profiles.csv", profile_rows)):
-        with (args.output_dir / filename).open("w", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=list(table[0]))
-            writer.writeheader()
-            writer.writerows(table)
+    with (args.output_dir / "census.csv").open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 if __name__ == "__main__":
