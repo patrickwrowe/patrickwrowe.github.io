@@ -15,6 +15,7 @@ Import it as a sibling module (`from figure_style import ...`); the scripts run 
 from __future__ import annotations
 
 import argparse
+import math
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -39,6 +40,7 @@ __all__ = [
     "svg_line",
     "svg_marker",
     "svg_series",
+    "svg_square_marker",
     "svg_text",
     "write_figure",
 ]
@@ -193,6 +195,27 @@ def svg_marker(x_position: float, y_position: float, filled: bool) -> str:
         f'<circle cx="{x_position:.2f}" cy="{y_position:.2f}" '
         f'r="{MARKER_RADIUS - MARKER_STROKE / 2:.2f}" fill="var(--plate)" '
         f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
+    )
+
+
+def svg_square_marker(x_position: float, y_position: float) -> str:
+    """A filled square data marker in `var(--ink)`, of the same area as the circular one.
+
+    The third marker of a chart whose circles are already spoken for by the filled-versus-open
+    pair of `svg_marker`; its side is `MARKER_RADIUS` times root pi, so it carries the same
+    visual weight as `svg_marker`'s circle.
+
+    Args:
+        x_position: Marker centre x, in viewBox units.
+        y_position: Marker centre y, in viewBox units.
+
+    Returns:
+        The SVG `<rect>` element as a string.
+    """
+    side = MARKER_RADIUS * math.sqrt(math.pi)
+    return (
+        f'<rect x="{x_position - side / 2:.2f}" y="{y_position - side / 2:.2f}" '
+        f'width="{side:.2f}" height="{side:.2f}" fill="var(--ink)" stroke="none"/>'
     )
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 
 import pytest
@@ -21,6 +22,7 @@ from figure_style import (
     svg_line,
     svg_marker,
     svg_series,
+    svg_square_marker,
     svg_text,
     write_figure,
 )
@@ -132,3 +134,12 @@ def test_write_figure_for_a_figure_without_data_calls_build_with_the_flag_alone(
 def test_write_figure_without_an_output_exits_before_building(tmp_path):
     with pytest.raises(SystemExit):
         write_figure(lambda *_: pytest.fail("built"), "one line", ["--data-dir", str(tmp_path)])
+
+
+def test_a_square_marker_is_centred_filled_ink_and_has_the_area_of_the_circle():
+    marker = svg_square_marker(10.0, 20.0)
+    x, y, width, height = (float(v) for v in re.findall(r'(?:x|y|width|height)="([\d.]+)"', marker))
+    assert (x + width / 2, y + height / 2) == pytest.approx((10.0, 20.0), abs=0.01)
+    assert width == height
+    assert width * height == pytest.approx(math.pi * MARKER_RADIUS**2, rel=0.01)
+    assert 'fill="var(--ink)" stroke="none"' in marker
