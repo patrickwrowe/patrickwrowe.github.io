@@ -22,7 +22,14 @@ import numpy as np
 import pytest
 import short_range_share
 from chart_svg import TEXT, assert_text_fits, numeric_labels
-from figure_style import LABEL_SIZE, MARKER_RADIUS, NARROW_CHART_EM, svg_marker, svg_square_marker
+from figure_style import (
+    LABEL_SIZE,
+    MARKER_OUTLINE,
+    MARKER_RADIUS,
+    NARROW_CHART_EM,
+    svg_marker,
+    svg_square_marker,
+)
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/excited-states"
@@ -248,15 +255,19 @@ def test_a_system_with_no_row_is_refused_naming_the_file_and_the_system(tmp_path
         short_range_share.build(tmp_path)
 
 
-# Markers are `2 * MARKER_RADIUS` across. Rows of Table 1 that lie nearer than that overlap in
-# the drawing: these are the known, reviewed pairs, named "system pair states". A new row, or
-# a layout change, that adds one fails `test_the_markers_that_overlap_are_the_known_pairs`.
+# Markers that touch in the drawing: those whose painted shapes, plate outline included, share
+# a point (`touching_pairs`). That is more than the centres lying nearer than a marker is wide
+# (2 * MARKER_RADIUS): two squares touch at their corners from further out, so the four and
+# five pairs of nearer centres are joined by corner slivers (the smallest 0.13 square units).
+# These are the known, reviewed pairs, named "system pair states". A new row, or a layout
+# change, that makes two markers touch fails `test_the_markers_that_touch_are_the_known_pairs`.
 OVERLAPPING_PAIRS = {
     False: {
         frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
         frozenset({"FMO 5-6 2,1", "FMO 4-7 1,2"}),
         frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
         frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
+        frozenset({"PCP 1-3 1,1", "PCP 2-4 1,1"}),
     },
     True: {
         frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
@@ -264,7 +275,15 @@ OVERLAPPING_PAIRS = {
         frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
         frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
         frozenset({"PCP 1-3 1,1", "PCP 2-4 1,1"}),
+        frozenset({"PCP 2-4 1,1", "PCP 7-8 1,1"}),
+        frozenset({"PCP 5-6 1,1", "PCP 7-8 1,1"}),
     },
+}
+# The markers as first drawn: the open circle filled with the plate, nothing outlined.
+PLAIN_MARKERS = {
+    "FMO": ("filled", partial(svg_marker, filled=True)),
+    "LH2": ("open", partial(svg_marker, filled=False)),
+    "PCP": ("square", svg_square_marker),
 }
 # The least share of a marker's ink that later markers may leave showing. A circle is read by
 # its outline, so most of it must show: the plain open circle of LH2 pair B's 13 per cent row
@@ -274,6 +293,7 @@ OVERLAPPING_PAIRS = {
 # a third of a square wide beside the square that overlaps it, still a second marker.
 MIN_VISIBLE_INK = {"circle": 0.7, "rect": 0.25}
 SAMPLE_STEP = 0.05  # viewBox units
+TOUCH_STEP = 0.02  # viewBox units, finer: the corner slivers are 0.1 units across
 
 
 def read_shapes(svg: str) -> list[dict]:
@@ -375,16 +395,75 @@ def visible_ink(svg: str) -> dict[str, float]:
     return visible
 
 
+def touching_pairs(svg: str) -> set[frozenset[str]]:
+    """The pairs of markers whose painted shapes, outlines included, share a point.
+
+    Sampled on a grid of `TOUCH_STEP` over each nearby pair; a fill of "none" paints nothing, so
+    two rings touch where their strokes cross, not where one lies inside the other.
+
+    Args:
+        svg: The figure.
+
+    Returns:
+        Each touching pair as a frozenset of two marker names.
+    """
+    shapes = read_shapes(svg)
+    reach = max(shape["extent"] + shape["outline"] / 2 for shape in shapes)
+    touching = set()
+    for first, second in itertools.combinations(shapes, 2):
+        gap = np.hypot(*np.subtract(first["centre"], second["centre"]))
+        if gap > 2 * reach * np.sqrt(2):  # beyond the corner-to-corner reach of two squares
+            continue
+        low = np.minimum(first["centre"], second["centre"]) - reach
+        high = np.maximum(first["centre"], second["centre"]) + reach
+        axes = [
+            np.arange(start, stop + TOUCH_STEP, TOUCH_STEP)
+            for start, stop in zip(low, high, strict=True)
+        ]
+        points = np.array(list(itertools.product(*axes)))
+        if (paint(first, points)[1] & paint(second, points)[1]).any():
+            touching.add(frozenset({first["name"], second["name"]}))
+    return touching
+
+
+def lacking_separation(svg: str) -> list[str]:
+    """The markers drawn without what keeps a neighbour that overlaps them countable.
+
+    A filled marker needs its `var(--plate)` outline of `MARKER_OUTLINE`, which parts it from
+    a neighbour of the same ink; an open one needs to be unfilled, so the marker beneath shows
+    through its ring.
+
+    Args:
+        svg: The figure.
+
+    Returns:
+        The names ("system pair states") of the markers that lack it, in drawing order.
+    """
+    lacking = []
+    for shape in read_shapes(svg):
+        if shape["fill"] == "var(--ink)":
+            separated = shape["stroke"] == "var(--plate)" and shape["outline"] == MARKER_OUTLINE
+        else:
+            separated = shape["fill"] == "none"
+        if not separated:
+            lacking.append(shape["name"])
+    return lacking
+
+
 @pytest.mark.parametrize("narrow", [False, True])
-def test_the_markers_that_overlap_are_the_known_pairs(narrow):
-    shapes = read_shapes(short_range_share.build(DATA, narrow=narrow))
-    assert len(shapes) == 15
-    near = {
-        frozenset({first["name"], second["name"]})
-        for first, second in itertools.combinations(shapes, 2)
-        if np.hypot(*np.subtract(first["centre"], second["centre"])) < 2 * MARKER_RADIUS
-    }
-    assert near == OVERLAPPING_PAIRS[narrow]
+def test_the_markers_that_touch_are_the_known_pairs(narrow):
+    svg = short_range_share.build(DATA, narrow=narrow)
+    assert len(read_shapes(svg)) == 15
+    assert touching_pairs(svg) == OVERLAPPING_PAIRS[narrow]
+
+
+@pytest.mark.parametrize("narrow", [False, True])
+def test_every_marker_carries_what_keeps_its_overlapping_neighbour_countable(narrow):
+    # FMO's circles and PCP's squares are outlined in the plate's colour, LH2's rings unfilled.
+    svg = short_range_share.build(DATA, narrow=narrow)
+    assert lacking_separation(svg) == []
+    # Five FMO circles and five PCP squares, and the legend's FMO circle and PCP square.
+    assert svg.count(f'stroke="var(--plate)" stroke-width="{MARKER_OUTLINE}"') == 5 + 5 + 2
 
 
 @pytest.mark.parametrize("narrow", [False, True])
@@ -402,17 +481,24 @@ def test_every_row_stays_findable_with_most_of_its_outline_showing(narrow):
 
 
 def test_the_visibility_check_sees_the_plain_markers_hide_lh2_pair_b(monkeypatch):
-    # The markers as first drawn (the open circle filled with the plate, nothing outlined):
-    # the 14 per cent circle covered all but a crescent of the 13 per cent one.
-    plain = {
-        "FMO": ("filled", partial(svg_marker, filled=True)),
-        "LH2": ("open", partial(svg_marker, filled=False)),
-        "PCP": ("square", svg_square_marker),
-    }
-    monkeypatch.setattr(short_range_share, "MARKERS", plain)
+    # The 14 per cent circle covered all but a crescent of the 13 per cent one.
+    monkeypatch.setattr(short_range_share, "MARKERS", PLAIN_MARKERS)
     fractions = visible_ink(short_range_share.build(DATA))
     assert fractions["LH2 B 1,1"] == pytest.approx(0.50, abs=0.03)
     assert fractions["LH2 B 1,1"] < MIN_VISIBLE_INK["circle"]
+
+
+def test_dropping_the_separation_from_any_series_is_caught(monkeypatch):
+    # Each series on its own: the visibility check alone passes without the plate outline
+    # (the overlapping squares merge into one block yet each shows more ink), so this one
+    # must name them.
+    separate = dict(short_range_share.MARKERS)
+    for series in PLAIN_MARKERS:
+        plain_series = {**separate, series: PLAIN_MARKERS[series]}
+        monkeypatch.setattr(short_range_share, "MARKERS", plain_series)
+        lacking = lacking_separation(short_range_share.build(DATA))
+        assert len(lacking) == 5
+        assert {name.split()[0] for name in lacking} == {series}
 
 
 def test_every_axis_title_carries_its_unit():
