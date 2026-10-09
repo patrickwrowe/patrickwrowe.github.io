@@ -70,10 +70,13 @@ Do not break these without asking first.
   a value may be taken from one (a year, a prize name, an amount), the file and its path
   never go into `src/` or `public/`, a caption or a credit. Posters, prospectus or review
   covers and submitted journal covers may be published (Patrick, 2026-10-03).
-- **Copy goes through the pipeline** in restructure spec §5: dossier, draft, stylist,
-  separate fact audit, edit pass, design review, Patrick. Blurbs, captions, alt text and
-  wall-label fields are part of the article and go through the same audit. The voice
-  guide is the `/pwr:in-my-voice` skill (its `SKILL.md`, `references/` and `samples/`);
+- **Copy goes through the pipeline** in restructure spec §5, with the models plan 03 fixed
+  (spec §17): dossier (Fable), draft (Fable), stylist (Fable, fresh context, editing the
+  draft in place), separate fact audit (Fable, fresh context), edit pass (Fable), design
+  review (Opus), Patrick. Blurbs, captions, alt text, `heroCaption` and the wall-label
+  fields are part of the article and go through every stage; copy changed after the audit
+  is audited again by a fresh Fable agent (`audit-2.md`, `audit-3.md`). The voice guide is
+  the `/pwr:in-my-voice` skill (its `SKILL.md`, `references/` and `samples/`);
   `docs/voice/derek-lowe.md` holds only the site's own rules, and the terminology sheet
   is `docs/voice/terminology.md`.
 
@@ -88,6 +91,9 @@ Do not break these without asking first.
   session 7, `/cv/`. An entry's `theme` is a reference to a `work` entry and its `anchor`
   is a `##` heading id in that article; `scripts/check_links.py` confirms every anchor
   exists after a build.
+- **A theme with a `hero` needs a `heroCaption`** (the schema enforces it): `heroAlt` is the
+  alt text, `heroCaption` the caption under the hero plate and `heroCredit` its credit line;
+  all three are article copy and go through the pipeline.
 - **`draft` hides a page from production and `stub` marks placeholder prose on a live page.**
   A theme article is `draft: true` until Patrick approves it, then `draft: false` with
   `stub` and `stubNote` removed in the same commit. A theme also needs `shortTitle`, and its
@@ -102,11 +108,18 @@ Do not break these without asking first.
   slabs are monochrome SVG from `scripts/figures/render_cluster.py`: every stroke resolves
   to `var(--ink)`, depth is opacity, inline it with `?raw` and
   `<Fragment set:html={...}>`, never `<Image>`. Grids of large boxes and one hero render
-  per theme article are greyscale PNG from Blender via `molrender`: one grey per species,
-  no hue, view transform Standard, world pure white so `multiply` onto `--plate` shows no
-  box, placed with `<Image>` inside a `<Plate>`. Either way the producing script is
-  committed under `scripts/figures/` and its input structures under
-  `scripts/figures/data/`, so every figure regenerates. Never a screenshot of a viewer.
+  per theme article are PNG from Blender via `molrender`: a single-species render is
+  greyscale (one grey per species, no hue); a render of more than one species (a protein
+  with its ligands, a slab with ions) takes one colour per species from `SPECIES_COLOUR` in
+  `scripts/figures/constants.py`, whose values are the `--species-*` tokens in
+  `src/styles/tokens.css`, with a protein's cartoon in the palette's carbon; view transform
+  Standard, world pure white so `multiply` onto `--plate` shows no box, placed with
+  `<Image>` inside a `<Plate>`. A public PDB structure is drawn as deposited by a
+  `kind: "protein"` panel (model 1, one conformer, no water, CONECT records written for its
+  ligands) and credited by entry and depositors ("Structure: PDB 1SY6, Kjer-Nielsen et al.
+  (2004)"); PDB archive data are CC0. Either way the producing script is committed under
+  `scripts/figures/` and its input structures under `scripts/figures/data/`, so every
+  figure regenerates. Never a screenshot of a viewer.
 - **Panel grids are `Grid.astro` matrices** (spec §6.2 as amended 2026-10-02): column
   headings above, row headings left, the column count held at every width with a sideways
   scroll under 1000 px, never a reflow; every panel is a thumbnail that opens its full render
@@ -138,6 +151,7 @@ uv run pytest scripts/tests               # the Python tests (link check, geomet
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...] [--base-url URL]
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
 $MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv
+$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/antibodies/manifest.json   # protein panels: a PDB entry as cartoon with its ligands in species colour (about 150 s a panel)
 FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh   # Fig. 10's clip; FFMPEG is required, ffmpeg is not system-wide
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
