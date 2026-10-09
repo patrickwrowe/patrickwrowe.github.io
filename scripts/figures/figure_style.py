@@ -23,9 +23,12 @@ from pathlib import Path
 from constants import SPECIES_COLOUR
 
 __all__ = [
+    "AXIS_BAND",
     "AXIS_TITLE_SIZE",
     "AXIS_WIDTH",
     "LABEL_SIZE",
+    "LEGEND_ROW_HEIGHT",
+    "MARKER_OUTLINE",
     "MARKER_RADIUS",
     "MARKER_STROKE",
     "MINUS_SIGN",
@@ -33,6 +36,7 @@ __all__ = [
     "SERIES_WIDTH",
     "TICK_LENGTH",
     "X_AXIS_TITLE_DROP",
+    "Y_TITLE_OFFSET",
     "format_tick",
     "species_colour",
     "svg_axis",
@@ -52,11 +56,20 @@ AXIS_TITLE_SIZE = 3.2
 # From a bottom axis line to the baseline of its title: the ticks, one line of tick labels
 # (svg_axis puts them a label size and 0.4 below the ticks) and a gap of 3.2.
 X_AXIS_TITLE_DROP = TICK_LENGTH + 2 * LABEL_SIZE + 3.2
+# The band below a plot's bottom axis: tick labels, then the axis title, then a little air.
+AXIS_BAND = 16.0
+# From a left axis line to the baseline of its rotated title, clear of two-digit tick labels.
+Y_TITLE_OFFSET = 9.0
+# One row of a chart's legend, from one baseline to the next.
+LEGEND_ROW_HEIGHT = 5.0
 # A data line.
 SERIES_WIDTH = 0.9
 # A data marker: the circle's outer radius, and the stroke of an open one.
 MARKER_RADIUS = 1.7
 MARKER_STROKE = 0.7
+# The `var(--plate)` outline of a filled marker drawn `separate`, which parts it from a
+# neighbour it overlaps.
+MARKER_OUTLINE = 0.4
 # The mono face draws U+2212 as a real minus; Python's float formatting uses hyphen-minus,
 # which reads shorter and sits high next to a digit.
 MINUS_SIGN = "−"
@@ -171,34 +184,45 @@ def svg_line(
     )
 
 
-def svg_marker(x_position: float, y_position: float, filled: bool) -> str:
+def svg_marker(x_position: float, y_position: float, filled: bool, separate: bool = False) -> str:
     """A data marker: filled in `var(--ink)`, or open with a `var(--plate)` centre.
 
     The open marker is filled with `var(--plate)`, not "none", so it knocks out the line
     behind it rather than reading as a bead threaded on a wire. Both are `MARKER_RADIUS`
     across; the open one's stroke (`MARKER_STROKE`) lies inside that radius.
 
+    A chart whose rows can lie nearer than a marker's width draws them `separate`: the open
+    marker is left unfilled, so a marker drawn beneath it shows through its ring, and the
+    filled one gets a `MARKER_OUTLINE` of `var(--plate)`, so two that touch stay two.
+
     Args:
         x_position: Marker centre x, in viewBox units.
         y_position: Marker centre y, in viewBox units.
         filled: True for a filled marker, False for an open one.
+        separate: Draw the marker so that a neighbour it overlaps stays countable.
 
     Returns:
         The SVG `<circle>` element as a string.
     """
     if filled:
+        stroke = (
+            f'stroke="var(--plate)" stroke-width="{MARKER_OUTLINE}"'
+            if separate
+            else 'stroke="none"'
+        )
         return (
             f'<circle cx="{x_position:.2f}" cy="{y_position:.2f}" r="{MARKER_RADIUS}" '
-            f'fill="var(--ink)" stroke="none"/>'
+            f'fill="var(--ink)" {stroke}/>'
         )
+    centre = "none" if separate else "var(--plate)"
     return (
         f'<circle cx="{x_position:.2f}" cy="{y_position:.2f}" '
-        f'r="{MARKER_RADIUS - MARKER_STROKE / 2:.2f}" fill="var(--plate)" '
+        f'r="{MARKER_RADIUS - MARKER_STROKE / 2:.2f}" fill="{centre}" '
         f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
     )
 
 
-def svg_square_marker(x_position: float, y_position: float) -> str:
+def svg_square_marker(x_position: float, y_position: float, separate: bool = False) -> str:
     """A filled square data marker in `var(--ink)`, of the same area as the circular one.
 
     The third marker of a chart whose circles are already spoken for by the filled-versus-open
@@ -208,14 +232,19 @@ def svg_square_marker(x_position: float, y_position: float) -> str:
     Args:
         x_position: Marker centre x, in viewBox units.
         y_position: Marker centre y, in viewBox units.
+        separate: Give the square a `MARKER_OUTLINE` of `var(--plate)`, so that two squares
+            that overlap stay two (`svg_marker`).
 
     Returns:
         The SVG `<rect>` element as a string.
     """
     side = MARKER_RADIUS * math.sqrt(math.pi)
+    stroke = (
+        f'stroke="var(--plate)" stroke-width="{MARKER_OUTLINE}"' if separate else 'stroke="none"'
+    )
     return (
         f'<rect x="{x_position - side / 2:.2f}" y="{y_position - side / 2:.2f}" '
-        f'width="{side:.2f}" height="{side:.2f}" fill="var(--ink)" stroke="none"/>'
+        f'width="{side:.2f}" height="{side:.2f}" fill="var(--ink)" {stroke}/>'
     )
 
 

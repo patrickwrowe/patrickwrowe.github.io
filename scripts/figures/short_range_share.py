@@ -46,11 +46,14 @@ from functools import partial
 from pathlib import Path
 
 from figure_style import (
+    AXIS_BAND,
     AXIS_TITLE_SIZE,
     AXIS_WIDTH,
     LABEL_SIZE,
+    LEGEND_ROW_HEIGHT,
     NARROW_CHART_EM,
     X_AXIS_TITLE_DROP,
+    Y_TITLE_OFFSET,
     svg_axis,
     svg_document,
     svg_line,
@@ -71,11 +74,14 @@ ROW_FIELDS = (
     "j_short_share_percent",
 )
 
-# The three series, in legend order, and the marker each is drawn with.
+# The three series, in legend order, and the marker each is drawn with. Rows of Table 1 lie
+# nearer than a marker is wide (LH2 pair B's two rows are 1.0 viewBox unit apart against a
+# marker 3.4 across), so each marker is drawn `separate`: the open circle unfilled, the filled
+# ones outlined in the plate's colour, and every row stays findable.
 MARKERS = {
-    "FMO": ("filled", partial(svg_marker, filled=True)),
-    "LH2": ("open", partial(svg_marker, filled=False)),
-    "PCP": ("square", svg_square_marker),
+    "FMO": ("filled", partial(svg_marker, filled=True, separate=True)),
+    "LH2": ("open", partial(svg_marker, filled=False, separate=True)),
+    "PCP": ("square", partial(svg_square_marker, separate=True)),
 }
 
 # The axes, (minimum, maximum) and labelled values. D runs to 8 angstrom so the 7 angstrom
@@ -91,17 +97,12 @@ MARGIN_TOP = 6.0
 MARGIN_RIGHT = 6.0
 PLOT_WIDTH = 128.0
 PLOT_HEIGHT = 70.0
-# Below the plot: tick labels, then the axis title, then a little air.
-AXIS_BAND = 16.0
-# From the axis line to the baseline of the rotated share title, clear of two-digit labels.
-Y_TITLE_OFFSET = 9.0
 GUIDE_DASH = "0.5 1.5"
 # From a marker's centre up to the baseline of the value written above it.
 VALUE_LABEL_RISE = 3.0
 # The legend sits in the empty top right of the plot, left of the guide: a marker, a gap, a
 # name, one row per series.
 LEGEND_OFFSET_FROM_GUIDE = 18.0
-LEGEND_ROW_HEIGHT = 5.0
 LEGEND_NAME_GAP = 3.5
 
 NARROW_WIDTH = NARROW_CHART_EM * LABEL_SIZE
@@ -121,9 +122,9 @@ def build(data_dir: Path, narrow: bool = False) -> str:
 
     Raises:
         ValueError: If a row lacks a field or names a system the chart has no marker for, if a
-            distance or share is not a finite number or leaves its axis, which would draw a
-            marker off the plot, or if the file's close-contact threshold leaves the distance
-            axis.
+            system has no row, if a distance or share is not a finite number or leaves its
+            axis, which would draw a marker off the plot, or if the file's close-contact
+            threshold leaves the distance axis.
     """
     path = data_dir / DATA_FILE
     table = json.loads(path.read_text())
@@ -206,13 +207,16 @@ def build(data_dir: Path, narrow: bool = False) -> str:
 
     for system, (kind, marker) in MARKERS.items():
         system_rows = [row for row in rows if row["system"] == system]
-        largest = max(system_rows, key=lambda row: row["j_short_share_percent"])
+        if not system_rows:
+            raise ValueError(f"{path}: no row of the system {system}")
+        # Every row that ties for the largest share is labelled, not only the first.
+        largest_percent = max(row["j_short_share_percent"] for row in system_rows)
         points = []
         for row in system_rows:
             point_x = x_of(row["min_distance_angstrom"])
             point_y = y_of(row["j_short_share_percent"])
             drawing = marker(point_x, point_y)
-            if row is largest:
+            if row["j_short_share_percent"] == largest_percent:
                 drawing += svg_text(
                     point_x,
                     point_y - VALUE_LABEL_RISE,

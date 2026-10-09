@@ -2,15 +2,19 @@
 
 The committed table1-short-range-share.json is the root of trust: the chart is checked against
 it, and the numbers a caption could copy (the 28 per cent at 2.26 angstrom, the 7 angstrom
-threshold, the largest share of each system) are recomputed from the drawing, from the data
-and, for the 2.26, from the staged chromophore geometries. Nothing here reads docs/, which is
-gitignored.
+threshold, the largest share of each system, the ranges of distance and share, the rows of
+each system) are recomputed from the drawing, from the data and, for the 2.26, from the staged
+chromophore geometries. The markers are also checked for hiding one another: rows of Table 1
+lie nearer than a marker is wide, and the drawing must keep each one findable. Nothing here
+reads docs/, which is gitignored.
 """
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
+from functools import partial
 from pathlib import Path
 
 import boxprep
@@ -18,7 +22,7 @@ import numpy as np
 import pytest
 import short_range_share
 from chart_svg import TEXT, assert_text_fits, numeric_labels
-from figure_style import LABEL_SIZE, MARKER_RADIUS, NARROW_CHART_EM
+from figure_style import LABEL_SIZE, MARKER_RADIUS, NARROW_CHART_EM, svg_marker, svg_square_marker
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/excited-states"
@@ -54,17 +58,17 @@ def read_points(svg: str) -> list[dict]:
             r'<g data-pair="([^"]+)" data-states="([^"]+)" [^>]*>(.*?)</g>', series, re.DOTALL
         ):
             if kind == "square":
-                x, y, side = (
-                    float(v)
-                    for v in re.search(
+                left, top, side = (
+                    float(value)
+                    for value in re.search(
                         r'<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)"', body
                     ).groups()
                 )
-                centre_x, centre_y = x + side / 2, y + side / 2
+                centre_x, centre_y = left + side / 2, top + side / 2
             else:
                 centre_x, centre_y = (
-                    float(v)
-                    for v in re.search(r'<circle cx="([\d.]+)" cy="([\d.]+)"', body).groups()
+                    float(value)
+                    for value in re.search(r'<circle cx="([\d.]+)" cy="([\d.]+)"', body).groups()
                 )
             label = TEXT.search(body)
             points.append(
@@ -127,7 +131,8 @@ def test_each_system_has_its_own_marker_and_the_legend_shows_all_three():
         "var(--plate)",
     }
     assert f'r="{MARKER_RADIUS}" fill="var(--ink)"' in svg  # the filled circle of FMO
-    assert 'fill="var(--plate)" stroke="var(--ink)"' in svg  # the open circle of LH2
+    # The open circle of LH2 is unfilled, so a marker beneath it shows through its ring.
+    assert 'fill="none" stroke="var(--ink)"' in svg
 
 
 def test_the_guide_stands_at_the_papers_7_angstrom_and_every_marker_is_inside_it():
@@ -164,6 +169,250 @@ def test_the_largest_share_of_each_system_is_written_above_its_marker_and_nowher
     for system, label in labelled.items():
         largest = max(point["share_percent"] for point in points if point["system"] == system)
         assert float(label.rstrip("%")) == pytest.approx(largest, abs=0.1)
+
+
+def test_the_ranges_and_row_counts_a_caption_quotes_are_recomputed_from_the_drawing_and_the_data():
+    for narrow in (False, True):
+        points = read_points(short_range_share.build(DATA, narrow=narrow))
+        distances = [point["distance_angstrom"] for point in points]
+        shares = [point["share_percent"] for point in points]
+        # "all 15 pairs at 0.98 to 2.98 angstrom, shares from 7.1 to 66 per cent"
+        assert (min(distances), max(distances)) == pytest.approx((0.98, 2.98), abs=0.01)
+        assert (min(shares), max(shares)) == pytest.approx((7.1, 66.0), abs=0.05)
+        by_system = {
+            system: [point for point in points if point["system"] == system]
+            for system in ("FMO", "LH2", "PCP")
+        }
+        assert {system: len(rows) for system, rows in by_system.items()} == {
+            "FMO": 5,
+            "LH2": 5,
+            "PCP": 5,
+        }
+        span = {
+            system: (
+                min(point["share_percent"] for point in rows),
+                max(point["share_percent"] for point in rows),
+            )
+            for system, rows in by_system.items()
+        }
+        assert span["FMO"] == pytest.approx((19.0, 28.0), abs=0.05)
+        assert span["LH2"] == pytest.approx((10.0, 66.0), abs=0.05)
+        assert span["PCP"] == pytest.approx((7.1, 22.0), abs=0.05)
+        # LH2 without its one 66 per cent: "between 10 and 27".
+        assert max(
+            point["share_percent"] for point in by_system["LH2"] if point["share_percent"] < 60
+        ) == pytest.approx(27.0, abs=0.05)
+        # FMO's other three pairs: 2.18 to 2.61 angstrom, 19 to 25 per cent.
+        fmo_others = [point for point in by_system["FMO"] if point["pair"] != "1-2"]
+        assert len(fmo_others) == 4  # pairs 5-6 (two rows), 4-7 and 3-7
+        assert (
+            min(point["distance_angstrom"] for point in fmo_others),
+            max(point["distance_angstrom"] for point in fmo_others),
+        ) == pytest.approx((2.18, 2.61), abs=0.01)
+        assert (
+            min(point["share_percent"] for point in fmo_others),
+            max(point["share_percent"] for point in fmo_others),
+        ) == pytest.approx((19.0, 25.0), abs=0.05)
+    # The 66 per cent is the S1-S2 cross coupling of LH2 pair A, 4.98 meV in total (the data).
+    cross = next(row for row in ROWS if row["j_short_share_percent"] == 66)
+    assert (cross["system"], cross["pair"], cross["coupled_states"]) == ("LH2", "A", "1,2")
+    assert cross["j_total_mev"] == 4.98
+    assert 100 * cross["j_short_mev"] / cross["j_total_mev"] == pytest.approx(66.0, abs=0.5)
+
+
+def write_table(tmp_path: Path, rows: list[dict]) -> None:
+    """The committed table with these rows, in a directory the chart can be built from."""
+    table = json.loads((DATA / "table1-short-range-share.json").read_text())
+    table["rows"] = rows
+    (tmp_path / "table1-short-range-share.json").write_text(json.dumps(table))
+
+
+def test_a_tie_for_the_largest_share_of_a_system_labels_every_row_that_ties(tmp_path):
+    rows = [dict(row) for row in ROWS]
+    tied = next(row for row in rows if (row["system"], row["pair"]) == ("FMO", "5-6"))
+    tied["j_short_share_percent"] = 28  # equal to pair 1-2, the largest of FMO
+    write_table(tmp_path, rows)
+    points = read_points(short_range_share.build(tmp_path))
+    assert sorted(
+        (point["pair"], point["states"])
+        for point in points
+        if point["system"] == "FMO" and point["label"] == "28%"
+    ) == [("1-2", "1,2"), ("5-6", "1,2")]
+
+
+def test_a_system_with_no_row_is_refused_naming_the_file_and_the_system(tmp_path):
+    write_table(tmp_path, [row for row in ROWS if row["system"] != "LH2"])
+    with pytest.raises(
+        ValueError, match=r"table1-short-range-share\.json: no row of the system LH2"
+    ):
+        short_range_share.build(tmp_path)
+
+
+# Markers are `2 * MARKER_RADIUS` across. Rows of Table 1 that lie nearer than that overlap in
+# the drawing: these are the known, reviewed pairs, named "system pair states". A new row, or
+# a layout change, that adds one fails `test_the_markers_that_overlap_are_the_known_pairs`.
+OVERLAPPING_PAIRS = {
+    False: {
+        frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
+        frozenset({"FMO 5-6 2,1", "FMO 4-7 1,2"}),
+        frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
+        frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
+    },
+    True: {
+        frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
+        frozenset({"FMO 5-6 2,1", "FMO 4-7 1,2"}),
+        frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
+        frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
+        frozenset({"PCP 1-3 1,1", "PCP 2-4 1,1"}),
+    },
+}
+# The least share of a marker's ink that later markers may leave showing. A circle is read by
+# its outline, so most of it must show: the plain open circle of LH2 pair B's 13 per cent row
+# showed 0.50 beneath its neighbour's plate-filled one, the drawn one shows 0.75. A square of
+# PCP overlaps its neighbour more (pairs 1-3 and 7-8 are 0.12 angstrom apart, 1.2 units in the
+# phone layout), and its plate outline costs it ink: it keeps 0.56 wide and 0.28 narrow, a bar
+# a third of a square wide beside the square that overlaps it, still a second marker.
+MIN_VISIBLE_INK = {"circle": 0.7, "rect": 0.25}
+SAMPLE_STEP = 0.05  # viewBox units
+
+
+def read_shapes(svg: str) -> list[dict]:
+    """Every marker's geometry and paint, in drawing order, as the SVG states them.
+
+    Args:
+        svg: The figure.
+
+    Returns:
+        One dict per marker: name ("system pair states"), kind ("circle" or "rect"), centre
+        (x, y), extent (the circle's radius or the square's half side), fill, stroke and
+        outline (the stroke's width, 0 without one), all in viewBox units.
+    """
+    shapes = []
+    for system, series in re.findall(
+        r'<g data-series="(\w+)"[^>]*>(.*?)\n    </g>', svg, re.DOTALL
+    ):
+        for pair, states, body in re.findall(
+            r'<g data-pair="([^"]+)" data-states="([^"]+)" [^>]*>(.*?)</g>', series, re.DOTALL
+        ):
+            element = re.search(r"<(circle|rect) ([^>]*)/>", body)
+            attributes = dict(re.findall(r'([\w-]+)="([^"]*)"', element.group(2)))
+            if element.group(1) == "circle":
+                centre = (float(attributes["cx"]), float(attributes["cy"]))
+                extent = float(attributes["r"])
+            else:
+                extent = float(attributes["width"]) / 2
+                centre = (float(attributes["x"]) + extent, float(attributes["y"]) + extent)
+            shapes.append(
+                {
+                    "name": f"{system} {pair} {states}",
+                    "kind": element.group(1),
+                    "centre": centre,
+                    "extent": extent,
+                    "fill": attributes["fill"],
+                    "stroke": attributes["stroke"],
+                    "outline": 0.0
+                    if attributes["stroke"] == "none"
+                    else float(attributes["stroke-width"]),
+                }
+            )
+    return shapes
+
+
+def paint(shape: dict, points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Where a marker leaves ink and where it paints anything, at these points.
+
+    A stroke is centred on the shape's edge and paints over the fill; a fill of "none" paints
+    nothing, so a marker beneath an unfilled ring shows through it.
+
+    Args:
+        shape: One entry of `read_shapes`.
+        points: Shape (n, 2), in viewBox units.
+
+    Returns:
+        Two boolean arrays of length n: the points inked (in `var(--ink)`), and the points
+        painted in any colour, `var(--plate)` included.
+    """
+    offset = points - shape["centre"]
+    if shape["kind"] == "circle":
+        distance = np.hypot(offset[:, 0], offset[:, 1])
+    else:
+        distance = np.abs(offset).max(axis=1)
+    half_outline = shape["outline"] / 2
+    in_stroke = (np.abs(distance - shape["extent"]) <= half_outline) & (shape["outline"] > 0)
+    in_fill = distance <= shape["extent"]
+    fill_shows = in_fill & ~in_stroke & (distance < shape["extent"] - half_outline)
+    inked = (in_stroke & (shape["stroke"] == "var(--ink)")) | (
+        fill_shows & (shape["fill"] == "var(--ink)")
+    )
+    painted = in_stroke | (in_fill & (shape["fill"] != "none"))
+    return inked, painted
+
+
+def visible_ink(svg: str) -> dict[str, float]:
+    """The share of each marker's ink that no later marker paints over, by marker name.
+
+    Sampled on a grid of `SAMPLE_STEP`. Markers are drawn in series order, so one is covered
+    only by those after it.
+
+    Args:
+        svg: The figure.
+
+    Returns:
+        Marker name to the visible fraction of its ink, between 0 and 1.
+    """
+    shapes = read_shapes(svg)
+    reach = max(shape["extent"] + shape["outline"] for shape in shapes)
+    offsets = np.arange(-reach, reach + SAMPLE_STEP, SAMPLE_STEP)
+    grid = np.array(list(itertools.product(offsets, offsets)))
+    visible = {}
+    for index, shape in enumerate(shapes):
+        points = grid + shape["centre"]
+        inked, _ = paint(shape, points)
+        covered = np.zeros(len(points), dtype=bool)
+        for later in shapes[index + 1 :]:
+            covered |= paint(later, points)[1]
+        visible[shape["name"]] = float((inked & ~covered).sum() / inked.sum())
+    return visible
+
+
+@pytest.mark.parametrize("narrow", [False, True])
+def test_the_markers_that_overlap_are_the_known_pairs(narrow):
+    shapes = read_shapes(short_range_share.build(DATA, narrow=narrow))
+    assert len(shapes) == 15
+    near = {
+        frozenset({first["name"], second["name"]})
+        for first, second in itertools.combinations(shapes, 2)
+        if np.hypot(*np.subtract(first["centre"], second["centre"])) < 2 * MARKER_RADIUS
+    }
+    assert near == OVERLAPPING_PAIRS[narrow]
+
+
+@pytest.mark.parametrize("narrow", [False, True])
+def test_every_row_stays_findable_with_most_of_its_outline_showing(narrow):
+    svg = short_range_share.build(DATA, narrow=narrow)
+    fractions = visible_ink(svg)
+    kinds = {shape["name"]: shape["kind"] for shape in read_shapes(svg)}
+    assert len(fractions) == 15
+    hidden = {
+        name: round(fraction, 2)
+        for name, fraction in fractions.items()
+        if fraction < MIN_VISIBLE_INK[kinds[name]]
+    }
+    assert not hidden, f"markers hidden by a later one: {hidden}"
+
+
+def test_the_visibility_check_sees_the_plain_markers_hide_lh2_pair_b(monkeypatch):
+    # The markers as first drawn (the open circle filled with the plate, nothing outlined):
+    # the 14 per cent circle covered all but a crescent of the 13 per cent one.
+    plain = {
+        "FMO": ("filled", partial(svg_marker, filled=True)),
+        "LH2": ("open", partial(svg_marker, filled=False)),
+        "PCP": ("square", svg_square_marker),
+    }
+    monkeypatch.setattr(short_range_share, "MARKERS", plain)
+    fractions = visible_ink(short_range_share.build(DATA))
+    assert fractions["LH2 B 1,1"] == pytest.approx(0.50, abs=0.03)
+    assert fractions["LH2 B 1,1"] < MIN_VISIBLE_INK["circle"]
 
 
 def test_every_axis_title_carries_its_unit():

@@ -56,11 +56,14 @@ from pathlib import Path
 
 import numpy as np
 from figure_style import (
+    AXIS_BAND,
     AXIS_TITLE_SIZE,
     LABEL_SIZE,
+    LEGEND_ROW_HEIGHT,
     NARROW_CHART_EM,
     SERIES_WIDTH,
     X_AXIS_TITLE_DROP,
+    Y_TITLE_OFFSET,
     format_tick,
     species_colour,
     svg_axis,
@@ -100,11 +103,6 @@ MARGIN_LEFT = 13.0
 MARGIN_TOP = 9.0
 MARGIN_RIGHT = 4.0
 PANEL_GAP = 10.0
-# Below the axis: tick labels, then the axis title, then a little air.
-AXIS_BAND = 16.0
-# From the axis line to the baseline of the rotated height title: clear of tick labels of two
-# digits (the contact-angle chart's is wider for its four-character labels).
-Y_TITLE_OFFSET = 9.0
 
 # --narrow: the panels stack, each as wide as the 31.5 em viewBox leaves after the margins.
 NARROW_WIDTH = NARROW_CHART_EM * LABEL_SIZE
@@ -113,7 +111,6 @@ NARROW_PLOT_HEIGHT = 60.0
 
 # The legend sits in the empty top-right of each panel, one row per series.
 LEGEND_SWATCH_LENGTH = 5.0
-LEGEND_ROW_HEIGHT = 5.0
 LEGEND_WIDTH = 22.0
 
 

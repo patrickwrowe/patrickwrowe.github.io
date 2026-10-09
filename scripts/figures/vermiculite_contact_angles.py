@@ -57,6 +57,7 @@ import numpy as np
 from figure_style import (
     AXIS_TITLE_SIZE,
     LABEL_SIZE,
+    LEGEND_ROW_HEIGHT,
     NARROW_CHART_EM,
     SERIES_WIDTH,
     X_AXIS_TITLE_DROP,
@@ -132,6 +133,8 @@ PANEL_BELOW = 7.0
 X_TITLE_BAND = 9.0
 # Air above the legend, so it does not ride the plate's top edge.
 MARGIN_TOP = 4.0
+# From the axis line to the rotated title: wider than figure_style.Y_TITLE_OFFSET (9.0) for
+# this chart's four-character tick labels.
 Y_TITLE_OFFSET = 11.5
 
 # --narrow: the angles stack, each as wide as the 31.5 em viewBox leaves after the margins.
@@ -140,7 +143,6 @@ NARROW_PLOT_WIDTH = NARROW_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
 NARROW_PLOT_HEIGHT = 26.0
 
 # The legend of line styles, at the top: a row in the wide layout, a column in the narrow.
-LEGEND_ROW_HEIGHT = 5.0
 LEGEND_SAMPLE_LENGTH = 8.0
 LEGEND_PITCH = 62.0
 SWATCH_LENGTH = 5.0

@@ -10,6 +10,7 @@ from constants import SPECIES_COLOUR
 from figure_style import (
     AXIS_TITLE_SIZE,
     LABEL_SIZE,
+    MARKER_OUTLINE,
     MARKER_RADIUS,
     MARKER_STROKE,
     MINUS_SIGN,
@@ -138,8 +139,23 @@ def test_write_figure_without_an_output_exits_before_building(tmp_path):
 
 def test_a_square_marker_is_centred_filled_ink_and_has_the_area_of_the_circle():
     marker = svg_square_marker(10.0, 20.0)
-    x, y, width, height = (float(v) for v in re.findall(r'(?:x|y|width|height)="([\d.]+)"', marker))
-    assert (x + width / 2, y + height / 2) == pytest.approx((10.0, 20.0), abs=0.01)
+    left, top, width, height = (
+        float(value) for value in re.findall(r'(?:x|y|width|height)="([\d.]+)"', marker)
+    )
+    assert (left + width / 2, top + height / 2) == pytest.approx((10.0, 20.0), abs=0.01)
     assert width == height
     assert width * height == pytest.approx(math.pi * MARKER_RADIUS**2, rel=0.01)
     assert 'fill="var(--ink)" stroke="none"' in marker
+
+
+def test_a_separate_marker_lets_its_neighbour_show_and_keeps_its_default_markup_otherwise():
+    # The default markers are unchanged byte for byte (every other chart is built from them).
+    assert svg_marker(10.0, 20.0, True, separate=False) == svg_marker(10.0, 20.0, True)
+    assert svg_square_marker(10.0, 20.0, separate=False) == svg_square_marker(10.0, 20.0)
+    # Separate: the open circle is unfilled, the filled ones carry a plate outline.
+    assert 'fill="none" stroke="var(--ink)"' in svg_marker(10.0, 20.0, False, separate=True)
+    outline = f'stroke="var(--plate)" stroke-width="{MARKER_OUTLINE}"'
+    assert outline in svg_marker(10.0, 20.0, True, separate=True)
+    assert outline in svg_square_marker(10.0, 20.0, separate=True)
+    # The geometry is the same as the plain marker's.
+    assert 'cx="10.00" cy="20.00" r="1.7"' in svg_marker(10.0, 20.0, True, separate=True)
