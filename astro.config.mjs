@@ -34,7 +34,10 @@ export default defineConfig({
       name: "Source Serif 4",
       cssVariable: "--font-serif",
       weights: [400, 600],
-      subsets: ["latin"],
+      // Greek for the θ, κ, λ and Δ of the prose and the charts (scripts/figures/
+      // figure_style.py sets a chart's Greek in this face, the mono having none). Each subset
+      // is its own unicode-range face, fetched only by a page that uses one of its letters.
+      subsets: ["latin", "greek"],
       fallbacks: ["Georgia", "serif"],
     },
     {

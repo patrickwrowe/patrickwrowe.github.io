@@ -15,6 +15,7 @@ Import it as a sibling module (`from figure_style import ...`); the scripts run 
 from __future__ import annotations
 
 import argparse
+import re
 from collections.abc import Callable
 from pathlib import Path
 
@@ -57,6 +58,11 @@ MARKER_STROKE = 0.7
 # The mono face draws U+2212 as a real minus; Python's float formatting uses hyphen-minus,
 # which reads shorter and sits high next to a digit.
 MINUS_SIGN = "−"
+# The mono face has no Greek (IBM Plex Mono ships none), so a Greek letter in a label would
+# fall back to whatever monospace font the reader's system has. The serif loads the Greek
+# subset (astro.config.mjs), so a run of Greek is set in it: the same glyph as the prose and
+# the caption beside the chart.
+GREEK_RUN = re.compile("[\u0370-\u03ff]+")
 # The phone-width budget of a chart's narrow variant, in units of its label size: 31.5
 # labels of 11 px (--t-label) is 346.5 px, inside the 350 px plate of a 390 px screen.
 # Plate.astro shows a `.chart--narrow` below 700 px.
@@ -72,6 +78,8 @@ def svg_text(
     rotate: float | None = None,
 ) -> str:
     """A text element in the site's mono face, filled with `var(--graphite)`.
+
+    A run of Greek letters is wrapped in a `<tspan>` in `var(--serif)` (`GREEK_RUN`).
 
     Args:
         x_position: Anchor x, in viewBox units.
@@ -92,7 +100,9 @@ def svg_text(
     return (
         f'<text x="{x_position:.2f}" y="{y_position:.2f}" text-anchor="{anchor}" '
         f'font-size="{size}" fill="var(--graphite)" stroke="none" font-family="var(--mono)"'
-        f"{transform}>{content}</text>"
+        f"{transform}>"
+        + GREEK_RUN.sub(lambda run: f'<tspan font-family="var(--serif)">{run[0]}</tspan>', content)
+        + "</text>"
     )
 
 

@@ -21,6 +21,7 @@ from figure_style import (
     svg_line,
     svg_marker,
     svg_series,
+    svg_text,
     write_figure,
 )
 
@@ -38,6 +39,14 @@ def test_a_negative_tick_label_uses_the_true_minus_sign(value, decimals, expecte
 @pytest.mark.parametrize("symbol", sorted(SPECIES_COLOUR))
 def test_every_species_in_the_palette_has_its_token(symbol):
     assert species_colour(symbol) == f"var(--species-{symbol.lower()})"
+
+
+def test_greek_in_a_label_is_set_in_the_serif_and_the_rest_stays_mono():
+    label = svg_text(0.0, 0.0, "P(cos θ) and Δφ", LABEL_SIZE)
+    assert 'font-family="var(--mono)"' in label
+    assert re.findall(r'<tspan font-family="var\(--serif\)">([^<]+)</tspan>', label) == ["θ", "Δφ"]
+    assert re.sub(r"<[^>]+>", "", label) == "P(cos θ) and Δφ"
+    assert "tspan" not in svg_text(0.0, 0.0, "height above surface (Å)", LABEL_SIZE)
 
 
 def test_a_species_with_no_colour_is_refused():

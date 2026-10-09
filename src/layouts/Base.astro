@@ -27,7 +27,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <link rel="alternate" type="application/rss+xml" title="Writing" href="/rss.xml" />
 
     <Font cssVariable="--font-sans" preload />
-    <Font cssVariable="--font-serif" preload />
+    {/* Latin only: the Greek subset is for the few pages that use it, fetched on use. */}
+    <Font cssVariable="--font-serif" preload={[{ subset: "latin" }]} />
     <Font cssVariable="--font-mono" />
 
     {

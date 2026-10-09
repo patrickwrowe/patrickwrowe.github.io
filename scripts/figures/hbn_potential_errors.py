@@ -106,7 +106,7 @@ MARGIN_TOP = 5.0
 MARGIN_RIGHT = 8.0
 ROW_HEIGHT = 8.0
 # Below a plot: tick labels, then the axis title, then a little air.
-AXIS_BAND = 13.0
+AXIS_BAND = 16.0
 VALUE_LABEL_GAP = 3.0
 GUIDE_DASH = "0.5 1.5"
 

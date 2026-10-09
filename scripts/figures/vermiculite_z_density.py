@@ -101,7 +101,7 @@ MARGIN_TOP = 9.0
 MARGIN_RIGHT = 4.0
 PANEL_GAP = 10.0
 # Below the axis: tick labels, then the axis title, then a little air.
-AXIS_BAND = 13.0
+AXIS_BAND = 16.0
 # From the axis line to the baseline of the rotated height title: clear of tick labels of two
 # digits (the contact-angle chart's is wider for its four-character labels).
 Y_TITLE_OFFSET = 9.0

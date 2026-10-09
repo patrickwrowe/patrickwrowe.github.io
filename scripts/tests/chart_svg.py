@@ -15,9 +15,11 @@ from figure_style import LABEL_SIZE
 
 # The mono face advances 0.6 em, so a label of n characters at size s is 0.6 n s wide.
 MONO_ADVANCE_EM = 0.6
+# The content may hold a `<tspan>` (figure_style sets Greek in the serif); `plain` strips it.
 TEXT = re.compile(
-    r'<text x="([\d.]+)" y="([\d.]+)" text-anchor="(\w+)" font-size="([\d.]+)"([^>]*)>([^<]*)<'
+    r'<text x="([\d.]+)" y="([\d.]+)" text-anchor="(\w+)" font-size="([\d.]+)"([^>]*)>(.*?)</text>'
 )
+TAG = re.compile(r"<[^>]+>")
 NUMBER = re.compile(r"−?\d+(?:\.\d+)?")
 
 
@@ -91,7 +93,8 @@ def assert_text_fits(svg: str) -> None:
     width, height = map(float, re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups())
     texts = TEXT.findall(svg)
     assert texts
-    for x_position, y_position, anchor, size, attributes, content in texts:
+    for x_position, y_position, anchor, size, attributes, markup in texts:
+        content = TAG.sub("", markup)
         assert float(size) >= LABEL_SIZE, content
         extent = MONO_ADVANCE_EM * len(content) * float(size)
         reach = {"start": 0.0, "middle": 0.5, "end": 1.0}[anchor] * extent

@@ -31,8 +31,8 @@ House style of the site's figures (figure_style.py): emitted as SVG by hand over
 viewBox, strokes in `var(--graphite)` and each cation's curves in its `--species-*` token
 (constants.SPECIES_COLOUR); a swatch beside each panel's cation name says which. Each panel
 is a `<g data-panel data-variable>` and each curve a `<g data-series>`, so the figure can be
-checked against the data without reading pixels. The mono face's loaded subset (latin) has no
-Greek, so theta and phi fall back to the next monospace font glyph by glyph.
+checked against the data without reading pixels. The mono face has no Greek, so svg_text sets
+theta and phi in the serif, as the prose and the caption set them.
 
 `--narrow` draws the same panels, curves and labels in a viewBox 31.5 em of LABEL_SIZE wide
 (the site's phone-width budget below 700 px, Plate.astro's `.chart--narrow`): the two columns
@@ -127,7 +127,11 @@ MARGIN_RIGHT = 4.0
 HEADING_BAND = 7.0
 PANEL_HEADER = 7.0
 PANEL_BELOW = 7.0
-X_TITLE_BAND = 5.0
+# Air under each x axis title, as under the other charts' (AXIS_BAND there); in the narrow
+# layout it is also what parts the theta group from the phi heading below it.
+X_TITLE_BAND = 9.0
+# Air above the legend, so it does not ride the plate's top edge.
+MARGIN_TOP = 4.0
 Y_TITLE_OFFSET = 11.5
 
 # --narrow: the angles stack, each as wide as the 31.5 em viewBox leaves after the margins.
@@ -162,12 +166,12 @@ def build(data_dir: Path, narrow: bool = False) -> str:
     plot_height = NARROW_PLOT_HEIGHT if narrow else PLOT_HEIGHT
     panel_pitch = PANEL_HEADER + plot_height + PANEL_BELOW
     group_height = HEADING_BAND + len(CATIONS) * panel_pitch + X_TITLE_BAND
-    legend_height = 3.0 + LEGEND_ROW_HEIGHT * (len(LAYERS) if narrow else 1)
+    legend_height = MARGIN_TOP + 3.0 + LEGEND_ROW_HEIGHT * (len(LAYERS) if narrow else 1)
 
     parts: list[str] = []
     for layer_index, (layer_key, _column, dash, label) in enumerate(LAYERS):
         legend_x = MARGIN_LEFT + (0 if narrow else layer_index * LEGEND_PITCH)
-        legend_y = 3.5 + (layer_index * LEGEND_ROW_HEIGHT if narrow else 0)
+        legend_y = MARGIN_TOP + 3.5 + (layer_index * LEGEND_ROW_HEIGHT if narrow else 0)
         parts.append(
             f'<g data-legend="{layer_key}">'
             + svg_line(
