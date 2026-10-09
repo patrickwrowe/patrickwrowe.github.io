@@ -1,0 +1,74 @@
+{
+  "note": "Public PDB entries drawn by scripts/figures/render_box_grid.py for the antibodies article (src/content/work/figures/antibodies/). Each file is exactly as files.rcsb.org served it on the date given, fetched once with curl -fsSL. md5 and size_bytes are of the committed file. The article writes each credit line; this file records the depositors and citation it is written from.",
+  "files": {
+    "1SY6.pdb": {
+      "url": "https://files.rcsb.org/download/1SY6.pdb",
+      "downloaded": "2026-10-09",
+      "md5": "1d94f11ac9369ad64caeddba8ea58311",
+      "size_bytes": 421605,
+      "pdb_id": "1SY6",
+      "title": "CRYSTAL STRUCTURE OF CD3GAMMAEPSILON HETERODIMER IN COMPLEX WITH OKT3 FAB FRAGMENT",
+      "title_source": "the file's TITLE record, as the PDB writes it",
+      "method": "X-RAY DIFFRACTION",
+      "resolution_angstrom": 2.1,
+      "release_year": 2004,
+      "depositors": [
+        "Kjer-Nielsen, L.",
+        "Dunstone, M.A.",
+        "Kostenko, L.",
+        "Ely, L.K.",
+        "Beddoe, T.",
+        "Misfud, N.A.",
+        "Purcell, A.W.",
+        "Brooks, A.G.",
+        "McCluskey, J.",
+        "Rossjohn, J."
+      ],
+      "depositors_note": "As the file's AUTHOR record spells them. The JRNL record spells the sixth Mifsud, N.A., the form the paper uses.",
+      "citation": "Kjer-Nielsen, L. et al. Proc. Natl. Acad. Sci. U.S.A. 101, 7675-7680 (2004), doi:10.1073/pnas.0402295101",
+      "doi": "10.1073/pnas.0402295101",
+      "pubmed_id": 15136729,
+      "chains": {
+        "L": "OKT3 Fab light chain",
+        "H": "OKT3 Fab heavy chain",
+        "A": "CD3 gamma/epsilon ectodomains as one chain (DBREF: gamma 1-81, epsilon 108-203, joined by a 26-residue linker); the model holds residues 0-81 and 118-203, so the linker is not in it"
+      },
+      "ligands": "none (no HETATM records)",
+      "licence": "PDB archive data are CC0 1.0 (rcsb.org usage policy, read 2026-10-09)."
+    },
+    "6TRO.pdb": {
+      "url": "https://files.rcsb.org/download/6TRO.pdb",
+      "downloaded": "2026-10-09",
+      "md5": "c49ef4aeef2839a3756be04daac815aa",
+      "size_bytes": 1124037,
+      "pdb_id": "6TRO",
+      "title": "CRYSTAL STRUCTURE OF THE T-CELL RECEPTOR GVY01 BOUND TO HLA A2*01-GVYDGREHTV",
+      "title_source": "the file's TITLE record, as the PDB writes it",
+      "method": "X-RAY DIFFRACTION",
+      "resolution_angstrom": 3.0,
+      "release_year": 2020,
+      "depositors": [
+        "Coles, C.H.",
+        "McMurran, C.",
+        "Lloyd, A.",
+        "Hibbert, L.",
+        "Lupardus, P.J.",
+        "Cole, D.K.",
+        "Harper, S."
+      ],
+      "depositors_note": "As the file's AUTHOR record lists them. The JRNL record of the paper adds Hock, M., Raman, M.C.C. and Hayes, C.",
+      "citation": "Coles, C.H. et al. J. Biol. Chem. 295, 11486-11494 (2020), doi:10.1074/jbc.RA120.014016",
+      "doi": "10.1074/jbc.RA120.014016",
+      "pubmed_id": 32532817,
+      "chains": {
+        "A": "HLA-A*02:01 heavy chain",
+        "B": "beta-2-microglobulin",
+        "C": "MAGE-A4 peptide, residues 230-239, GVYDGREHTV",
+        "D": "GVY01 TCR alpha chain",
+        "E": "GVY01 TCR beta chain"
+      },
+      "ligands": "none; the 23 HETATM records are all HOH water, which boxprep.read_pdb drops",
+      "licence": "PDB archive data are CC0 1.0 (rcsb.org usage policy, read 2026-10-09)."
+    }
+  }
+}
