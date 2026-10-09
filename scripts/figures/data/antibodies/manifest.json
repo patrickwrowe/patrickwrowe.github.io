@@ -15,6 +15,15 @@
       "direction": [-0.86, -0.24, 0.45],
       "cartoon_chains": ["L", "H", "A"],
       "stick_chains": []
+    },
+    {
+      "id": "mage-a4-pmhc-tcr",
+      "source": "scripts/figures/data/antibodies/6TRO.pdb",
+      "direction": [0.26, -0.96, 0.12],
+      "cartoon_chains": ["A", "B", "D", "E"],
+      "stick_chains": ["C"],
+      "sphere_radius_angstrom": 0.6,
+      "bond_radius_angstrom": 0.3
     }
   ]
 }
