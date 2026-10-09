@@ -153,13 +153,43 @@ const { title, description, section, math = false, meta, fields = [], documentTi
     padding: 0.1em 0.3em;
     border-radius: 2px;
   }
-  /* Shiki sits on --plate so code blocks match the figure containers (spec 02 §3.3). */
+  /* A code span in running text is one token (a SMILES string, an identifier), and a
+   * line break inside it reads as two: at 390 px `CC1=CC(=NO1)NS(=O)(=O)C` broke at
+   * `)(` into two chips, each a valid string on its own. As an inline-block it moves to
+   * the next line whole, and one longer than the column wraps inside its own box rather
+   * than overflowing. `normal` line height keeps the chip as tall as it was inline, so
+   * the line pitch is unchanged. Paragraphs only: a caption's script path is meant to
+   * break anywhere (Plate.astro). */
+  .prose p > code {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: normal;
+  }
+  /* Shiki sits on --plate so code blocks match the figure containers (spec 02 §3.3),
+   * and its theme's inline foreground, a literal hex, gives way to the prose's ink. */
   .prose pre {
     background: var(--plate) !important;
+    color: var(--ink-soft) !important;
     padding: 1.1rem 1.25rem;
     overflow-x: auto;
     font-size: 0.875rem;
     line-height: 1.55;
+  }
+  /* The block sets the size. `.prose code`'s 0.875em compounded on it to 12.25 px, so
+   * a word in a sample was set smaller than the same word quoted as a chip above it. */
+  .prose pre code {
+    font-size: inherit;
+  }
+  /* Shiki wraps long lines (`wrap: true`), and a wrapped line restarted at the margin,
+   * where it read as a new unindented line: in a verse sample that misstates the very
+   * indentation the prose describes. Each line hangs its turnovers at 8ch, deeper than
+   * any indent the sample sets, as verse sets a turnover. Inline-block, not block: the
+   * newline Shiki leaves between lines would otherwise add a blank line under each. */
+  .prose pre .line {
+    display: inline-block;
+    padding-left: 8ch;
+    text-indent: -8ch;
   }
   .prose hr {
     border: 0;
