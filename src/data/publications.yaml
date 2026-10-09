@@ -71,7 +71,7 @@
   doi: 10.1038/s41467-020-14854-4
   theme: two-dimensional-and-confined
   anchor: vermiculite-membranes
-  blurb: "Exchanging the cation between vermiculite's layers moves its water contact angle from 15° for lithium to 101° for tin, and lithium alone is far more hydrophilic than the trend allows. The AIMD says why: potassium has 1 adsorption site and orders the contact layer, lithium has 2 and lets it relax to bulk-like water bound at −0.89 eV per molecule. Second author."
+  blurb: "Exchanging the cation between vermiculite's layers moves its water contact angle from 15° for lithium to 101° for tin, and lithium alone is far more hydrophilic than the trend allows. The AIMD says why: potassium has 1 adsorption site and orders the contact layer; lithium has 2, and lets it relax to bulk-like water bound at −0.89 eV per molecule. Second author."
 
 - id: hbn-rippling
   kind: paper
@@ -82,7 +82,7 @@
   doi: 10.1021/acs.jpcc.0c05831
   theme: two-dimensional-and-confined
   anchor: boron-nitride-rippling
-  blurb: "A Gaussian approximation potential for hexagonal boron nitride with a force error of 0.09 eV Å⁻¹, an order of magnitude below Tersoff, ExTeP and ReaxFF. On 7,200-atom sheets it gives hBN the same anomalous rippling exponent as graphene, 0.82 against 0.87, a bending rigidity of 1.09 eV, and a crossing to soliton-like ripples between −0.25% and −0.5% strain. Second author."
+  blurb: "A Gaussian approximation potential for hexagonal boron nitride with a force error of 0.09 eV Å⁻¹, an order of magnitude below Tersoff, ExTeP and ReaxFF. Let loose on 7,200-atom sheets, it gives hBN the same anomalous rippling exponent as graphene, 0.82 against 0.87, a bending rigidity of 1.09 eV and a crossing to soliton-like ripples between −0.25% and −0.5% strain. Second author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2007.11448" }
     - { label: Data, url: "https://doi.org/10.17863/CAM.66112" }
