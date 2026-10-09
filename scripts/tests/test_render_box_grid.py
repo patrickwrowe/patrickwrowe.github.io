@@ -392,7 +392,7 @@ def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_sp
     )
     assert spheres == [
         StandInLayer(
-            style=StandInSpheres(radius=0.4 / 1.70, geometry="Point"),
+            style=StandInSpheres(radius=0.4 / 1.70, geometry="Instance"),
             material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR[symbol])),
             select=StandInAtomMask(mask=mask, of=structure_id),
         )
@@ -587,7 +587,7 @@ def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_laye
     assert masks["Zn"] == (False,) * 7 + (True,) + (False,) * 2
     assert masks["Mg"] == (False,) * 8 + (True,) + (False,)
     assert all(
-        layer.style == StandInSpheres(radius=0.4 / 1.70, geometry="Point") for layer in spheres
+        layer.style == StandInSpheres(radius=0.4 / 1.70, geometry="Instance") for layer in spheres
     )
     assert sticks.style == StandInSticks(radius=0.2)
 

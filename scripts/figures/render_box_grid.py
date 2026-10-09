@@ -111,9 +111,10 @@ every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the o
 one-pixel border, each isolated, and reported in the summary line; residual chroma at most
 panel_checks.MAX_CHROMA, over the whole frame for one species and over the
 CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
-for more than one species; the colour path in `scene_for` is exercised only through a
-stand-in molrender (the first multi-species draft render is its real check), and so is the
-protein path (its draft render of 1SY6 and 6TRO was).
+for more than one species. The colour path in `scene_for` is exercised without Blender only
+through a stand-in molrender, which cannot show what Blender draws: the species spheres were
+Points that all took one colour until the first real multi-species render (6TRO, 2026-10-09)
+showed it, so a change to that path is checked on the render's pixels.
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -321,7 +322,10 @@ def scene_for(
     subject of more than one is a `Sticks` layer over every atom, in the darkest of the
     colours present, and one `Spheres` layer per species, selected by an `AtomMask`
     against the subject PDB and coloured from the manifest's `colour` map, then
-    `constants.SPECIES_COLOUR`.
+    `constants.SPECIES_COLOUR`. The species spheres are Instances, not Points: a Blender
+    point cloud carries one material, so Point spheres in several layers all took the last
+    layer's colour (and dropped an atom), found on the first real multi-species render,
+    2026-10-09, of 6TRO's peptide. The one-material grey layer keeps Point.
 
     A protein panel (`kind` "protein") ignores `multi_species`: one `Cartoon` layer in the
     palette's carbon, selected by an `AtomMask` over `cartoon_chains`, and, over the atoms
@@ -405,7 +409,7 @@ def scene_for(
             )
         layers.extend(
             Layer(
-                style=Spheres(radius=sphere_radius, geometry="Point"),
+                style=Spheres(radius=sphere_radius, geometry="Instance"),
                 material=Solid(rgb=rgb[symbol]),
                 select=AtomMask(
                     mask=tuple((drawn & (atom_symbols == symbol)).tolist()), of=subject_id
