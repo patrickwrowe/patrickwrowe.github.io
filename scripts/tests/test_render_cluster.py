@@ -11,6 +11,7 @@ import boxprep
 import numpy as np
 import pytest
 import render_cluster
+from cluster_svg import run_cli
 from constants import COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR
 
 REPO = Path(__file__).resolve().parents[2]
@@ -194,12 +195,6 @@ def write_xyz(path: Path, species: list[str], positions: np.ndarray) -> Path:
     ]
     path.write_text("\n".join([f"{len(species)}\t", "", *rows]) + "\n")
     return path
-
-
-def run_cli(monkeypatch, capsys, *argv: str) -> str:
-    monkeypatch.setattr(sys, "argv", ["render_cluster.py", *argv])
-    render_cluster.main()
-    return capsys.readouterr().out
 
 
 def test_hide_hydrogens_leaves_no_hydrogen_in_the_drawing_and_says_how_many_atoms_remain(
