@@ -360,19 +360,18 @@ def scene_for(
         ),
         material=Solid(rgb=(grey, grey, grey)),
     )
-    is_protein = spec.get("kind", "box") == "protein"
-    if not (multi_species or is_protein):
+    protein = boxprep.read_pdb(subject) if spec.get("kind", "box") == "protein" else None
+    if protein is None and not multi_species:
         subject_layers = (grey_layer,)
     else:
         atom_symbols = np.asarray(species)
         subject_id = StructureId(
             sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=len(species)
         )
-        if is_protein:
-            protein = boxprep.read_pdb(subject)
-            drawn = np.isin(protein.chain_ids, spec["stick_chains"]) | protein.is_hetero
-        else:
+        if protein is None:
             drawn = np.ones(len(species), dtype=bool)
+        else:
+            drawn = np.isin(protein.chain_ids, spec["stick_chains"]) | protein.is_hetero
         symbols = sorted(set(atom_symbols[drawn].tolist()))
         palette = {**SPECIES_COLOUR, **spec.get("colour", {})}
         unpainted = [symbol for symbol in symbols if symbol not in palette]
@@ -383,7 +382,7 @@ def scene_for(
             )
         rgb = {symbol: srgb_hex_to_linear(palette[symbol]) for symbol in symbols}
         layers = []
-        if is_protein:
+        if protein is not None:
             layers.append(
                 Layer(
                     style=Cartoon(),
@@ -402,9 +401,9 @@ def scene_for(
                 Layer(
                     style=Sticks(radius=float(spec["bond_radius_angstrom"])),
                     material=Solid(rgb=darkest),
-                    select=AtomMask(mask=tuple(drawn.tolist()), of=subject_id)
-                    if is_protein
-                    else ALL,
+                    select=ALL
+                    if protein is None
+                    else AtomMask(mask=tuple(drawn.tolist()), of=subject_id),
                 )
             )
         layers.extend(
