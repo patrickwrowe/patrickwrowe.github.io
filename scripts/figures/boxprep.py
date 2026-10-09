@@ -76,19 +76,40 @@ class ProteinStructure(NamedTuple):
 
     Every per-atom field has one entry per atom, in the same order. `records` and
     `secondary_structure_records` are the file's own lines, kept so the renderer can write
-    exactly these atoms back out: positions in angstrom.
+    exactly these atoms back out: positions in angstrom. `residue_numbers` alone does not
+    tell residue 111 from 111A; `insertion_codes` ("" when blank) does. The two
+    `n_dropped_*` counts are of the atom records `read_pdb` left out of model 1.
     """
 
     species: list[str]
     positions_angstrom: np.ndarray
     chain_ids: np.ndarray
     residue_numbers: np.ndarray
+    insertion_codes: np.ndarray
     is_hetero: np.ndarray
     records: list[str]
     secondary_structure_records: list[str]
+    n_dropped_altloc: int
+    n_dropped_water: int
 
     def __len__(self) -> int:
         return len(self.species)
+
+    def drawn_by_species(self, stick_chains: list[str]) -> np.ndarray:
+        """Per atom, whether a protein render draws it by species (sticks and spheres).
+
+        These are the atoms of `stick_chains` and every HETATM (water is already gone); the
+        atoms of the other chains are the Cartoon's. `render_box_grid.scene_for` builds its
+        species layers from this mask and `render_panel` decides the PNG's colour mode from
+        it.
+
+        Args:
+            stick_chains: Chain ids drawn as sticks and spheres.
+
+        Returns:
+            Boolean array, shape (n_atoms,).
+        """
+        return np.isin(self.chain_ids, stick_chains) | self.is_hetero
 
 
 def read_pdb(path: Path) -> ProteinStructure:
@@ -96,18 +117,26 @@ def read_pdb(path: Path) -> ProteinStructure:
 
     Atoms are the ATOM and HETATM records of the first model. An atom whose alternate
     location (column 17) is anything but blank or "A" is dropped, as is every `HOH`
-    residue. The element is columns 77-78 ("MG" reads "Mg"); a record without one takes it
-    from columns 13-14 of the atom name, where the PDB format right-justifies it (an ATOM
-    record keeps only the first letter, because protein atoms are H, C, N, O and S). Chain
-    id is column 22, residue number columns 23-26 (the insertion code is not read), hetero
-    flag is the record name. ANISOU, CONECT, TER and every other record are ignored,
-    except HELIX and SHEET, which Molecular Nodes reads for the cartoon's secondary
-    structure and which `ProteinStructure.secondary_structure_records` returns.
+    residue; both counts are returned. The element is columns 77-78 ("MG" reads "Mg"); a
+    record without one takes it from columns 13-14 of the atom name, where the PDB format
+    right-justifies it (an ATOM record keeps only the first letter, because protein atoms
+    are H, C, N, O and S). Chain id is column 22, residue number columns 23-26, insertion
+    code column 27, hetero flag is the record name. ANISOU, CONECT, TER and every other
+    record are ignored, except HELIX and SHEET, which Molecular Nodes reads for the
+    cartoon's secondary structure and which `ProteinStructure.secondary_structure_records`
+    returns.
 
     `records` are the kept ATOM and HETATM lines verbatim, so writing them (render_box_grid.prepare
     does) gives a file whose atoms are exactly those this function returns, in the same
-    order: the species and chain masks the renderer measures here are then indexed by the
-    atoms Molecular Nodes loads from that file.
+    order, with every column, the insertion code in column 27 included: the species and
+    chain masks the renderer measures here are then indexed by the atoms Molecular Nodes
+    loads from that file.
+
+    Insertion codes: Molecular Nodes numbers residues by changes of residue number and
+    chain only (`ures_id`), so an insertion-coded residue (6TRO chain E has 111A and 112A)
+    may be merged with the residue before it in the cartoon's residue ids. The masks here
+    are by chain and are unaffected; whether the merge shows in a render is for the design
+    review to look at on the picture.
 
     Args:
         path: Path to the PDB file.
@@ -116,40 +145,57 @@ def read_pdb(path: Path) -> ProteinStructure:
         The structure. Positions are in angstrom.
 
     Raises:
-        ValueError: If the file has no atom left to draw, or a coordinate is not a number.
+        ValueError: If the file has no atom left to draw, or the coordinates (columns
+            31-54) or residue number (23-26) of an atom record are not numbers; the message
+            names the file and the line.
     """
     lines = path.read_text().splitlines()
-    atom_lines: list[str] = []
-    for line in lines:
+    kept: list[tuple[int, str]] = []
+    n_dropped_altloc = n_dropped_water = 0
+    for line_number, line in enumerate(lines, start=1):
         if line.startswith("ENDMDL"):  # model 1 only
             break
-        if (
-            line.startswith(("ATOM  ", "HETATM"))
-            and line[16:17] in " A"  # alternate location: blank, or the first conformer
-            and line[17:20] != "HOH"
-        ):
-            atom_lines.append(line)
-    if not atom_lines:
+        if not line.startswith(("ATOM  ", "HETATM")):
+            continue
+        if line[17:20] == "HOH":
+            n_dropped_water += 1
+        elif line[16:17] not in " A":  # alternate location: blank, or the first conformer
+            n_dropped_altloc += 1
+        else:
+            kept.append((line_number, line))
+    if not kept:
         raise ValueError(f"{path}: no atoms to draw (model 1, altloc blank or A, no HOH)")
 
     species: list[str] = []
-    for line in atom_lines:
+    positions_angstrom: list[list[float]] = []
+    residue_numbers: list[int] = []
+    for line_number, line in kept:
+        try:
+            positions_angstrom.append([float(line[start : start + 8]) for start in (30, 38, 46)])
+            residue_numbers.append(int(line[22:26]))
+        except ValueError as error:
+            raise ValueError(
+                f"{path}: line {line_number}: coordinates (columns 31-54) or residue number "
+                f"(columns 23-26) are not numbers: {line[:54]!r}"
+            ) from error
         element = line[76:78].strip().title()
         if not element:
             element = line[12:14].strip(" 0123456789").title()
             if line.startswith("ATOM"):
                 element = element[:1]
         species.append(element)
+    atom_lines = [line for _, line in kept]
     return ProteinStructure(
         species=species,
-        positions_angstrom=np.array(
-            [[float(line[start : start + 8]) for start in (30, 38, 46)] for line in atom_lines]
-        ),
+        positions_angstrom=np.array(positions_angstrom),
         chain_ids=np.array([line[21] for line in atom_lines]),
-        residue_numbers=np.array([int(line[22:26]) for line in atom_lines]),
+        residue_numbers=np.array(residue_numbers),
+        insertion_codes=np.array([line[26:27].strip() for line in atom_lines]),
         is_hetero=np.array([line.startswith("HETATM") for line in atom_lines]),
         records=atom_lines,
         secondary_structure_records=[line for line in lines if line.startswith(("HELIX", "SHEET"))],
+        n_dropped_altloc=n_dropped_altloc,
+        n_dropped_water=n_dropped_water,
     )
 
 

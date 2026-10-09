@@ -534,6 +534,8 @@ def test_prepare_writes_a_protein_as_the_atoms_read_pdb_kept_in_the_files_order(
     ]
     atoms = [line for line in lines if line.startswith(("ATOM", "HETATM"))]
     assert [int(line[6:11]) for line in atoms] == [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
+    # Atom 8 is in residue 7A: the insertion code reaches column 27 of the subject file.
+    assert atoms[6][22:27] == "   7A"
 
 
 @pytest.mark.parametrize(
@@ -592,10 +594,9 @@ def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_laye
     assert sticks.style == StandInSticks(radius=0.2)
 
 
-def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
-    render_box_grid_module, tmp_path
-):
-    chain_a = tmp_path / "chain-a.pdb"  # atoms 1-6 of chain A; read_pdb drops the B conformer
+def _chain_a_only(tmp_path: Path) -> Path:
+    """The toy protein's atoms 1-6, chain A alone: no ligand, no ion, no second chain."""
+    chain_a = tmp_path / "chain-a.pdb"  # read_pdb drops the B conformer, atom 3
     chain_a.write_text(
         "".join(
             f"{line}\n"
@@ -603,8 +604,14 @@ def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
             if line.startswith("ATOM") and line[21] == "A" and int(line[6:11]) < 7  # model 1
         )
     )
+    return chain_a
+
+
+def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
+    render_box_grid_module, tmp_path
+):
     scene, _ = _protein_scene(
-        render_box_grid_module, tmp_path, source=str(chain_a), stick_chains=[]
+        render_box_grid_module, tmp_path, source=str(_chain_a_only(tmp_path)), stick_chains=[]
     )
     (structure,) = scene.entities
     (cartoon,) = structure.layers
@@ -635,3 +642,75 @@ def test_a_protein_panel_goes_from_pdb_to_a_saved_rgb_png(
     saved = Image.open(output)
     assert saved.mode == "RGB" and saved.size == (1728, 972)
     assert "panel: 10 atoms" in capsys.readouterr().out
+
+
+def test_a_protein_panels_summary_line_counts_the_atom_records_read_pdb_dropped(
+    render_box_grid_module, monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
+    spec = {**PROTEIN_SPEC, "id": "panel", "resolution": [1728, 972]}
+    _render_panel(
+        render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (74, 74, 74)
+    )
+    assert "panel: 10 atoms (dropped 1 altloc, 1 water), wall" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("stick_chains", "ink_rgb", "mode", "multi_species"),
+    [
+        (["B"], (200, 60, 40), "RGB", True),
+        ([], (74, 74, 74), "L", False),
+    ],
+    ids=["a peptide drawn by species is coloured", "cartoon chains alone are grey"],
+)
+def test_a_protein_is_saved_grey_unless_it_draws_an_atom_by_species(
+    render_box_grid_module,
+    monkeypatch,
+    tmp_path,
+    scene_calls,
+    stick_chains,
+    ink_rgb,
+    mode,
+    multi_species,
+):
+    # The cartoon-alone file has the atoms of C, N and O, so the old rule (more than one
+    # species among all atoms) would have called it coloured.
+    source = TOY_PROTEIN if stick_chains else _chain_a_only(tmp_path)
+    spec = {
+        **PROTEIN_SPEC,
+        "id": "panel",
+        "source": str(source),
+        "cartoon_chains": ["A"],
+        "stick_chains": stick_chains,
+        "resolution": [1728, 972],
+    }
+    monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
+    monkeypatch.setattr(
+        render_box_grid_module,
+        "scene_for",
+        lambda spec, subject, cage, species, *, multi_species, draft: scene_calls.append(
+            {"multi_species": multi_species, "draft": draft}
+        ),
+    )
+    output = _render_panel(
+        render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), ink_rgb
+    )
+    assert Image.open(output).mode == mode
+    assert scene_calls == [{"multi_species": multi_species, "draft": False}]
+
+
+def test_a_coloured_cartoon_alone_protein_fails_the_whole_frame_chroma_limit(
+    render_box_grid_module, monkeypatch, tmp_path
+):
+    spec = {
+        **PROTEIN_SPEC,
+        "id": "panel",
+        "source": str(_chain_a_only(tmp_path)),
+        "stick_chains": [],
+        "resolution": [1728, 972],
+    }
+    monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
+    with pytest.raises(RuntimeError, match=r"max chroma 160/255 exceeds 32"):
+        _render_panel(
+            render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (200, 60, 40)
+        )

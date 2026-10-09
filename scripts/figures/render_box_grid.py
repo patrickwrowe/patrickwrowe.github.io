@@ -111,15 +111,26 @@ every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the o
 one-pixel border, each isolated, and reported in the summary line; residual chroma at most
 panel_checks.MAX_CHROMA, over the whole frame for one species and over the
 CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
-for more than one species. The colour path in `scene_for` is exercised without Blender only
-through a stand-in molrender, which cannot show what Blender draws: the species spheres were
-Points that all took one colour until the first real multi-species render (6TRO, 2026-10-09)
-showed it, so a change to that path is checked on the render's pixels.
+for more than one species (a protein: for any atom drawn by species, so a protein of cartoon
+chains alone is grey, judged over the whole frame). The colour path in `scene_for` is
+exercised without Blender only through a stand-in molrender, which cannot show what Blender
+draws: the species spheres were Points that all took one colour until the first real
+multi-species render (6TRO, 2026-10-09) showed it, so a change to that path is checked on the
+render's pixels.
+The species spheres are therefore Instances, and that has a cost: molrender measured Instance
+spheres about 3x slower than Point and advises Point "for a whole solvated system"
+(molrender scene/styles.py, BallAndStick). A multi-species frame of thousands of atoms pays
+it, and a panel has no switch back to Point (only one-species spheres are Points). Nothing has
+yet compared the visible size of an Instance sphere with a Point sphere of the same
+`sphere_radius_angstrom`, which matters when a multi-species panel sits beside a one-species
+one on a plate; the first large multi-species draft should record its wall time and that
+comparison.
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
-the size assertion is relaxed to match. EEVEE draws Point spheres far smaller than Cycles
-does, so judge radii at the production tier.
+the size assertion is relaxed to match. EEVEE draws Point spheres (the one-species grey layer
+and the hidden cage) far smaller than Cycles does; nobody has compared the Instance species
+spheres draft against production. Either way, judge radii at the production tier.
 
 Known defect: Molecular Nodes' compositor overlays an empty annotations image and leaves one
 black pixel at the exact image centre and, on a non-square frame, can leave a stray pixel on
@@ -327,7 +338,8 @@ def scene_for(
     layer's colour (and dropped an atom), found on the first real multi-species render,
     2026-10-09, of 6TRO's peptide. The one-material grey layer keeps Point.
 
-    A protein panel (`kind` "protein") ignores `multi_species`: one `Cartoon` layer in the
+    A protein panel (`kind` "protein") ignores `multi_species`, which `render_panel` sets
+    from whether the panel draws any atom by species: one `Cartoon` layer in the
     palette's carbon, selected by an `AtomMask` over `cartoon_chains`, and, over the atoms
     of `stick_chains` and every HETATM (water is already gone), the multi-species `Sticks`
     and per-species `Spheres` layers restricted by an `AtomMask`. With no such atoms (the
@@ -371,7 +383,7 @@ def scene_for(
         if protein is None:
             drawn = np.ones(len(species), dtype=bool)
         else:
-            drawn = np.isin(protein.chain_ids, spec["stick_chains"]) | protein.is_hetero
+            drawn = protein.drawn_by_species(spec["stick_chains"])
         symbols = sorted(set(atom_symbols[drawn].tolist()))
         palette = {**SPECIES_COLOUR, **spec.get("colour", {})}
         unpainted = [symbol for symbol in symbols if symbol not in palette]
@@ -438,6 +450,12 @@ def scene_for(
 def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     """Render one panel to `<output_dir>/<id>.png` and print one summary line.
 
+    The PNG is saved grey and judged over the whole frame when the panel draws one species
+    and in colour, judged on its border, when it draws more. A box counts the species of
+    its atoms; a protein counts those it draws as sticks and spheres, so a protein of
+    cartoon chains alone is grey whatever its atoms are. A protein's summary line also
+    gives the atom records `boxprep.read_pdb` dropped as altloc B or later and as water.
+
     Args:
         spec: One panel from `panel_checks.load_panels`.
         work_dir: Scratch directory for the PDB files.
@@ -456,7 +474,16 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
     started_s = time.perf_counter()
     subject, cage, species = prepare(spec, work_dir)
-    multi_species = len(set(species)) > 1
+    if spec.get("kind", "box") == "protein":
+        # The subject holds the atoms the source's `read_pdb` keeps, in order, so the source's
+        # mask indexes `species`. A protein is coloured where it draws atoms by species; one of
+        # cartoon chains alone (the hero) is one grey, judged over the whole frame.
+        protein = boxprep.read_pdb(Path(spec["source"]))
+        multi_species = bool(protein.drawn_by_species(spec["stick_chains"]).any())
+        dropped = f" (dropped {protein.n_dropped_altloc} altloc, {protein.n_dropped_water} water)"
+    else:
+        multi_species = len(set(species)) > 1
+        dropped = ""
     rendered = work_dir / output.name
     result = render(
         scene_for(spec, subject, cage, species, multi_species=multi_species, draft=draft),
@@ -484,7 +511,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     shutil.move(rendered, output)
     elapsed_s = time.perf_counter() - started_s
     print(
-        f"{spec['id']}: {len(species)} atoms, wall {elapsed_s:.0f} s, "
+        f"{spec['id']}: {len(species)} atoms{dropped}, wall {elapsed_s:.0f} s, "
         f"blender exit {result.returncode}, {output}, "
         f"crop {crop}, "
         f"border strays (row, column, rgb): {strays or 'none'}, "

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import boxprep
+import panel_checks
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
@@ -77,3 +78,29 @@ def test_the_title_year_resolution_and_doi_are_the_files(name):
     resolution = next(line for line in lines if line.startswith("REMARK   2 RESOLUTION"))
     assert float(resolution.split()[3]) == entry["resolution_angstrom"]
     assert f"DOI    {entry['doi'].upper()}" in text
+
+
+PANELS = {panel["id"]: panel for panel in panel_checks.load_panels(DATA / "manifest.json")}
+RENDER_IDS = sorted(key for key in PROVENANCE["renders"] if key not in {"note", "method"})
+
+
+def test_every_panel_of_the_manifest_has_a_render_entry_and_every_entry_a_panel():
+    assert RENDER_IDS == sorted(PANELS)
+
+
+@pytest.mark.parametrize("panel_id", RENDER_IDS)
+def test_a_render_entry_records_the_manifests_direction_and_chose_one_of_its_candidates(panel_id):
+    entry, panel = PROVENANCE["renders"][panel_id], PANELS[panel_id]
+    assert entry["source"] == Path(panel["source"]).name
+    assert entry["direction"] == panel["direction"]
+    chosen = [c for c in entry["candidates"] if c["verdict"] == "Chosen."]
+    assert [c["direction"] for c in chosen] == [panel["direction"]]
+    assert entry["why"] and entry["limits"]
+
+
+def test_the_recorded_radii_are_the_panels_override_of_the_plates():
+    radii = PROVENANCE["renders"]["mage-a4-pmhc-tcr"]["radii"]
+    panel = PANELS["mage-a4-pmhc-tcr"]
+    assert radii["sphere_radius_angstrom"] == panel["sphere_radius_angstrom"] == 0.6
+    assert radii["bond_radius_angstrom"] == panel["bond_radius_angstrom"] == 0.3
+    assert PANELS["hero"]["sphere_radius_angstrom"] == 0.4  # the plate's value, not overridden

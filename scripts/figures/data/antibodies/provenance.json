@@ -70,5 +70,104 @@
       "ligands": "none; the 23 HETATM records are all HOH water, which boxprep.read_pdb drops",
       "licence": "PDB archive data are CC0 1.0 (rcsb.org usage policy, read 2026-10-09)."
     }
+  },
+  "renders": {
+    "note": "Why each committed render looks as it does; free-form, read by people. The values in manifest.json are the record, test_antibodies_data_provenance.py checks that these agree with them.",
+    "method": "World +z is the image's up and render_box_grid.py does not rotate a structure, so candidate directions were generated rather than guessed: 4000 points on the sphere, orthographic projection at 1728 x 972 with margin 1.02, scored by scale (px per angstrom), by the overlap of the two partners' silhouettes (Calpha discs of 3 angstrom), by how side-on the view is to the axis between the partners' centroids, and by how much of the interface (1SY6) or of the peptide (6TRO) a Calpha z-buffer leaves visible. Three well-separated directions per entry were draft-rendered (--draft, 864 x 486) and the choice was made by eye on those drafts and on crops of the contact. The scoring script was a scratch one and is not committed; the numbers below are its output. 2026-10-09.",
+    "hero": {
+      "source": "1SY6.pdb",
+      "direction": [
+        -0.86,
+        -0.24,
+        0.45
+      ],
+      "why": "The CD3 chain touches the Fab's variable domains in the picture, the two partners do not overlap in projection, and the view is side-on to the interface (1.00). Nothing is clipped: the frame is fitted to the complex.",
+      "candidates": [
+        {
+          "direction": [
+            0.96,
+            -0.06,
+            -0.29
+          ],
+          "px_per_angstrom": 8.78,
+          "silhouette_overlap": 0.03,
+          "side_on": 0.97,
+          "verdict": "A clean stack of CD3 over the Fv over the constant domains, but a white gap where CD3 meets the Fv, so it reads as two objects. Rejected."
+        },
+        {
+          "direction": [
+            -0.86,
+            -0.24,
+            0.45
+          ],
+          "px_per_angstrom": 8.95,
+          "silhouette_overlap": 0.02,
+          "side_on": 1.0,
+          "verdict": "Chosen."
+        },
+        {
+          "direction": [
+            0.24,
+            -0.97,
+            0.01
+          ],
+          "px_per_angstrom": 9.48,
+          "silhouette_overlap": 0.11,
+          "side_on": 0.97,
+          "verdict": "The contact shows, but CD3 overlaps the Fv in projection. Rejected."
+        }
+      ],
+      "limits": "1SY6 stands along world z with CD3 on top, so every side-on view is a portrait object in the 16:9 frame (about a quarter of its width); the best lean any side-on direction allows is 30 degrees from vertical."
+    },
+    "mage-a4-pmhc-tcr": {
+      "source": "6TRO.pdb",
+      "direction": [
+        0.26,
+        -0.96,
+        0.12
+      ],
+      "why": "The peptide runs along the groove between the two alpha helices of the HLA-A*02:01 heavy chain and 64 per cent of its atoms are unobscured (a Calpha z-buffer); the complex's bounding box fills 77 per cent of the frame area, the most of the three (54 per cent for the first candidate), and the view is side-on to the pMHC-TCR axis (1.00).",
+      "candidates": [
+        {
+          "direction": [
+            0.5,
+            -0.67,
+            0.55
+          ],
+          "px_per_angstrom": 8.28,
+          "peptide_visible": 0.97,
+          "side_on": 1.0,
+          "verdict": "The peptide is clear but the complex's bounding box fills only 54 per cent of the frame area. Rejected."
+        },
+        {
+          "direction": [
+            0.26,
+            -0.96,
+            0.12
+          ],
+          "px_per_angstrom": 10.3,
+          "peptide_visible": 0.64,
+          "side_on": 1.0,
+          "verdict": "Chosen."
+        },
+        {
+          "direction": [
+            0.88,
+            -0.37,
+            0.31
+          ],
+          "px_per_angstrom": 8.71,
+          "peptide_visible": 0.85,
+          "side_on": 0.83,
+          "verdict": "The peptide sits half behind the front helix. Rejected."
+        }
+      ],
+      "limits": "The PDB frame puts the TCR below the pMHC (lower z) and the picture cannot be rolled, so the TCR is lower right, the opposite of the textbook picture. Views with the TCR above left 7 to 30 per cent of the peptide visible and were near end-on.",
+      "radii": {
+        "sphere_radius_angstrom": 0.6,
+        "bond_radius_angstrom": 0.3,
+        "why": "The panel overrides the plate's 0.4 and 0.22 (the carbon plates' values). The peptide is about 28 angstrom long in a frame about 127 angstrom wide, and at 0.4 and 0.22 its sticks and spheres were thin; both settings were rendered at the production tier and compared, and 0.6 and 0.3 read clearly. To restore the plate's values, delete the two panel keys and re-render with --force (about 2.5 minutes)."
+      }
+    }
   }
 }

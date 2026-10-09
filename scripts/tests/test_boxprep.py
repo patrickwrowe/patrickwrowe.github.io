@@ -462,6 +462,8 @@ def test_read_pdb_keeps_model_one_the_first_conformer_and_no_water():
     assert protein.positions_angstrom[1].tolist() == [1.458, 0.0, 0.0]
     assert 1.600 not in protein.positions_angstrom[:, 0]
     assert protein.positions_angstrom.shape == (10, 3)
+    # One altloc B atom (serial 3) and one water (12) were dropped; model 2 is not counted.
+    assert (protein.n_dropped_altloc, protein.n_dropped_water) == (1, 1)
 
 
 def test_read_pdb_reads_a_two_letter_element_and_falls_back_to_the_atom_name():
@@ -486,3 +488,33 @@ def test_read_pdb_refuses_a_file_with_no_atom_to_draw(tmp_path):
     )
     with pytest.raises(ValueError, match="no atoms to draw"):
         boxprep.read_pdb(only_water)
+
+
+def test_read_pdb_keeps_the_insertion_code_apart_from_the_residue_number():
+    # Atom 8 of the fixture sits in residue 7A; residue_numbers alone would call it 7.
+    protein = boxprep.read_pdb(FIXTURES / "toy-protein.pdb")
+    assert protein.insertion_codes.tolist() == [""] * 6 + ["A"] + [""] * 3
+    assert protein.residue_numbers[6] == 7
+    assert protein.records[6][26] == "A"
+
+
+def test_drawn_by_species_is_the_stick_chains_and_every_hetero_atom():
+    protein = boxprep.read_pdb(FIXTURES / "toy-protein.pdb")
+    assert protein.drawn_by_species(["B"]).tolist() == [False] * 5 + [True] * 5
+    # No stick chain: only the zinc, the magnesium and the ligand carbon are drawn by species.
+    assert protein.drawn_by_species([]).tolist() == [False] * 7 + [True] * 3
+
+
+@pytest.mark.parametrize(
+    ("start", "stop", "text"),
+    [(30, 38, "     abc"), (46, 54, "1.2.3.4."), (22, 26, "  x7")],
+    ids=["x coordinate", "z coordinate", "residue number"],
+)
+def test_read_pdb_names_the_file_and_line_of_a_record_it_cannot_parse(tmp_path, start, stop, text):
+    lines = (FIXTURES / "toy-protein.pdb").read_text().splitlines()
+    index = next(n for n, line in enumerate(lines) if line.startswith("ATOM      5"))
+    lines[index] = lines[index][:start] + text[: stop - start] + lines[index][stop:]
+    broken = tmp_path / "broken.pdb"
+    broken.write_text("\n".join(lines) + "\n")
+    with pytest.raises(ValueError, match=rf"broken\.pdb: line {index + 1}: .*not numbers"):
+        boxprep.read_pdb(broken)
