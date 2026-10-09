@@ -65,6 +65,23 @@ const { n, animate = false } = Astro.props;
     object-fit: contain;
     mix-blend-mode: multiply;
   }
+  /* Artwork that is itself a link (a poster plate opening its PDF). The frame clips at
+   * its edge, so the site's focus ring, drawn 3 px outside the link, was cut away and a
+   * keyboard reader saw nothing; it is drawn inside the frame instead. Hover takes a
+   * 1 px rule in --lustre, the state the Poster component marks with its border; the
+   * focus rule comes second so a focused link keeps its ring under the pointer. */
+  .plate__frame :global(a) {
+    display: block;
+    border-bottom: 0;
+  }
+  .plate__frame :global(a:hover) {
+    outline: 1px solid var(--lustre);
+    outline-offset: -1px;
+  }
+  .plate__frame :global(a:focus-visible) {
+    outline: 2px solid var(--lustre-deep);
+    outline-offset: -2px;
+  }
   /* A data chart inlined as SVG. --chart-em is the chart's viewBox width in units of
    * its own tick-label size (figure_style.LABEL_SIZE), so at full size its labels
    * set at exactly --t-label, the size of every other data label on the site.
