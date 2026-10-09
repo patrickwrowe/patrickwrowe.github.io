@@ -21,8 +21,28 @@ SPECIES_COLOUR and mirrored in src/styles/tokens.css. Species are also told apar
 and by filled versus open, so the figure still reads in greyscale. `--lustre` is never a
 species: it is reserved for state and anomaly.
 
+Every species of the palette can be drawn (carbon, hydrogen, oxygen, nitrogen, magnesium and
+the rest); the single-species ramp and the sizes are DRAW_COLOUR and DRAW_RADIUS_FACTOR.
+
 Usage:
-    uv run scripts/figures/render_cluster.py <input.xyz> <output.svg> [--rotate X,Y,Z]
+    uv run scripts/figures/render_cluster.py <input.xyz> --output <output.svg> [--rotate X,Y,Z]
+    (a negative first angle needs the equals sign: --rotate=-154.3,-14.7,-109.3)
+
+`--hide-hydrogens` leaves every hydrogen out before the cluster is centred, bonded and drawn.
+Two or more inputs are a series: panels on one grid at one scale and one rotation, which is
+how two structures are drawn side by side in one view, e.g. the natural FMO arrangement and
+a generated one (608 atoms each, hydrogens hidden):
+    D=scripts/figures/data/excited-states
+    uv run scripts/figures/render_cluster.py $D/fmo-natural.xyz $D/fmo-generated-00300.xyz \
+        --labels "natural,generated" --hide-hydrogens --radius-scale 2.0 \
+        --rotate=39.92,21.6,162.07 \
+        --output src/content/work/figures/excited-states/fmo-natural-vs-generated.svg
+`--together` instead draws all the inputs as ONE cluster, each atom where its file puts it, so
+two molecules superposed in a common frame keep their relative position: the pair of FMO
+bacteriochlorophylls 1 and 2, seen face-on with their closest contact (an O...H, 2.26 A) side-on:
+    uv run scripts/figures/render_cluster.py $D/chromophore-1.xyz $D/chromophore-2.xyz \
+        --together --radius-scale 2.2 --rotate=-137.41,-4.66,-122.33 \
+        --output src/content/work/figures/excited-states/bchl-pair-1-2.svg
 
 The CHO-GAP combustion series (Fig. 14 of the carbon article), and with `--narrow` its
 phone-width variant, whose labels are sized so the viewBox is figure_style.NARROW_CHART_EM
@@ -46,7 +66,7 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
-from constants import SPECIES_COLOUR
+from constants import COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR
 from figure_style import NARROW_CHART_EM
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
@@ -68,9 +88,19 @@ BOND_WIDTH = 0.11
 #
 # The ramp is three coarse, well-separated steps rather than a gradient, because
 # depth is drawn as opacity and a fine lightness ramp would be read as distance.
+#
+# Every species of the palette has an entry. The ramp has only two steps, so every species but
+# hydrogen is ink; a species other than carbon, hydrogen and oxygen is told apart by its size
+# alone until a figure has a second species, when its `--species-*` colour does it. Carbon,
+# hydrogen and oxygen are sized by eye (hydrogen above its covalent ratio of 0.41, oxygen well
+# above 0.87 so its open ring is legible); every other species is its covalent radius over
+# carbon's (constants.COVALENT_RADIUS_ANGSTROM), which draws magnesium nearly twice carbon.
 GROUP_COLOUR = "var(--ink)"
-DRAW_COLOUR = {"C": "var(--ink)", "H": "var(--graphite)", "O": "var(--ink)"}
-DRAW_RADIUS_FACTOR = {"C": 1.0, "H": 0.48, "O": 1.25}
+DRAW_COLOUR = dict.fromkeys(SPECIES_COLOUR, GROUP_COLOUR) | {"H": "var(--graphite)"}
+DRAW_RADIUS_FACTOR = {
+    symbol: COVALENT_RADIUS_ANGSTROM[symbol] / COVALENT_RADIUS_ANGSTROM["C"]
+    for symbol in SPECIES_COLOUR
+} | {"H": 0.48, "O": 1.25}
 HOLLOW_SPECIES = frozenset({"O"})
 
 
@@ -464,6 +494,17 @@ def main() -> None:
         "labels wide, the phone-width variant of a chart.",
     )
     parser.add_argument(
+        "--hide-hydrogens",
+        action="store_true",
+        help="Leave every hydrogen out before the cluster is centred, bonded and drawn.",
+    )
+    parser.add_argument(
+        "--together",
+        action="store_true",
+        help="Draw all the inputs as one cluster, each atom where its file puts it, instead of "
+        "as panels of a series: two molecules in the frame they were superposed in.",
+    )
+    parser.add_argument(
         "--slab",
         type=float,
         default=None,
@@ -480,18 +521,35 @@ def main() -> None:
         counts = Counter(structure.species)
         return " ".join(f"{s}{counts[s]}" for s in sorted(counts))
 
-    if len(args.inputs) == 1 and not args.labels:
-        structure = boxprep.read_xyz(args.inputs[0], args.frame)
-        svg = render(structure, rotate, args.radius_scale, args.slab)  # type: ignore[arg-type]
-        print(f"{args.inputs[0].name}: {len(structure)} atoms, {describe(structure)}")
+    structures = []
+    for path in args.inputs:
+        structure = boxprep.read_xyz(path, args.frame)
+        if args.hide_hydrogens:
+            kept = np.array(structure.species) != "H"
+            structure = boxprep.Structure(
+                [symbol for symbol, keep in zip(structure.species, kept, strict=True) if keep],
+                structure.positions_angstrom[kept],
+            )
+            if not len(structure):
+                parser.error(f"{path}: nothing is left to draw once the hydrogens are hidden")
+        structures.append(structure)
+    if args.together:
+        structures = [
+            boxprep.Structure(
+                [symbol for structure in structures for symbol in structure.species],
+                np.vstack([structure.positions_angstrom for structure in structures]),
+            )
+        ]
+
+    if len(structures) == 1 and not args.labels:
+        svg = render(structures[0], rotate, args.radius_scale, args.slab)  # type: ignore[arg-type]
+        names = " + ".join(path.name for path in args.inputs)
+        print(f"{names}: {len(structures[0])} atoms, {describe(structures[0])}")
     else:
         labels = args.labels.split(",") if args.labels else [p.stem for p in args.inputs]
-        if len(labels) != len(args.inputs):
-            parser.error(f"{len(labels)} labels for {len(args.inputs)} inputs")
-        clusters = [
-            (label, boxprep.read_xyz(path, args.frame))
-            for label, path in zip(labels, args.inputs, strict=True)
-        ]
+        if len(labels) != len(structures):
+            parser.error(f"{len(labels)} labels for {len(structures)} drawings")
+        clusters = list(zip(labels, structures, strict=True))
         svg = render_series(  # type: ignore[arg-type]
             clusters,
             rotate,

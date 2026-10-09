@@ -249,8 +249,8 @@ def read_xyz(path: Path, frame: int = -1) -> Structure:
     if unknown:
         raise ValueError(
             f"{path}: no covalent radius for {sorted(unknown)}. Add it to "
-            f"COVALENT_RADIUS_ANGSTROM in constants.py, and to DRAW_RADIUS_FACTOR in "
-            f"render_cluster.py if it will be drawn."
+            f"COVALENT_RADIUS_ANGSTROM in constants.py, and to SPECIES_COLOUR there if it "
+            f"will be drawn."
         )
     return Structure(species, positions_angstrom)
 
