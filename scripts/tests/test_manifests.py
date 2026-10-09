@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import boxprep
 import panel_checks
 import pytest
 from PIL import Image
@@ -26,7 +27,11 @@ PANELS = [
 
 
 def test_every_manifest_is_found():
-    assert {manifest.parent.name for manifest in MANIFESTS} == {"graphitisation", "spheres"}
+    assert {manifest.parent.name for manifest in MANIFESTS} == {
+        "antibodies",
+        "graphitisation",
+        "spheres",
+    }
 
 
 @pytest.mark.parametrize("panel", PANELS)
@@ -42,3 +47,12 @@ def test_each_panel_has_its_source_and_a_png_of_the_size_it_renders_to(panel):
         return
     assert size_px[0] == size_px[1], f"{output} is {size_px}, not a square crop"
     assert size_px[0] < min(width_px, height_px), f"{output} is {size_px}: never cropped"
+
+
+PROTEIN_PANELS = [param for param in PANELS if param.values[0].get("kind") == "protein"]
+
+
+@pytest.mark.parametrize("panel", PROTEIN_PANELS)
+def test_a_protein_panel_names_exactly_the_chains_its_file_draws(panel):
+    chains = set(boxprep.read_pdb(REPO / panel["source"]).chain_ids.tolist())
+    assert chains == set(panel["cartoon_chains"]) | set(panel["stick_chains"])
