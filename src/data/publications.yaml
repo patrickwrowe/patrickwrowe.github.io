@@ -112,7 +112,7 @@
   doi: 10.1021/acsnano.2c02784
   theme: two-dimensional-and-confined
   anchor: nanotube-water-flow
-  blurb: "Water's friction on boron nitride is about 4–5 times that on carbon at every curvature, from 16 nanotubes and 2 sheets run for over 40 ns on committee potentials trained to revPBE-D3. The radius dependence is oxygen's and the material dependence is hydrogen's, which docks on nitrogen and hops: oxygen makes water slip, hydrogen makes it stick. Third author."
+  blurb: "Water's friction on hexagonal boron nitride is about 4–5 times that on carbon at every curvature, from 16 nanotubes and 2 sheets run for over 40 ns on committee neural network potentials trained to revPBE-D3. The radius dependence is oxygen's and the material dependence is hydrogen's, which docks on nitrogen and hops: oxygen makes water slip, hydrogen makes it stick. Third author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2202.04955" }
     - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
@@ -126,7 +126,7 @@
   doi: 10.1038/s41586-023-05849-4
   theme: two-dimensional-and-confined
   anchor: molybdenum-disulfide-membranes
-  blurb: "A restacked MoS₂ membrane shuts to water below about pH 4 and opens above about pH 11, remembers which, and collapses from 11.4 to 6.4 Å once its surface sulfur is protonated. AIMD at 2 lithium loadings found the same water bilayer and no substantial difference in diffusion between them, so lithium alone does not set the permeation; classical MD showed it sets the entry. Third author."
+  blurb: "A restacked MoS₂ membrane shuts to water below about pH 4 and opens above about pH 11, remembers which, and collapses from 11.4 to 6.4 Å once its surface sulfur is protonated. AIMD at 2 lithium loadings found the same water bilayer and no substantial difference in diffusion, so lithium alone does not set the permeation; classical MD showed it sets the entry. Third author."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2301.10195" }
 
