@@ -36,13 +36,22 @@ ARRANGEMENT_ARGV = [
 ]
 
 
+# The phone variant: the same two panels stacked, natural above generated, in a viewBox
+# NARROW_CHART_EM labels wide, so each panel takes the plate's whole width at 390 px.
+LAYOUTS = [
+    ("fmo-natural-vs-generated.svg", []),
+    ("fmo-natural-vs-generated-narrow.svg", ["--columns", "1", "--narrow"]),
+]
+
+
+@pytest.mark.parametrize(("name", "layout_argv"), LAYOUTS)
 def test_the_committed_arrangement_plate_is_byte_for_byte_what_the_documented_command_writes(
-    tmp_path, monkeypatch, capsys
+    name, layout_argv, tmp_path, monkeypatch, capsys
 ):
-    written = tmp_path / "fmo-natural-vs-generated.svg"
-    run_cli(monkeypatch, capsys, *ARRANGEMENT_ARGV, "--output", str(written))
+    written = tmp_path / name
+    run_cli(monkeypatch, capsys, *ARRANGEMENT_ARGV, *layout_argv, "--output", str(written))
     svg = written.read_text()
-    assert (FIGURES / "fmo-natural-vs-generated.svg").read_text() == svg, "plate M1 is stale"
+    assert (FIGURES / name).read_text() == svg, f"plate M1 ({name}) is stale"
 
 
 @pytest.mark.parametrize("name", ["fmo-natural.xyz", "fmo-generated-00300.xyz"])
@@ -53,8 +62,9 @@ def test_both_arrangements_are_608_atoms_with_eight_magnesium_one_per_chromophor
     assert structure.species.count("H") == 272
 
 
-def test_the_arrangement_plate_draws_two_panels_in_one_view_of_336_heavy_atoms_each():
-    svg = (FIGURES / "fmo-natural-vs-generated.svg").read_text()
+@pytest.mark.parametrize("name", [name for name, _ in LAYOUTS])
+def test_the_arrangement_plate_draws_two_panels_in_one_view_of_336_heavy_atoms_each(name):
+    svg = (FIGURES / name).read_text()
     assert svg.count("<svg") == 1  # one viewBox: one scale and one view for both
     assert svg.count("<circle") == 2 * 336  # hydrogens hidden: 608 - 272
     assert "--species-h" not in svg
@@ -103,3 +113,16 @@ def test_the_two_fixed_chromophores_are_drawn_at_the_same_place_in_both_panels_a
     registered = nearest_angstrom < 0.01
     assert registered.sum() == unmoved.sum() == 2
     assert nearest_angstrom[~registered].min() > 0.5  # the six that move are well apart
+
+
+def test_the_phone_variant_stacks_the_panels_and_registers_the_fixed_pair_vertically():
+    svg = (FIGURES / "fmo-natural-vs-generated-narrow.svg").read_text()
+    assert re.search(r'data-chart-em="([\d.]+)"', svg).group(1) == "31.5"
+    drawn = circle_centres(svg, "Mg")
+    # Each generated magnesium less each natural one: the panel offset appears exactly twice,
+    # once per fixed chromophore, and it is straight down (circle_centres' y runs up).
+    offsets = np.round(drawn[8:][None, :, :] - drawn[:8][:, None, :], 2).reshape(-1, 2)
+    vectors, counts = np.unique(offsets, axis=0, return_counts=True)
+    offset = vectors[counts.argmax()]
+    assert counts.max() == 2
+    assert offset[0] == pytest.approx(0.0, abs=0.01) and offset[1] < 0

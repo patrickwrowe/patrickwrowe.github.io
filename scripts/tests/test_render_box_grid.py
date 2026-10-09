@@ -386,10 +386,10 @@ def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_sp
     )
 
     sticks, *spheres = layers
-    # The darker of the two colours present, in linear light: oxygen's, not hydrogen's.
+    # The palette's carbon whatever is drawn, here water: a neutral grey under the spheres.
     assert sticks == StandInLayer(
         style=StandInSticks(radius=0.2),
-        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["O"])),
+        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"])),
     )
     assert spheres == [
         StandInLayer(
@@ -407,10 +407,15 @@ def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_sp
     assert scene.entities[1].hide
 
 
-def test_the_sticks_take_the_darkest_colour_present(render_box_grid_module, tmp_path):
-    scene, _ = _scene(render_box_grid_module, tmp_path, ["O", "H", "C", "C"])
-    sticks = scene.entities[0].layers[0]
+def test_the_sticks_are_the_palettes_carbon_even_beside_a_darker_species(
+    render_box_grid_module, tmp_path
+):
+    # Magnesium is darker than carbon; the sticks stay carbon, so its sphere stands out.
+    scene, _ = _scene(render_box_grid_module, tmp_path, ["O", "Mg", "C", "C"])
+    sticks, *spheres = scene.entities[0].layers
     assert sticks.material.rgb == srgb_hex_to_linear(SPECIES_COLOUR["C"])
+    assert srgb_hex_to_linear(SPECIES_COLOUR["Mg"]) in [layer.material.rgb for layer in spheres]
+    assert sticks.material.rgb != srgb_hex_to_linear(SPECIES_COLOUR["Mg"])
 
 
 def test_the_manifest_colour_map_beats_the_palette_and_can_add_a_species(
@@ -427,8 +432,8 @@ def test_the_manifest_colour_map_beats_the_palette_and_can_add_a_species(
     assert rgb_by_mask[(True, False, False)] == srgb_hex_to_linear(SPECIES_COLOUR["C"])
     assert rgb_by_mask[(False, True, False)] == srgb_hex_to_linear("#112233")
     assert rgb_by_mask[(False, False, True)] == srgb_hex_to_linear("#aabbcc")
-    # #112233 is now the darkest of the three, so the sticks follow it.
-    assert sticks.material.rgb == srgb_hex_to_linear("#112233")
+    # The sticks follow the carbon the map leaves alone, not the darker oxygen it sets.
+    assert sticks.material.rgb == srgb_hex_to_linear(SPECIES_COLOUR["C"])
 
 
 def test_a_species_in_neither_the_colour_map_nor_the_palette_is_refused_naming_it(
@@ -575,8 +580,8 @@ def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_laye
     # The sticks and spheres cover the stick chain and every HETATM, and nothing else.
     drawn = (False,) * 5 + (True,) * 5
     assert sticks.select == StandInAtomMask(mask=drawn, of=structure_id)
-    # Magnesium is the darkest of the colours drawn, so the sticks take its.
-    assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["Mg"]))
+    # The sticks are the cartoon's carbon, not the darker magnesium, whose sphere then shows.
+    assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"]))
     masks = {
         symbol: layer.select.mask
         for symbol, layer in zip(["C", "Mg", "N", "Zn"], spheres, strict=True)

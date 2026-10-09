@@ -40,11 +40,15 @@ the same place in every panel:
         --labels "natural,generated" --hide-hydrogens --radius-scale 2.0 --shared-centre \
         --rotate=39.92,21.6,162.07 \
         --output src/content/work/figures/excited-states/fmo-natural-vs-generated.svg
+    and again with `--columns 1 --narrow` (the phone variant, the two panels stacked) and
+        --output src/content/work/figures/excited-states/fmo-natural-vs-generated-narrow.svg
 `--together` instead draws all the inputs as ONE cluster, each atom where its file puts it, so
 two molecules superposed in a common frame keep their relative position: the pair of FMO
-bacteriochlorophylls 1 and 2, seen face-on with their closest contact (an O...H, 2.26 A) side-on:
+bacteriochlorophylls 1 and 2, seen face-on with their closest contact (an O...H, 2.26 A) side-on,
+and `--mark-closest` joining those two atoms with a dotted ink line, edge to edge, so the contact
+a caption names can be found among 152 atoms:
     uv run scripts/figures/render_cluster.py $D/chromophore-1.xyz $D/chromophore-2.xyz \
-        --together --radius-scale 2.2 --rotate=-137.41,-4.66,-122.33 \
+        --together --mark-closest --radius-scale 2.2 --rotate=-137.41,-4.66,-122.33 \
         --output src/content/work/figures/excited-states/bchl-pair-1-2.svg
 
 The CHO-GAP combustion series (Fig. 14 of the carbon article), and with `--narrow` its
@@ -105,6 +109,10 @@ DRAW_RADIUS_FACTOR = {
     for symbol in SPECIES_COLOUR
 } | {"H": 0.48, "O": 1.25}
 HOLLOW_SPECIES = frozenset({"O"})
+# The marked closest contact (`--mark-closest`): round dots this fraction of a bond wide, centre
+# to centre this many dot widths apart, so it reads as a non-bonded contact and not a bond.
+CONTACT_WIDTH_FRACTION = 0.7
+CONTACT_DOT_SPACING = 2.2
 
 
 def _species_colour(species: str, multi_species: bool) -> str:
@@ -270,10 +278,28 @@ def render(
     rotate_degrees: tuple[float, float, float],
     radius_scale: float = 1.0,
     slab_angstrom: float | None = None,
+    contact: tuple[int, int] | None = None,
 ) -> str:
     centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
     rotated = centred @ rotation_matrix(rotate_degrees).T
     species = structure.species
+    contact_markup = ""
+    if contact is not None:
+        # A dotted ink line between the two atoms' drawn edges, on top of everything: the
+        # marked contact is a fact the caption states, so it is never hidden behind an atom.
+        first, second = contact
+        start, end = rotated[first, :2], rotated[second, :2]
+        unit = (end - start) / np.linalg.norm(end - start)
+        start = start + unit * ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[first]] * radius_scale
+        end = end - unit * ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[second]] * radius_scale
+        width = CONTACT_WIDTH_FRACTION * BOND_WIDTH * radius_scale
+        separation = np.linalg.norm(rotated[first] - rotated[second])
+        contact_markup = (
+            f'\n    <line data-contact-angstrom="{separation:.3f}" '
+            f'x1="{start[0]:.3f}" y1="{-start[1]:.3f}" x2="{end[0]:.3f}" y2="{-end[1]:.3f}" '
+            f'fill="none" stroke="var(--ink)" stroke-width="{width:.3f}" '
+            f'stroke-dasharray="0 {CONTACT_DOT_SPACING * width:.3f}"/>'
+        )
     if slab_angstrom is not None:
         # A periodic cell of a few thousand atoms projects to a solid black square: the
         # front face hides everything and there is no structure to read. Cutting a slab
@@ -293,7 +319,8 @@ def render(
         f'viewBox="{min_x:.3f} {-max_y:.3f} {max_x - min_x:.3f} {max_y - min_y:.3f}" '
         f'role="img">\n'
         f'  <g fill="var(--ink)" stroke="var(--ink)" stroke-linecap="round">\n'
-        f"    {_draw(rotated, species, _is_multi_species(species), radius_scale=radius_scale)}\n"
+        f"    {_draw(rotated, species, _is_multi_species(species), radius_scale=radius_scale)}"
+        f"{contact_markup}\n"
         f"  </g>\n"
         f"</svg>\n"
     )
@@ -521,6 +548,12 @@ def main() -> None:
         "as panels of a series: two molecules in the frame they were superposed in.",
     )
     parser.add_argument(
+        "--mark-closest",
+        action="store_true",
+        help="With --together and two inputs: join the closest pair of atoms, one from each "
+        "input, with a dotted ink line between their drawn edges.",
+    )
+    parser.add_argument(
         "--slab",
         type=float,
         default=None,
@@ -549,6 +582,17 @@ def main() -> None:
             if not len(structure):
                 parser.error(f"{path}: nothing is left to draw once the hydrogens are hidden")
         structures.append(structure)
+    contact = None
+    if args.mark_closest:
+        if not args.together or len(structures) != 2 or args.slab is not None:
+            parser.error("--mark-closest needs --together, exactly two inputs and no --slab")
+        separations_angstrom = np.linalg.norm(
+            structures[0].positions_angstrom[:, None, :]
+            - structures[1].positions_angstrom[None, :, :],
+            axis=-1,
+        )
+        first, second = np.unravel_index(separations_angstrom.argmin(), separations_angstrom.shape)
+        contact = (int(first), len(structures[0]) + int(second))
     if args.together:
         structures = [
             boxprep.Structure(
@@ -558,7 +602,7 @@ def main() -> None:
         ]
 
     if len(structures) == 1 and not args.labels:
-        svg = render(structures[0], rotate, args.radius_scale, args.slab)  # type: ignore[arg-type]
+        svg = render(structures[0], rotate, args.radius_scale, args.slab, contact)  # type: ignore[arg-type]
         names = " + ".join(path.name for path in args.inputs)
         print(f"{names}: {len(structures[0])} atoms, {describe(structures[0])}")
     else:

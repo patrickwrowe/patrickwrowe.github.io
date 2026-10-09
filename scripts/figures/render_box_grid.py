@@ -65,7 +65,7 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            beats constants.SPECIES_COLOUR for that species on every panel of the
                            plate (a panel's own map replaces the plate's whole map). A frame of
                            more than one species draws a Sticks layer over every atom in the
-                           darkest colour present (by relative luminance) and one Spheres
+                           palette's carbon (a protein's cartoon colour) and one Spheres
                            layer per species in its own colour, each converted to linear RGB
                            with constants.srgb_hex_to_linear; a species with no colour in
                            either place is refused by name before Blender starts.
@@ -164,7 +164,6 @@ import panel_checks
 from constants import (
     CARBON_VDW_RADIUS_ANGSTROM,
     COVALENT_RADIUS_ANGSTROM,
-    RELATIVE_LUMINANCE_WEIGHTS,
     SPECIES_COLOUR,
     srgb_hex_to_linear,
 )
@@ -366,13 +365,17 @@ def scene_for(
     """The molrender scene for one panel under the section 6.2 constraints.
 
     A subject of one species (`multi_species` False) is one grey `BallAndStick` layer. A
-    subject of more than one is a `Sticks` layer over every atom, in the darkest of the
-    colours present, and one `Spheres` layer per species, selected by an `AtomMask`
+    subject of more than one is a `Sticks` layer over every atom, in the palette's carbon,
+    and one `Spheres` layer per species, selected by an `AtomMask`
     against the subject PDB and coloured from the manifest's `colour` map, then
     `constants.SPECIES_COLOUR`. The species spheres are Instances, not Points: a Blender
     point cloud carries one material, so Point spheres in several layers all took the last
     layer's colour (and dropped an atom), found on the first real multi-species render,
-    2026-10-09, of 6TRO's peptide. The one-material grey layer keeps Point.
+    2026-10-09, of 6TRO's peptide. The one-material grey layer keeps Point. The sticks were
+    once the darkest colour present, which with magnesium drawn was magnesium's own dark green,
+    so the sphere at the centre of each bacteriochlorophyll could not be told from its bonds
+    (the excited-states hero, 2026-10-09); in carbon, the colour of most bonds and of the
+    cartoon, a sphere of any other species stands out from the sticks it sits on.
 
     A protein panel (`kind` "protein") ignores `multi_species`, which `render_panel` sets
     from whether the panel draws any atom by species: one `Cartoon` layer in the
@@ -429,26 +432,24 @@ def scene_for(
                 "constants.SPECIES_COLOUR or to the manifest's colour map"
             )
         rgb = {symbol: srgb_hex_to_linear(palette[symbol]) for symbol in symbols}
+        carbon = srgb_hex_to_linear(palette["C"])
         layers = []
         if protein is not None:
             layers.append(
                 Layer(
                     style=Cartoon(),
-                    material=Solid(rgb=srgb_hex_to_linear(palette["C"])),
+                    material=Solid(rgb=carbon),
                     select=AtomMask(
                         mask=tuple(np.isin(protein.chain_ids, spec["cartoon_chains"]).tolist()),
                         of=subject_id,
                     ),
                 )
             )
-        if symbols:  # a protein of cartoon chains alone (the hero) draws no atom by species
-            darkest = min(
-                rgb.values(), key=lambda channels: np.dot(RELATIVE_LUMINANCE_WEIGHTS, channels)
-            )
+        if symbols:  # a protein of cartoon chains alone draws no atom by species
             layers.append(
                 Layer(
                     style=Sticks(radius=float(spec["bond_radius_angstrom"])),
-                    material=Solid(rgb=darkest),
+                    material=Solid(rgb=carbon),
                     select=ALL
                     if protein is None
                     else AtomMask(mask=tuple(drawn.tolist()), of=subject_id),

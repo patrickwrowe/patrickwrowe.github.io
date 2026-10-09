@@ -422,5 +422,6 @@
     <line x1="8.194" y1="-1.672" x2="8.162" y2="-1.920" fill="none" stroke="var(--species-c)" stroke-width="0.242" opacity="0.950"/>
     <line x1="8.162" y1="-1.920" x2="8.129" y2="-2.167" fill="none" stroke="var(--species-h)" stroke-width="0.242" opacity="0.950"/>
     <circle cx="8.129" cy="-2.167" r="0.169" stroke="none" fill="var(--species-h)" opacity="0.950"/>
+    <line data-contact-angstrom="2.261" x1="0.555" y1="0.274" x2="2.208" y2="0.274" fill="none" stroke="var(--ink)" stroke-width="0.169" stroke-dasharray="0 0.373"/>
   </g>
 </svg>

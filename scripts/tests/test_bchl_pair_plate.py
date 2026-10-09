@@ -30,6 +30,7 @@ PAIR_ARGV = [
     str(DATA / "chromophore-1.xyz"),
     str(DATA / "chromophore-2.xyz"),
     "--together",
+    "--mark-closest",
     "--radius-scale",
     "2.2",
     f"--rotate={PAIR_ROTATION}",
@@ -99,3 +100,55 @@ def test_the_view_has_the_closest_contact_side_on_so_the_2_26_angstrom_is_drawn_
         core = chromophore.positions_angstrom[np.isin(chromophore.species, ["N", "Mg"])]
         normal = np.linalg.svd(core - core.mean(axis=0))[2][2]
         assert abs(view @ normal) > np.cos(np.radians(40))
+
+
+def test_a_dotted_ink_line_joins_the_oxygen_and_the_hydrogen_edge_to_edge():
+    svg = (FIGURES / "bchl-pair-1-2.svg").read_text()
+    (line,) = re.findall(r"<line data-contact-angstrom=[^>]*/>", svg)
+    assert 'data-contact-angstrom="2.261"' in line
+    assert 'stroke="var(--ink)"' in line and "stroke-dasharray" in line
+    start, end = (
+        np.array([float(value) for value in pair])
+        for pair in re.findall(r'x\d="([-\d.]+)" y\d="([-\d.]+)"', line)
+    )
+    first = boxprep.read_xyz(DATA / "chromophore-1.xyz")
+    second = boxprep.read_xyz(DATA / "chromophore-2.xyz")
+    positions_angstrom = np.vstack([first.positions_angstrom, second.positions_angstrom])
+    rotation = render_cluster.rotation_matrix(
+        tuple(float(degrees) for degrees in PAIR_ROTATION.split(","))
+    )
+    rotated = (positions_angstrom - positions_angstrom.mean(axis=0)) @ rotation.T
+    separations_angstrom = np.linalg.norm(
+        first.positions_angstrom[:, None, :] - second.positions_angstrom[None, :, :], axis=-1
+    )
+    oxygen, hydrogen = np.unravel_index(separations_angstrom.argmin(), separations_angstrom.shape)
+    oxygen_xy = rotated[oxygen, :2] * (1, -1)  # SVG y runs down
+    hydrogen_xy = rotated[len(first) + hydrogen, :2] * (1, -1)
+    # The line runs from the oxygen ring's edge to the hydrogen disc's edge, on the line
+    # between their centres, and covers neither atom.
+    radius = {
+        symbol: render_cluster.ATOM_RADIUS * render_cluster.DRAW_RADIUS_FACTOR[symbol] * 2.2
+        for symbol in ("O", "H")
+    }
+    assert np.linalg.norm(start - oxygen_xy) == pytest.approx(radius["O"], abs=2e-3)
+    assert np.linalg.norm(end - hydrogen_xy) == pytest.approx(radius["H"], abs=2e-3)
+    assert np.linalg.norm(end - start) == pytest.approx(
+        np.linalg.norm(hydrogen_xy - oxygen_xy) - radius["O"] - radius["H"], abs=2e-3
+    )
+
+
+@pytest.mark.parametrize(
+    ("names", "extra"),
+    [
+        (["chromophore-1.xyz", "chromophore-2.xyz"], []),
+        (["chromophore-1.xyz", "chromophore-2.xyz"], ["--together", "--slab", "10"]),
+        (["chromophore-1.xyz", "chromophore-2.xyz", "chromophore-1.xyz"], ["--together"]),
+    ],
+)
+def test_mark_closest_is_refused_without_exactly_two_inputs_drawn_together(
+    names, extra, tmp_path, monkeypatch, capsys
+):
+    argv = [*(str(DATA / name) for name in names), "--mark-closest", *extra]
+    with pytest.raises(SystemExit):
+        run_cli(monkeypatch, capsys, *argv, "--output", str(tmp_path / "pair.svg"))
+    assert "--mark-closest needs --together" in capsys.readouterr().err

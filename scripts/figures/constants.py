@@ -72,10 +72,6 @@ SPECIES_COLOUR: dict[str, str] = {
     "Al": "#5a3547",
 }
 
-# Weights of linear red, green and blue in relative luminance Y, which orders two colours by
-# how dark they are (ITU-R BT.709, the sRGB primaries, IEC 61966-2-1).
-RELATIVE_LUMINANCE_WEIGHTS = (0.2126, 0.7152, 0.0722)
-
 # Molecular Nodes' van der Waals radius for carbon (molecularnodes assets/data.py). Its
 # BallAndStick style reads sphere_radius as a factor on this, not as a length.
 CARBON_VDW_RADIUS_ANGSTROM = 1.70

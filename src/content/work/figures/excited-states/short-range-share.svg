@@ -3,22 +3,12 @@
   <line x1="13.00" y1="76.00" x2="141.00" y2="76.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <line x1="13.00" y1="76.00" x2="13.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
   <text x="13.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
-  <line x1="29.00" y1="76.00" x2="29.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="29.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1</text>
-  <line x1="45.00" y1="76.00" x2="45.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="45.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2</text>
-  <line x1="61.00" y1="76.00" x2="61.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="61.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3</text>
-  <line x1="77.00" y1="76.00" x2="77.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="77.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">4</text>
-  <line x1="93.00" y1="76.00" x2="93.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="93.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">5</text>
-  <line x1="109.00" y1="76.00" x2="109.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="109.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">6</text>
-  <line x1="125.00" y1="76.00" x2="125.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="125.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">7</text>
-  <line x1="141.00" y1="76.00" x2="141.00" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
-  <text x="141.00" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">8</text>
+  <line x1="49.57" y1="76.00" x2="49.57" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="49.57" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1</text>
+  <line x1="86.14" y1="76.00" x2="86.14" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="86.14" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">2</text>
+  <line x1="122.71" y1="76.00" x2="122.71" y2="77.60" stroke="var(--graphite)" stroke-width="0.45"/>
+  <text x="122.71" y="81.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">3</text>
   <line x1="13.00" y1="76.00" x2="13.00" y2="6.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <line x1="11.40" y1="76.00" x2="13.00" y2="76.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <text x="10.40" y="77.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">0</text>
@@ -29,31 +19,30 @@
   <line x1="11.40" y1="16.00" x2="13.00" y2="16.00" stroke="var(--graphite)" stroke-width="0.45"/>
   <text x="10.40" y="17.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">60</text>
   <text x="77.00" y="86.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">minimum distance D (Å)</text>
-  <text x="4.00" y="41.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.00 41.00)">short-range share of J_TOT (%)</text>
-  <g data-guide="close-contact" data-distance-angstrom="7"><line x1="125.00" y1="6.00" x2="125.00" y2="76.00" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/><text x="123.50" y="74.00" text-anchor="end" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">D = 7 Å</text></g>
+  <text x="4.00" y="41.00" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)" transform="rotate(-90 4.00 41.00)">short-range share (%)</text>
   <g data-series="FMO" data-marker="filled">
-      <g data-pair="1-2" data-states="1,2" data-distance-angstrom="2.26" data-share-percent="28"><circle cx="49.16" cy="48.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="49.16" y="45.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">28%</text></g>
-      <g data-pair="5-6" data-states="1,2" data-distance-angstrom="2.61" data-share-percent="25"><circle cx="54.76" cy="51.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="5-6" data-states="2,1" data-distance-angstrom="2.61" data-share-percent="19"><circle cx="54.76" cy="57.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="4-7" data-states="1,2" data-distance-angstrom="2.58" data-share-percent="22"><circle cx="54.28" cy="54.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="3-7" data-states="1,2" data-distance-angstrom="2.18" data-share-percent="23"><circle cx="47.88" cy="53.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="1-2" data-states="1,2" data-distance-angstrom="2.26" data-share-percent="28"><circle cx="95.65" cy="48.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="95.65" y="45.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">28%</text></g>
+      <g data-pair="5-6" data-states="1,2" data-distance-angstrom="2.61" data-share-percent="25"><circle cx="108.45" cy="51.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="5-6" data-states="2,1" data-distance-angstrom="2.61" data-share-percent="19"><circle cx="108.45" cy="57.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="4-7" data-states="1,2" data-distance-angstrom="2.58" data-share-percent="22"><circle cx="107.35" cy="54.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="3-7" data-states="1,2" data-distance-angstrom="2.18" data-share-percent="23"><circle cx="92.73" cy="53.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
     </g>
   <g data-series="LH2" data-marker="open">
-      <g data-pair="A" data-states="1,1" data-distance-angstrom="1.9" data-share-percent="10"><circle cx="43.40" cy="66.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
-      <g data-pair="B" data-states="1,1" data-distance-angstrom="1.71" data-share-percent="13"><circle cx="40.36" cy="63.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
-      <g data-pair="A" data-states="2,2" data-distance-angstrom="1.9" data-share-percent="27"><circle cx="43.40" cy="49.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
-      <g data-pair="A" data-states="1,2" data-distance-angstrom="1.9" data-share-percent="66"><circle cx="43.40" cy="10.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/><text x="43.40" y="7.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">66%</text></g>
-      <g data-pair="B" data-states="2,2" data-distance-angstrom="1.71" data-share-percent="14"><circle cx="40.36" cy="62.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
+      <g data-pair="A" data-states="1,1" data-distance-angstrom="1.9" data-share-percent="10"><circle cx="82.49" cy="66.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
+      <g data-pair="B" data-states="1,1" data-distance-angstrom="1.71" data-share-percent="13"><circle cx="75.54" cy="63.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
+      <g data-pair="A" data-states="2,2" data-distance-angstrom="1.9" data-share-percent="27"><circle cx="82.49" cy="49.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
+      <g data-pair="A" data-states="1,2" data-distance-angstrom="1.9" data-share-percent="66"><circle cx="82.49" cy="10.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/><text x="82.49" y="7.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">66%</text></g>
+      <g data-pair="B" data-states="2,2" data-distance-angstrom="1.71" data-share-percent="14"><circle cx="75.54" cy="62.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/></g>
     </g>
   <g data-series="PCP" data-marker="square">
-      <g data-pair="4-7" data-states="1,1" data-distance-angstrom="0.98" data-share-percent="22"><rect x="27.17" y="52.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="28.68" y="51.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">22%</text></g>
-      <g data-pair="1-3" data-states="1,1" data-distance-angstrom="2.53" data-share-percent="10"><rect x="51.97" y="64.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="7-8" data-states="1,1" data-distance-angstrom="2.65" data-share-percent="10"><rect x="53.89" y="64.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="2-4" data-states="1,1" data-distance-angstrom="2.4" data-share-percent="7.1"><rect x="49.89" y="67.39" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
-      <g data-pair="5-6" data-states="1,1" data-distance-angstrom="2.98" data-share-percent="7.2"><rect x="59.17" y="67.29" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="4-7" data-states="1,1" data-distance-angstrom="0.98" data-share-percent="22"><rect x="47.33" y="52.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="48.84" y="51.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">22%</text></g>
+      <g data-pair="1-3" data-states="1,1" data-distance-angstrom="2.53" data-share-percent="10"><rect x="104.02" y="64.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="7-8" data-states="1,1" data-distance-angstrom="2.65" data-share-percent="10"><rect x="108.41" y="64.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="2-4" data-states="1,1" data-distance-angstrom="2.4" data-share-percent="7.1"><rect x="99.26" y="67.39" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
+      <g data-pair="5-6" data-states="1,1" data-distance-angstrom="2.98" data-share-percent="7.2"><rect x="120.48" y="67.29" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/></g>
     </g>
-  <g data-legend="FMO"><circle cx="107.00" cy="10.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="110.50" y="11.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">FMO</text></g>
-  <g data-legend="LH2"><circle cx="107.00" cy="15.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/><text x="110.50" y="16.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">LH2</text></g>
-  <g data-legend="PCP"><rect x="105.49" y="18.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="110.50" y="21.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">PCP</text></g>
+  <g data-legend="FMO"><circle cx="127.00" cy="10.00" r="1.7" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="130.50" y="11.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">FMO</text></g>
+  <g data-legend="LH2"><circle cx="127.00" cy="15.00" r="1.35" fill="none" stroke="var(--ink)" stroke-width="0.7"/><text x="130.50" y="16.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">LH2</text></g>
+  <g data-legend="PCP"><rect x="125.49" y="18.49" width="3.01" height="3.01" fill="var(--ink)" stroke="var(--plate)" stroke-width="0.4"/><text x="130.50" y="21.00" text-anchor="start" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">PCP</text></g>
   </g>
 </svg>

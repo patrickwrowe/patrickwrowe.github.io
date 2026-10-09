@@ -34,7 +34,7 @@
     "fmo-natural.xyz": {
       "source_path": "Coupling_Monte_Carlo/Canonical/Geometry_00000.xyz",
       "source_md5": "1d8b71769111676dd5859b26bd34215c",
-      "what": "The natural arrangement of the eight FMO bacteriochlorophyll a, 608 atoms (264 C, 272 H, 8 Mg, 32 N, 32 O; eight chromophores of 76 atoms), centred on the midpoint of the source and drain chromophores; identical to Geometries/Geometry_00001.xyz, structure 1 of the library of Knee, Rowe, Smith, Troisi, Datta, J. Phys. Chem. Lett. 8, 2328 (2017).",
+      "what": "The natural arrangement of the eight FMO bacteriochlorophyll a, 608 atoms (264 C, 272 H, 8 Mg, 32 N, 32 O; eight chromophores of 76 atoms), centred on the mean of its 608 atoms (the origin to 0.01 angstrom; the midpoint of the source and drain magnesium is 4.9 angstrom from it, so it is not centred there, as an earlier version of this entry said); identical to Geometries/Geometry_00001.xyz, structure 1 of the library of Knee, Rowe, Smith, Troisi, Datta, J. Phys. Chem. Lett. 8, 2328 (2017).",
       "edit": "none; a verbatim copy",
       "format_quirk": "The count line is the atom count plus a tab, the comment line is blank, columns are tab-separated and the element symbol is padded with a space. boxprep.read_xyz reads the file as it is (it splits on any whitespace and skips the comment line), so no extension was needed; scripts/tests/test_excited_states_data_provenance.py reads the staged files through it.",
       "md5": "1d8b71769111676dd5859b26bd34215c",
@@ -67,13 +67,13 @@
       "direction": [
         -0.7,
         0.71,
-        0.14
+        0.0
       ],
       "resolution": [
         1728,
         972
       ],
-      "why": "Chain A is a shell of beta-sheet and helices around the eight bacteriochlorophylls, and this view looks across the open face of the shell: the central stack of pigments shows through between the helices, the eighth bacteriochlorophyll (A 400, 42 atoms, its tail unmodelled) stands clear of the shell on the left, and the rings of the other seven can be told apart. Nothing is clipped: the frame is fitted to the subunit.",
+      "why": "Chain A is a shell of beta-sheet and helices around the eight bacteriochlorophylls, and this view looks level across the open face of the shell: the central stack of seven pigments shows through between the helices and the eighth (A 400, 42 atoms, its tail unmodelled) sits at the left edge with a helix across its lower half. It is the 2026-10-09 choice, [-0.7, 0.71, 0.14], brought level by the design review: molrender fits its orthographic camera to the projected corners of the subject's bounding box, not to the atoms, so a view with any z component also frames the box's top face, and on this subunit, whose height (59.8 angstrom along z) fixes the 16:9 frame's scale, the 0.14 cost a sixth of the scale. Level, the scale is the frame's height over the subunit's. The margin is 1.06, not the plate default 1.02: level at 1.02 the ink reached 9 px from the top and bottom edges (0.98 of the height) and read as cropped on the page; at 1.06 it covers 0.94. The sticks are the palette's carbon (render_box_grid.py's rule since this review; they were magnesium's dark green, the darkest colour present, so each magnesium sphere merged with its bonds). Nothing is clipped: the frame is fitted to the subunit.",
       "candidates": [
         {
           "direction": [
@@ -106,7 +106,7 @@
           "px_per_angstrom": 15.33,
           "macrocycle_visible": 0.78,
           "draft_wall_time_s": 282,
-          "verdict": "Chosen."
+          "verdict": "Replaced by the design review (2026-10-09) with the same azimuth brought level, below. The eighth pigment stood clearer here, but the bounding-box fit framed the subunit at 13.25 px per angstrom (0.43 x 0.86 of the frame, 16 per cent of its area in ink); the 15.33 above is the atoms-only scoring, which the render does not follow."
         },
         {
           "direction": [
@@ -118,9 +118,31 @@
           "macrocycle_visible": 0.75,
           "draft_wall_time_s": 255,
           "verdict": "Side-on to the sheet: the strands stack like the rungs of a ladder in front of the pigments, and one pigment is clear. Rejected."
+        },
+        {
+          "direction": [
+            -0.7,
+            0.71,
+            0.0
+          ],
+          "px_per_angstrom": 15.32,
+          "macrocycle_visible": 0.68,
+          "production_wall_time_s": 176,
+          "verdict": "Chosen. The design review's level view, margin 1.06: 15.32 px per angstrom by the bounding-box model (15.92 at margin 1.02, production 183 s, rejected for the 9 px edges), ink 0.50 x 0.94 of the frame and 20 per cent of its area. The stack reads through the open face; the eighth pigment keeps its upper half clear of a helix."
+        },
+        {
+          "direction": [
+            -0.34,
+            0.94,
+            0.0
+          ],
+          "px_per_angstrom": 15.92,
+          "macrocycle_visible": 0.7,
+          "production_wall_time_s": 191,
+          "verdict": "Level at azimuth 110 degrees, margin 1.02, picked because the backbone z-buffer found the eighth pigment wholly unoccluded there. Rejected: rendered, a helix crosses the eighth pigment, which is edge-on, and three helices lie across the stack, which reads darker and more crowded than at azimuth 135."
         }
       ],
-      "limits": "The macrocycle score is a crude backbone-only z-buffer and ranks the four within 0.08 of each other; the choice rests on the drafts. In every direction tried between a fifth and three tenths of the macrocycle atoms are behind a helix or strand, and the stack at the centre is dense: the eight are not each separately countable in the frame, which is why the caption should say the pigments sit inside the protein rather than number them off the picture. The subunit fills about 16 per cent of the frame's area (the frame is 16:9 and the subunit is nearly square in projection). The one non-white border pixel, at the top right, is Molecular Nodes' known compositor stray (render_box_grid.py's docstring) and passes the border check.",
+      "limits": "The macrocycle score is a crude backbone-only z-buffer (and it called the azimuth-110 eighth pigment clear when the cartoon covers it); the choice rests on the renders. In every direction tried between a fifth and a third of the macrocycle atoms are behind a helix or strand, and the stack at the centre is dense: the eight are not each separately countable in the frame, which is why the caption says the pigments sit inside the protein rather than number them off the picture, and few magnesium spheres show, the rings being seen obliquely. The subunit is nearly square in projection and the frame 16:9, so the ink covers half the width at most; the hero is never cropped (spec 6.2). The scale figures are the bounding-box model's (the corners of the atoms' axis-aligned box projected along the direction, which reproduces each render's ink box to 0.01 of the frame); the scoring script was a scratch one and is not committed. The one non-white border pixel, at the top right, is Molecular Nodes' known compositor stray (render_box_grid.py's docstring) and passes the border check.",
       "radii": {
         "sphere_radius_angstrom": 0.4,
         "bond_radius_angstrom": 0.22,
@@ -135,8 +157,8 @@
         "altloc": 0,
         "water": 178
       },
-      "wall_time_s": 147,
-      "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 147 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 233])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
+      "wall_time_s": 176,
+      "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 176 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 234])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
     }
   }
 }

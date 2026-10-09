@@ -92,16 +92,6 @@ def read_points(svg: str) -> list[dict]:
     return points
 
 
-def guide_distance_angstrom(svg: str) -> float:
-    """Where the dotted close-contact guide stands on the distance axis, read off the drawing."""
-    positions, values = numeric_labels(svg, "middle")
-    slope, offset = np.polyfit(values, positions, 1)
-    guide_x = float(
-        re.search(r'<g data-guide="close-contact"[^>]*><line x1="([\d.]+)"', svg).group(1)
-    )
-    return (guide_x - offset) / slope
-
-
 @pytest.mark.parametrize(("narrow", "committed"), LAYOUTS)
 def test_the_committed_svg_is_byte_for_byte_what_the_script_writes(narrow, committed):
     written = short_range_share.build(DATA, narrow=narrow).encode("utf-8")
@@ -142,13 +132,15 @@ def test_each_system_has_its_own_marker_and_the_legend_shows_all_three():
     assert 'fill="none" stroke="var(--ink)"' in svg
 
 
-def test_the_guide_stands_at_the_papers_7_angstrom_and_every_marker_is_inside_it():
+def test_every_marker_is_inside_the_papers_7_angstrom_limit_and_the_axis_stops_short_of_it():
+    # The caption states the limit; the chart draws no guide, so the axis can stop at 3.5.
+    assert TABLE["close_contact_threshold_angstrom"] == 7.0  # the data's, from manuscript p.9
     for narrow in (False, True):
         svg = short_range_share.build(DATA, narrow=narrow)
-        assert guide_distance_angstrom(svg) == pytest.approx(7.0, abs=0.01)
-        assert TABLE["close_contact_threshold_angstrom"] == 7.0  # the data's, from manuscript p.9
-        assert "D = 7 Å" in svg
-        assert max(point["distance_angstrom"] for point in read_points(svg)) < 7.0
+        assert "data-guide" not in svg and "D = 7" not in svg
+        _, ticks_angstrom = numeric_labels(svg, "middle")
+        assert max(ticks_angstrom) == 3 < short_range_share.DISTANCE_AXIS_ANGSTROM[1] < 7.0
+        assert max(point["distance_angstrom"] for point in read_points(svg)) < 3.0
 
 
 def test_the_28_per_cent_at_2_26_angstrom_is_the_fmo_pair_1_2_and_the_staged_geometry_agrees():
@@ -266,8 +258,6 @@ OVERLAPPING_PAIRS = {
         frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
         frozenset({"FMO 5-6 2,1", "FMO 4-7 1,2"}),
         frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
-        frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
-        frozenset({"PCP 1-3 1,1", "PCP 2-4 1,1"}),
     },
     True: {
         frozenset({"FMO 5-6 1,2", "FMO 4-7 1,2"}),
@@ -275,8 +265,6 @@ OVERLAPPING_PAIRS = {
         frozenset({"LH2 B 1,1", "LH2 B 2,2"}),
         frozenset({"PCP 1-3 1,1", "PCP 7-8 1,1"}),
         frozenset({"PCP 1-3 1,1", "PCP 2-4 1,1"}),
-        frozenset({"PCP 2-4 1,1", "PCP 7-8 1,1"}),
-        frozenset({"PCP 5-6 1,1", "PCP 7-8 1,1"}),
     },
 }
 # The markers as first drawn: the open circle filled with the plate, nothing outlined.
@@ -288,10 +276,9 @@ PLAIN_MARKERS = {
 # The least share of a marker's ink that later markers may leave showing. A circle is read by
 # its outline, so most of it must show: the plain open circle of LH2 pair B's 13 per cent row
 # showed 0.50 beneath its neighbour's plate-filled one, the drawn one shows 0.75. A square of
-# PCP overlaps its neighbour more (pairs 1-3 and 7-8 are 0.12 angstrom apart, 1.2 units in the
-# phone layout), and its plate outline costs it ink: it keeps 0.56 wide and 0.28 narrow, a bar
-# a third of a square wide beside the square that overlaps it, still a second marker.
-MIN_VISIBLE_INK = {"circle": 0.7, "rect": 0.25}
+# PCP touches its neighbour only in the phone layout (pairs 1-3 and 7-8 are 0.12 angstrom apart,
+# 2.7 units there) and keeps 0.86 of its ink; it kept 0.28 while the distance axis ran to 8.
+MIN_VISIBLE_INK = {"circle": 0.7, "rect": 0.8}
 SAMPLE_STEP = 0.05  # viewBox units
 TOUCH_STEP = 0.02  # viewBox units, finer: the corner slivers are 0.1 units across
 
@@ -504,7 +491,7 @@ def test_dropping_the_separation_from_any_series_is_caught(monkeypatch):
 def test_every_axis_title_carries_its_unit():
     svg = short_range_share.build(DATA)
     assert "minimum distance D (Å)" in svg
-    assert "short-range share of J_TOT (%)" in svg
+    assert "short-range share (%)" in svg
 
 
 @pytest.mark.parametrize(
@@ -526,14 +513,6 @@ def test_a_row_that_would_draw_off_the_plot_is_refused_naming_the_file_and_the_r
     corruption(table["rows"][3])
     (tmp_path / "table1-short-range-share.json").write_text(json.dumps(table))
     with pytest.raises(ValueError, match=r"table1-short-range-share\.json: \w+ \S+ .*" + message):
-        short_range_share.build(tmp_path)
-
-
-def test_a_threshold_off_the_distance_axis_is_refused(tmp_path):
-    table = json.loads((DATA / "table1-short-range-share.json").read_text())
-    table["close_contact_threshold_angstrom"] = 12.0
-    (tmp_path / "table1-short-range-share.json").write_text(json.dumps(table))
-    with pytest.raises(ValueError, match="threshold 12.0 leaves its axis"):
         short_range_share.build(tmp_path)
 
 

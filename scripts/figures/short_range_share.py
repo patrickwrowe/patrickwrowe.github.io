@@ -7,11 +7,13 @@
 Scatter of J_short / J_TOT (per cent) against the minimum intermolecular distance D (angstrom)
 for the fifteen rows of the JCTC paper's own Table 1, three series: FMO (filled circle), LH2
 (open circle) and PCP (filled square), the filled-versus-open device of the site's other
-charts with one shape more. The largest share of each series is written beside its marker. A
-dotted guide marks D = 7 angstrom, the paper's limit between pairs in close contact (D < 7)
-and distant ones (p.9). Every row of Table 1 lies inside it: the table lists the couplings
-with the largest short-range contributions, not a sample of all pairs, so the chart shows how
-large the short-range term gets, not how it falls with distance.
+charts with one shape more. The largest share of each series is written beside its marker.
+Every row of Table 1 lies inside D = 7 angstrom, the paper's limit between pairs in close
+contact (D < 7) and distant ones (p.9): the table lists the couplings with the largest
+short-range contributions, not a sample of all pairs, so the chart shows how large the
+short-range term gets, not how it falls with distance. The distance axis stops at 3.5 angstrom,
+just past the farthest row (2.98); drawn out to a guide at 7 it left about 63 per cent of the
+plot empty and crowded the fifteen markers into the rest, and the caption states the limit.
 
 Data: scripts/figures/data/excited-states/table1-short-range-share.json, typed from Fornari,
 Rowe, Padula and Troisi, J. Chem. Theory Comput. 13, 3754 (2017), Table 1 (manuscript p.11);
@@ -48,7 +50,6 @@ from pathlib import Path
 from figure_style import (
     AXIS_BAND,
     AXIS_TITLE_SIZE,
-    AXIS_WIDTH,
     LABEL_SIZE,
     LEGEND_ROW_HEIGHT,
     NARROW_CHART_EM,
@@ -56,7 +57,6 @@ from figure_style import (
     Y_TITLE_OFFSET,
     svg_axis,
     svg_document,
-    svg_line,
     svg_marker,
     svg_square_marker,
     svg_text,
@@ -84,10 +84,10 @@ MARKERS = {
     "PCP": ("square", partial(svg_square_marker, separate=True)),
 }
 
-# The axes, (minimum, maximum) and labelled values. D runs to 8 angstrom so the 7 angstrom
-# guide has room to its right; the share runs to 70 per cent, above the largest, 66.
-DISTANCE_AXIS_ANGSTROM = (0.0, 8.0)
-DISTANCE_TICKS_ANGSTROM = tuple(range(9))
+# The axes, (minimum, maximum) and labelled values. D runs to 3.5 angstrom, past the farthest
+# row, 2.98; the share runs to 70 per cent, above the largest, 66.
+DISTANCE_AXIS_ANGSTROM = (0.0, 3.5)
+DISTANCE_TICKS_ANGSTROM = tuple(range(4))
 SHARE_AXIS_PERCENT = (0.0, 70.0)
 SHARE_TICKS_PERCENT = (0, 20, 40, 60)
 
@@ -97,12 +97,11 @@ MARGIN_TOP = 6.0
 MARGIN_RIGHT = 6.0
 PLOT_WIDTH = 128.0
 PLOT_HEIGHT = 70.0
-GUIDE_DASH = "0.5 1.5"
 # From a marker's centre up to the baseline of the value written above it.
 VALUE_LABEL_RISE = 3.0
-# The legend sits in the empty top right of the plot, left of the guide: a marker, a gap, a
-# name, one row per series.
-LEGEND_OFFSET_FROM_GUIDE = 18.0
+# The legend sits in the empty top right of the plot: a marker, a gap, a name, one row per
+# series, the marker this far in from the plot's right edge.
+LEGEND_OFFSET_FROM_RIGHT = 14.0
 LEGEND_NAME_GAP = 3.5
 
 NARROW_WIDTH = NARROW_CHART_EM * LABEL_SIZE
@@ -122,20 +121,14 @@ def build(data_dir: Path, narrow: bool = False) -> str:
 
     Raises:
         ValueError: If a row lacks a field or names a system the chart has no marker for, if a
-            system has no row, if a distance or share is not a finite number or leaves its
-            axis, which would draw a marker off the plot, or if the file's close-contact
-            threshold leaves the distance axis.
+            system has no row, or if a distance or share is not a finite number or leaves its
+            axis, which would draw a marker off the plot.
     """
     path = data_dir / DATA_FILE
     table = json.loads(path.read_text())
     rows = table["rows"]
-    threshold_angstrom = table["close_contact_threshold_angstrom"]
     distance_low, distance_high = DISTANCE_AXIS_ANGSTROM
     share_low, share_high = SHARE_AXIS_PERCENT
-    if not distance_low < threshold_angstrom < distance_high:
-        raise ValueError(
-            f"{path}: the close-contact threshold {threshold_angstrom!r} leaves its axis"
-        )
     for row in rows:
         name = f"{row.get('system')} {row.get('pair')}"
         if missing := set(ROW_FIELDS) - set(row):
@@ -189,20 +182,10 @@ def build(data_dir: Path, narrow: bool = False) -> str:
         svg_text(
             plot_left - Y_TITLE_OFFSET,
             plot_top + PLOT_HEIGHT / 2,
-            "short-range share of J_TOT (%)",
+            "short-range share (%)",
             AXIS_TITLE_SIZE,
             rotate=-90,
         )
-    )
-
-    guide_x = x_of(threshold_angstrom)
-    parts.append(
-        f'<g data-guide="close-contact" data-distance-angstrom="{threshold_angstrom:g}">'
-        + svg_line(guide_x, plot_top, guide_x, plot_bottom, AXIS_WIDTH, GUIDE_DASH)
-        + svg_text(
-            guide_x - 1.5, plot_bottom - 2.0, f"D = {threshold_angstrom:g} Å", LABEL_SIZE, "end"
-        )
-        + "</g>"
     )
 
     for system, (kind, marker) in MARKERS.items():
@@ -235,7 +218,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
 
     for row_index, (system, (_kind, marker)) in enumerate(MARKERS.items()):
         row_y = plot_top + 4.0 + row_index * LEGEND_ROW_HEIGHT
-        marker_x = guide_x - LEGEND_OFFSET_FROM_GUIDE
+        marker_x = plot_left + plot_width - LEGEND_OFFSET_FROM_RIGHT
         parts.append(
             f'<g data-legend="{system}">'
             + marker(marker_x, row_y)

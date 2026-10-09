@@ -104,7 +104,12 @@ const { n, animate = false } = Astro.props;
   .plate__fig {
     white-space: nowrap;
   }
+  /* The text column stops at the prose's measure, in its own smaller ch: across a 54rem plate
+   * a caption ran about 107 characters to the line, past the 45-75 that reads (tokens.css),
+   * and the long captions of a theme article set 8 lines of it. The rule above stays the
+   * figure's width. */
   .plate__text {
+    max-width: var(--measure-prose);
     font-family: var(--serif);
     font-size: 0.875rem;
     line-height: 1.6;
