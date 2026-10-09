@@ -44,6 +44,7 @@ from constants import (
 )
 
 __all__ = [
+    "ProteinStructure",
     "Structure",
     "box_edge_from_density",
     "find_bonds",
@@ -51,6 +52,7 @@ __all__ = [
     "make_compact",
     "make_whole",
     "read_lammps_last_frame",
+    "read_pdb",
     "read_xyz",
     "slab_mask",
     "tile",
@@ -67,6 +69,88 @@ class Structure(NamedTuple):
 
     def __len__(self) -> int:
         return len(self.species)
+
+
+class ProteinStructure(NamedTuple):
+    """The atoms of a PDB file that a protein render draws, in the file's own order.
+
+    Every per-atom field has one entry per atom, in the same order. `records` and
+    `secondary_structure_records` are the file's own lines, kept so the renderer can write
+    exactly these atoms back out: positions in angstrom.
+    """
+
+    species: list[str]
+    positions_angstrom: np.ndarray
+    chain_ids: np.ndarray
+    residue_numbers: np.ndarray
+    is_hetero: np.ndarray
+    records: list[str]
+    secondary_structure_records: list[str]
+
+    def __len__(self) -> int:
+        return len(self.species)
+
+
+def read_pdb(path: Path) -> ProteinStructure:
+    """Read the atoms of a PDB file that a render draws: model 1, one conformer, no water.
+
+    Atoms are the ATOM and HETATM records of the first model. An atom whose alternate
+    location (column 17) is anything but blank or "A" is dropped, as is every `HOH`
+    residue. The element is columns 77-78 ("MG" reads "Mg"); a record without one takes it
+    from columns 13-14 of the atom name, where the PDB format right-justifies it (an ATOM
+    record keeps only the first letter, because protein atoms are H, C, N, O and S). Chain
+    id is column 22, residue number columns 23-26 (the insertion code is not read), hetero
+    flag is the record name. ANISOU, CONECT, TER and every other record are ignored,
+    except HELIX and SHEET, which Molecular Nodes reads for the cartoon's secondary
+    structure and which `ProteinStructure.secondary_structure_records` returns.
+
+    `records` are the kept ATOM and HETATM lines verbatim, so writing them (render_box_grid.prepare
+    does) gives a file whose atoms are exactly those this function returns, in the same
+    order: the species and chain masks the renderer measures here are then indexed by the
+    atoms Molecular Nodes loads from that file.
+
+    Args:
+        path: Path to the PDB file.
+
+    Returns:
+        The structure. Positions are in angstrom.
+
+    Raises:
+        ValueError: If the file has no atom left to draw, or a coordinate is not a number.
+    """
+    lines = path.read_text().splitlines()
+    atom_lines: list[str] = []
+    for line in lines:
+        if line.startswith("ENDMDL"):  # model 1 only
+            break
+        if (
+            line.startswith(("ATOM  ", "HETATM"))
+            and line[16:17] in " A"  # alternate location: blank, or the first conformer
+            and line[17:20] != "HOH"
+        ):
+            atom_lines.append(line)
+    if not atom_lines:
+        raise ValueError(f"{path}: no atoms to draw (model 1, altloc blank or A, no HOH)")
+
+    species: list[str] = []
+    for line in atom_lines:
+        element = line[76:78].strip().title()
+        if not element:
+            element = line[12:14].strip(" 0123456789").title()
+            if line.startswith("ATOM"):
+                element = element[:1]
+        species.append(element)
+    return ProteinStructure(
+        species=species,
+        positions_angstrom=np.array(
+            [[float(line[start : start + 8]) for start in (30, 38, 46)] for line in atom_lines]
+        ),
+        chain_ids=np.array([line[21] for line in atom_lines]),
+        residue_numbers=np.array([int(line[22:26]) for line in atom_lines]),
+        is_hetero=np.array([line.startswith("HETATM") for line in atom_lines]),
+        records=atom_lines,
+        secondary_structure_records=[line for line in lines if line.startswith(("HELIX", "SHEET"))],
+    )
 
 
 def read_xyz(path: Path, frame: int = -1) -> Structure:

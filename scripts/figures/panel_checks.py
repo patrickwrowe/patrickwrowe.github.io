@@ -45,7 +45,17 @@ REQUIRED_KEYS = (
 # (a plate-level key misspelled, e.g. "slab_angstorm" for "slab_angstrom") that would
 # otherwise render the whole panel at its default rather than failing loudly.
 OPTIONAL_KEYS = frozenset(
-    {"margin", "cage_angstrom", "slab_angstrom", "density_g_cm3", "tile", "colour"}
+    {
+        "margin",
+        "cage_angstrom",
+        "slab_angstrom",
+        "density_g_cm3",
+        "tile",
+        "colour",
+        "kind",
+        "cartoon_chains",
+        "stick_chains",
+    }
 )
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
@@ -91,6 +101,15 @@ def _is_direction(value: object) -> bool:
     )
 
 
+def _is_chain_list(value: object) -> bool:
+    """A list of distinct PDB chain ids, each one character (column 22), possibly empty."""
+    return (
+        isinstance(value, list)
+        and all(isinstance(chain, str) and len(chain) == 1 and chain != " " for chain in value)
+        and len(set(value)) == len(value)
+    )
+
+
 def _is_colour_map(value: object) -> bool:
     """A dict of element symbol ("O", "Mo") to sRGB hex ("#rrggbb"), possibly empty."""
     return isinstance(value, dict) and all(
@@ -133,11 +152,21 @@ VALUE_RULES = {
         "three positive integers [nx, ny, nz]",
     ),
     "colour": (_is_colour_map, "a map of element symbol to sRGB hex"),
+    "kind": (lambda value: value in ("box", "protein"), 'either "box" or "protein"'),
+    "cartoon_chains": (
+        lambda value: _is_chain_list(value) and len(value) > 0,
+        "a non-empty list of distinct one-character chain ids",
+    ),
+    "stick_chains": (_is_chain_list, "a list of distinct one-character chain ids"),
     "source": (
         lambda value: isinstance(value, str) and Path(value).is_file(),
-        "the path of an existing XYZ file",
+        "the path of an existing XYZ file (a PDB file for a protein panel)",
     ),
 }
+# Keys that only a protein panel (kind "protein") may carry, and must carry.
+PROTEIN_KEYS = ("cartoon_chains", "stick_chains")
+# Keys a protein panel cannot use: it is framed to its own complex, with no periodic cell.
+PROTEIN_UNUSED_KEYS = ("cage_angstrom", "slab_angstrom", "density_g_cm3", "tile")
 
 WHITE = 255
 CORNER_BLOCK_PX = 8
@@ -174,7 +203,11 @@ def load_panels(manifest_path: Path) -> list[dict]:
             positive density, a tile of three positive integers, a source that exists, a
             margin of at least 1, a positive sphere radius, a slab of null or a positive
             thickness, a direction of three numbers that are not all zero, a colour map
-            of element symbol to "#rrggbb"; every number must be finite),
+            of element symbol to "#rrggbb"; every number must be finite; a kind of "box" or
+            "protein"; chain lists of distinct one-character ids, the cartoon list not
+            empty), a protein panel that lacks PROTEIN_KEYS, whose source is not a .pdb
+            file, that sets a non-null PROTEIN_UNUSED_KEYS entry, or whose two chain lists
+            share a chain, a box panel that carries chain lists,
             an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
             panels share an id. Every message names the manifest, the panel and the key.
     """
@@ -201,6 +234,26 @@ def load_panels(manifest_path: Path) -> list[dict]:
                 raise ValueError(
                     f"{manifest_path}: panel {name}: {key} is {panel[key]!r}, expected {expected}"
                 )
+        if panel.get("kind", "box") == "protein":
+            lacking = [key for key in PROTEIN_KEYS if key not in panel]
+            if lacking:
+                raise ValueError(f"{manifest_path}: panel {name} is a protein and lacks {lacking}")
+            if not panel["source"].endswith(".pdb"):
+                raise ValueError(f"{manifest_path}: panel {name}: source is not a .pdb file")
+            unused = [key for key in PROTEIN_UNUSED_KEYS if panel.get(key) is not None]
+            if unused:
+                raise ValueError(
+                    f"{manifest_path}: panel {name}: a protein is framed to its own complex, "
+                    f"so {unused} must be null or absent"
+                )
+            shared = sorted(set(panel["cartoon_chains"]) & set(panel["stick_chains"]))
+            if shared:
+                raise ValueError(
+                    f"{manifest_path}: panel {name}: chain(s) {shared} are in both "
+                    "cartoon_chains and stick_chains"
+                )
+        elif any(key in panel for key in PROTEIN_KEYS):
+            raise ValueError(f"{manifest_path}: panel {name} has chain lists but is not a protein")
         if not PANEL_ID.fullmatch(str(name)):
             raise ValueError(f"{manifest_path}: panel id {name!r} does not match [\\w.-]+")
         if name in seen_ids:

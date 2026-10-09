@@ -22,10 +22,18 @@ import pytest
 from constants import SPECIES_COLOUR, srgb_hex_to_linear
 from PIL import Image
 
+TOY_PROTEIN = Path(__file__).parent / "fixtures" / "toy-protein.pdb"
+
 
 @dataclass(frozen=True)
 class StandInSolid:
     rgb: tuple[float, float, float]
+
+
+@dataclass(frozen=True)
+class StandInCartoon:
+    quality: int | None = None
+    peptide_rounded: bool = True
 
 
 @dataclass(frozen=True)
@@ -97,10 +105,12 @@ class StandInScene:
 
 
 MOLRENDER_STAND_INS = {
+    "ALL": None,  # what a stand-in Layer selects when `select` is left out
     "DRAFT": StandInQuality("AgX"),
     "PRODUCTION": StandInQuality("AgX"),
     "AtomMask": StandInAtomMask,
     "BallAndStick": StandInBallAndStick,
+    "Cartoon": StandInCartoon,
     "Layer": StandInLayer,
     "Scene": StandInScene,
     "Solid": StandInSolid,
@@ -480,3 +490,148 @@ def test_tool_versions_reads_each_version_or_says_unknown(
     monkeypatch.setattr(render_box_grid_module, "version", installed_version)
 
     assert tool_versions() == expected
+
+
+# ---------------------------------------------------------------------------
+# protein panels
+# ---------------------------------------------------------------------------
+
+# toy-protein.pdb keeps 10 atoms: chain A holds atoms 0-4 (alanine, glycine), zinc (7) and
+# magnesium (8); chain B holds atoms 5 and 6 and the ligand carbon (9). Zinc has no palette
+# colour, so a protein spec that draws it names one.
+PROTEIN_SPEC = {
+    **SCENE_SPEC,
+    "id": "toy",
+    "kind": "protein",
+    "source": str(TOY_PROTEIN),
+    "cartoon_chains": ["A"],
+    "stick_chains": ["B"],
+    "cage_angstrom": None,
+    "colour": {"Zn": "#336699"},
+}
+
+
+def _protein_scene(module, work_dir: Path, **spec_overrides):
+    """`prepare` then `scene_for` on the toy protein; returns the scene and the subject PDB."""
+    spec = {**PROTEIN_SPEC, **spec_overrides}
+    subject, cage, species = module.prepare(spec, work_dir)
+    assert cage is None
+    scene = module.scene_for(spec, subject, cage, species, multi_species=True, draft=False)
+    return scene, subject
+
+
+def test_prepare_writes_a_protein_as_the_atoms_read_pdb_kept_in_the_files_order(
+    render_box_grid_module, tmp_path
+):
+    subject, cage, species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
+    lines = subject.read_text().splitlines()
+    assert cage is None
+    assert species == ["N", "C", "C", "N", "C", "N", "C", "Zn", "Mg", "C"]
+    assert [line[:5] for line in lines if not line.startswith(("ATOM", "HETATM"))] == [
+        "HELIX",
+        "SHEET",
+        "END",
+    ]
+    atoms = [line for line in lines if line.startswith(("ATOM", "HETATM"))]
+    assert [int(line[6:11]) for line in atoms] == [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
+
+
+@pytest.mark.parametrize(
+    ("cartoon_chains", "stick_chains"),
+    [(["A"], []), (["A", "B", "Z"], []), (["A"], ["B", "Z"])],
+    ids=["a chain left undrawn", "a chain the file lacks", "a stick chain the file lacks"],
+)
+def test_a_protein_whose_chains_are_not_the_files_is_refused_naming_both(
+    render_box_grid_module, tmp_path, cartoon_chains, stick_chains
+):
+    spec = {**PROTEIN_SPEC, "cartoon_chains": cartoon_chains, "stick_chains": stick_chains}
+    with pytest.raises(ValueError, match=r"panel toy: .* has chains \['A', 'B'\] but the panel"):
+        render_box_grid_module.prepare(spec, tmp_path)
+    assert not (tmp_path / "toy.pdb").exists()
+
+
+def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_layers_over_the_rest(
+    render_box_grid_module, tmp_path
+):
+    scene, subject = _protein_scene(render_box_grid_module, tmp_path)
+    structure_id = StandInStructureId(
+        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=10
+    )
+    (structure,) = scene.entities  # no cage
+    cartoon, sticks, *spheres = structure.layers
+    assert not structure.remove_solvent
+
+    # Chain A is atoms 0-4 and the two ions; chain B is atoms 5, 6 and the ligand carbon.
+    assert cartoon == StandInLayer(
+        style=StandInCartoon(),
+        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"])),
+        select=StandInAtomMask(
+            mask=(True,) * 5 + (False,) * 2 + (True,) * 2 + (False,), of=structure_id
+        ),
+    )
+    # The sticks and spheres cover the stick chain and every HETATM, and nothing else.
+    drawn = (False,) * 5 + (True,) * 5
+    assert sticks.select == StandInAtomMask(mask=drawn, of=structure_id)
+    # Magnesium is the darkest of the colours drawn, so the sticks take its.
+    assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["Mg"]))
+    masks = {
+        symbol: layer.select.mask
+        for symbol, layer in zip(["C", "Mg", "N", "Zn"], spheres, strict=True)
+    }
+    assert [layer.material.rgb for layer in spheres] == [
+        srgb_hex_to_linear(colour)
+        for colour in (SPECIES_COLOUR["C"], SPECIES_COLOUR["Mg"], SPECIES_COLOUR["N"], "#336699")
+    ]
+    assert masks["C"] == (False,) * 6 + (True,) + (False,) * 2 + (True,)
+    assert masks["N"] == (False,) * 5 + (True,) + (False,) * 4
+    assert masks["Zn"] == (False,) * 7 + (True,) + (False,) * 2
+    assert masks["Mg"] == (False,) * 8 + (True,) + (False,)
+    assert all(
+        layer.style == StandInSpheres(radius=0.4 / 1.70, geometry="Point") for layer in spheres
+    )
+    assert sticks.style == StandInSticks(radius=0.2)
+
+
+def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
+    render_box_grid_module, tmp_path
+):
+    chain_a = tmp_path / "chain-a.pdb"  # atoms 1-6 of chain A; read_pdb drops the B conformer
+    chain_a.write_text(
+        "".join(
+            f"{line}\n"
+            for line in TOY_PROTEIN.read_text().splitlines()
+            if line.startswith("ATOM") and line[21] == "A" and int(line[6:11]) < 7  # model 1
+        )
+    )
+    scene, _ = _protein_scene(
+        render_box_grid_module, tmp_path, source=str(chain_a), stick_chains=[]
+    )
+    (structure,) = scene.entities
+    (cartoon,) = structure.layers
+    assert isinstance(cartoon.style, StandInCartoon)
+    assert cartoon.select.mask == (True,) * 5
+
+
+def test_the_cartoon_takes_the_manifests_carbon_colour(render_box_grid_module, tmp_path):
+    scene, _ = _protein_scene(
+        render_box_grid_module, tmp_path, colour={"Zn": "#336699", "C": "#102030"}
+    )
+    assert scene.entities[0].layers[0].material.rgb == srgb_hex_to_linear("#102030")
+
+
+def test_a_hetero_atom_with_no_colour_is_refused_naming_it(render_box_grid_module, tmp_path):
+    with pytest.raises(ValueError, match=r"panel toy: no colour for \['Zn'\]"):
+        _protein_scene(render_box_grid_module, tmp_path, colour={})
+
+
+def test_a_protein_panel_goes_from_pdb_to_a_saved_rgb_png(
+    render_box_grid_module, monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
+    spec = {**PROTEIN_SPEC, "id": "panel", "resolution": [1728, 972]}
+    output = _render_panel(
+        render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (74, 74, 74)
+    )
+    saved = Image.open(output)
+    assert saved.mode == "RGB" and saved.size == (1728, 972)
+    assert "panel: 10 atoms" in capsys.readouterr().out

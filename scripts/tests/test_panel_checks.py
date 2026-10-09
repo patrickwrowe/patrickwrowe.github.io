@@ -199,6 +199,63 @@ def test_load_panels_rejects_a_manifest_without_panels(tmp_path):
         panel_checks.load_panels(manifest_path)
 
 
+PROTEIN_PANEL = {
+    "id": "p",
+    "source": "p.pdb",
+    "kind": "protein",
+    "cartoon_chains": ["A", "B"],
+    "stick_chains": ["C"],
+}
+
+
+def test_load_panels_accepts_a_protein_with_a_null_cage_slab_and_no_stick_chains(tmp_path):
+    manifest_path = _manifest(
+        tmp_path,
+        [{**PROTEIN_PANEL, "stick_chains": [], "cage_angstrom": None, "slab_angstrom": None}],
+        slab_angstrom=10.0,  # a plate-level slab the panel overrides
+    )
+    panel = panel_checks.load_panels(manifest_path)[0]
+    assert panel["kind"] == "protein" and panel["stick_chains"] == []
+
+
+@pytest.mark.parametrize(
+    ("override", "expected"),
+    [
+        ({"cage_angstrom": [60.0, 60.0, 60.0]}, "cage_angstrom"),
+        ({"slab_angstrom": 10.0}, "slab_angstrom"),
+        ({"density_g_cm3": 1.0}, "density_g_cm3"),
+        ({"tile": [2, 1, 1]}, "tile"),
+        ({"stick_chains": ["B", "C"]}, r"\['B'\] are in both"),
+        ({"cartoon_chains": []}, "cartoon_chains is"),
+        ({"cartoon_chains": ["A", "A"]}, "cartoon_chains is"),
+        ({"cartoon_chains": ["AB"]}, "cartoon_chains is"),
+        ({"stick_chains": "C"}, "stick_chains is"),
+        ({"kind": "cartoon"}, "kind is"),
+        ({"source": "p.xyz"}, "not a .pdb file"),
+    ],
+)
+def test_load_panels_refuses_a_protein_that_breaks_a_rule_naming_manifest_and_panel(
+    tmp_path, override, expected
+):
+    manifest_path = _manifest(tmp_path, [{**PROTEIN_PANEL, **override}])
+    with pytest.raises(ValueError, match=expected) as error:
+        panel_checks.load_panels(manifest_path)
+    assert str(manifest_path) in str(error.value) and "panel p" in str(error.value)
+
+
+@pytest.mark.parametrize("missing", ["cartoon_chains", "stick_chains"])
+def test_load_panels_refuses_a_protein_without_both_chain_lists(tmp_path, missing):
+    panel = {key: value for key, value in PROTEIN_PANEL.items() if key != missing}
+    with pytest.raises(ValueError, match=rf"panel p is a protein and lacks \['{missing}'\]"):
+        panel_checks.load_panels(_manifest(tmp_path, [panel]))
+
+
+def test_load_panels_refuses_chain_lists_on_a_box_panel(tmp_path):
+    panel = {"id": "b", "source": "b.xyz", "cartoon_chains": ["A"]}
+    with pytest.raises(ValueError, match="panel b has chain lists but is not a protein"):
+        panel_checks.load_panels(_manifest(tmp_path, [panel]))
+
+
 # ---------------------------------------------------------------------------
 # assert_fits_cage: containment guard
 # ---------------------------------------------------------------------------

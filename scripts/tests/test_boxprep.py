@@ -447,3 +447,42 @@ def test_find_bonds_periodic_cutoff_argument_moves_the_cutoff():
         (0, 1),
         (0, 2),
     }
+
+
+def test_read_pdb_keeps_model_one_the_first_conformer_and_no_water():
+    # toy-protein.pdb holds 13 atom records; read_pdb drops the second conformer of the
+    # alpha carbon (serial 3), the water (12) and the whole of model 2 (13).
+    protein = boxprep.read_pdb(FIXTURES / "toy-protein.pdb")
+    assert len(protein) == 10
+    assert protein.species == ["N", "C", "C", "N", "C", "N", "C", "Zn", "Mg", "C"]
+    assert protein.chain_ids.tolist() == list("AAAAABBAAB")
+    assert protein.residue_numbers.tolist() == [1, 1, 1, 2, 2, 7, 7, 101, 102, 301]
+    assert protein.is_hetero.tolist() == [False] * 7 + [True] * 3
+    # The conformer kept is A's (x = 1.458), not B's (1.600).
+    assert protein.positions_angstrom[1].tolist() == [1.458, 0.0, 0.0]
+    assert 1.600 not in protein.positions_angstrom[:, 0]
+    assert protein.positions_angstrom.shape == (10, 3)
+
+
+def test_read_pdb_reads_a_two_letter_element_and_falls_back_to_the_atom_name():
+    # Zn has columns 77-78; Mg (HETATM) and the second chain-B alpha carbon (ATOM) do not.
+    protein = boxprep.read_pdb(FIXTURES / "toy-protein.pdb")
+    assert protein.species[7:9] == ["Zn", "Mg"]
+    assert protein.species[6] == "C"
+
+
+def test_read_pdb_returns_the_kept_records_verbatim_and_the_secondary_structure():
+    protein = boxprep.read_pdb(FIXTURES / "toy-protein.pdb")
+    serials = [int(record[6:11]) for record in protein.records]
+    assert serials == [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
+    assert protein.records[1] == (FIXTURES / "toy-protein.pdb").read_text().splitlines()[5]
+    assert [record[:5] for record in protein.secondary_structure_records] == ["HELIX", "SHEET"]
+
+
+def test_read_pdb_refuses_a_file_with_no_atom_to_draw(tmp_path):
+    only_water = tmp_path / "water.pdb"
+    only_water.write_text(
+        "HETATM    1  O   HOH A   1       0.000   0.000   0.000  1.00 20.00           O\nEND\n"
+    )
+    with pytest.raises(ValueError, match="no atoms to draw"):
+        boxprep.read_pdb(only_water)

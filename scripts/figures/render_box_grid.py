@@ -69,7 +69,25 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            layer per species in its own colour, each converted to linear RGB
                            with constants.srgb_hex_to_linear; a species with no colour in
                            either place is refused by name before Blender starts.
-    panels[].id, .source   an XYZ file readable by boxprep.read_xyz
+    panels[].id, .source   an XYZ file readable by boxprep.read_xyz; for a protein panel, a PDB file
+    panels[].kind          "box" (the default: periodic boxes and free clusters, as above) or
+                           "protein": a PDB file drawn as it is, never moved, tiled, caged or
+                           sliced (cage_angstrom, slab_angstrom, density_g_cm3 and tile must
+                           be null or absent), framed to the complex with `margin` and
+                           `direction`. boxprep.read_pdb reads model 1, one conformer
+                           (altloc blank or A) and no water; a protein is a Cartoon layer
+                           in the palette's carbon (`colour` may override it) over
+                           `cartoon_chains`, and every atom of `stick_chains` and every
+                           HETATM drawn as a multi-species frame is (the sticks and
+                           spheres above), so the file's chains must be exactly the two
+                           lists together. sphere_radius_angstrom sets the spheres and
+                           bond_radius_angstrom the sticks; `grey` is required but unused
+    panels[].cartoon_chains
+                           protein only, required: a non-empty list of auth chain ids (PDB
+                           column 22) drawn as Cartoon
+    panels[].stick_chains  protein only, required: a list of auth chain ids drawn
+                           species-coloured as sticks and spheres; [] for none, disjoint from
+                           cartoon_chains
     panels[].density_g_cm3 present for a periodic box: the cell edge follows from it and the
                            frame is wrapped; absent for a free cluster
     panels[].tile          [nx, ny, nz] periodic images (boxes only), default [1, 1, 1]
@@ -80,9 +98,11 @@ would otherwise fall back to a default rather than failing); ids are unique and 
 letters, digits, "_", "." and "-", because each names a file. Values are checked too
 (panel_checks.VALUE_RULES): resolution two positive integers, grey in [0, 1], cage null or
 three positive extents, density positive, tile three positive integers, colour a map of
-element symbol to "#rrggbb", every number finite, and a source that exists, relative to the
-repository root where this command runs. `panel_checks.load_panels` enforces all of this,
-naming the manifest, panel and key of the first value it refuses.
+element symbol to "#rrggbb", kind "box" or "protein", the chain lists of one-character ids,
+every number finite, and a source that exists, relative to the repository root where this
+command runs; a protein panel also needs both chain lists (the cartoon list not empty, the
+two disjoint), a .pdb source and no cage, slab, density or tile. `panel_checks.load_panels`
+enforces all of this, naming the manifest, panel and key of the first value it refuses.
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
@@ -92,7 +112,8 @@ one-pixel border, each isolated, and reported in the summary line; residual chro
 panel_checks.MAX_CHROMA, over the whole frame for one species and over the
 CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
 for more than one species; the colour path in `scene_for` is exercised only through a
-stand-in molrender (the first multi-species draft render is its real check).
+stand-in molrender (the first multi-species draft render is its real check), and so is the
+protein path (its draft render of 1SY6 and 6TRO was).
 Each panel renders into the scratch directory and moves to `<id>.png` only once every check
 passes, so a failed panel leaves nothing behind for the resume run to skip.
 `--draft` uses molrender's DRAFT tier for framing checks only: EEVEE at half resolution, and
@@ -133,10 +154,12 @@ from constants import (
     srgb_hex_to_linear,
 )
 from molrender import (
+    ALL,
     DRAFT,
     PRODUCTION,
     AtomMask,
     BallAndStick,
+    Cartoon,
     Layer,
     Scene,
     Solid,
@@ -195,6 +218,12 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
     centre along z, and the cage's eight corners sit at that centre plus or minus half
     of `cage_angstrom`.
 
+    A protein panel (`kind` "protein") is not moved, tiled or caged. The subject file is
+    the atom records `boxprep.read_pdb` kept (model 1, one conformer, no water), verbatim and
+    in the file's order, after the source's HELIX and SHEET records, which Molecular Nodes
+    reads for the cartoon: the chain masks `scene_for` measures on this file are then
+    indexed by the atoms Molecular Nodes loads from it.
+
     Args:
         spec: One panel from `panel_checks.load_panels`.
         work_dir: Scratch directory for the PDB files.
@@ -208,8 +237,24 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
             (`boxprep.read_xyz` names it), the frame has no atoms left after the slab is
             cut (the panel is named), or the cage does not hold the subject
             with its spheres on every axis, which would let the subject frame itself and
-            break the plate's shared scale (`panel_checks.assert_fits_cage`).
+            break the plate's shared scale (`panel_checks.assert_fits_cage`); for a protein,
+            if the file's chains are not exactly the chains the panel names in
+            `cartoon_chains` and `stick_chains`, so that no chain is left undrawn by a typo.
     """
+    if spec.get("kind", "box") == "protein":
+        protein = boxprep.read_pdb(Path(spec["source"]))
+        chains = set(protein.chain_ids.tolist())
+        named = {*spec["cartoon_chains"], *spec["stick_chains"]}
+        if chains != named:
+            raise ValueError(
+                f"panel {spec['id']}: {spec['source']} has chains {sorted(chains)} but the "
+                f"panel names {sorted(named)} in cartoon_chains and stick_chains"
+            )
+        subject = work_dir / f"{spec['id']}.pdb"
+        subject.write_text(
+            "\n".join([*protein.secondary_structure_records, *protein.records, "END"]) + "\n"
+        )
+        return subject, None, protein.species
     structure = boxprep.read_xyz(Path(spec["source"]))
     species = np.asarray(structure.species)
     positions_angstrom = structure.positions_angstrom
@@ -278,6 +323,13 @@ def scene_for(
     against the subject PDB and coloured from the manifest's `colour` map, then
     `constants.SPECIES_COLOUR`.
 
+    A protein panel (`kind` "protein") ignores `multi_species`: one `Cartoon` layer in the
+    palette's carbon, selected by an `AtomMask` over `cartoon_chains`, and, over the atoms
+    of `stick_chains` and every HETATM (water is already gone), the multi-species `Sticks`
+    and per-species `Spheres` layers restricted by an `AtomMask`. With no such atoms (the
+    hero) it is the Cartoon alone. The masks are measured on `subject`, the file
+    `prepare` wrote, by `boxprep.read_pdb`.
+
     Args:
         spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
         subject: PDB of the atoms to draw.
@@ -291,8 +343,8 @@ def scene_for(
         A scene with view transform Standard, opaque film and no shadow catcher.
 
     Raises:
-        ValueError: If the subject has more than one species and one has a colour neither in
-            the panel's `colour` map nor in `constants.SPECIES_COLOUR`.
+        ValueError: If a drawn species has a colour neither in the panel's `colour` map nor
+            in `constants.SPECIES_COLOUR`.
     """
     grey = float(spec["grey"])
     sphere_radius = float(spec["sphere_radius_angstrom"]) / CARBON_VDW_RADIUS_ANGSTROM
@@ -304,10 +356,20 @@ def scene_for(
         ),
         material=Solid(rgb=(grey, grey, grey)),
     )
-    if not multi_species:
+    is_protein = spec.get("kind", "box") == "protein"
+    if not (multi_species or is_protein):
         subject_layers = (grey_layer,)
     else:
-        symbols = sorted(set(species))
+        atom_symbols = np.asarray(species)
+        subject_id = StructureId(
+            sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=len(species)
+        )
+        if is_protein:
+            protein = boxprep.read_pdb(subject)
+            drawn = np.isin(protein.chain_ids, spec["stick_chains"]) | protein.is_hetero
+        else:
+            drawn = np.ones(len(species), dtype=bool)
+        symbols = sorted(set(atom_symbols[drawn].tolist()))
         palette = {**SPECIES_COLOUR, **spec.get("colour", {})}
         unpainted = [symbol for symbol in symbols if symbol not in palette]
         if unpainted:
@@ -316,27 +378,42 @@ def scene_for(
                 "constants.SPECIES_COLOUR or to the manifest's colour map"
             )
         rgb = {symbol: srgb_hex_to_linear(palette[symbol]) for symbol in symbols}
-        atom_symbols = np.asarray(species)
-        subject_id = StructureId(
-            sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=len(species)
-        )
-        darkest = min(
-            rgb.values(), key=lambda channels: np.dot(RELATIVE_LUMINANCE_WEIGHTS, channels)
-        )
-        subject_layers = (
-            Layer(
-                style=Sticks(radius=float(spec["bond_radius_angstrom"])),
-                material=Solid(rgb=darkest),
-            ),
-            *(
+        layers = []
+        if is_protein:
+            layers.append(
                 Layer(
-                    style=Spheres(radius=sphere_radius, geometry="Point"),
-                    material=Solid(rgb=rgb[symbol]),
-                    select=AtomMask(mask=tuple((atom_symbols == symbol).tolist()), of=subject_id),
+                    style=Cartoon(),
+                    material=Solid(rgb=srgb_hex_to_linear(palette["C"])),
+                    select=AtomMask(
+                        mask=tuple(np.isin(protein.chain_ids, spec["cartoon_chains"]).tolist()),
+                        of=subject_id,
+                    ),
                 )
-                for symbol in symbols
-            ),
+            )
+        if symbols:  # a protein of cartoon chains alone (the hero) draws no atom by species
+            darkest = min(
+                rgb.values(), key=lambda channels: np.dot(RELATIVE_LUMINANCE_WEIGHTS, channels)
+            )
+            layers.append(
+                Layer(
+                    style=Sticks(radius=float(spec["bond_radius_angstrom"])),
+                    material=Solid(rgb=darkest),
+                    select=AtomMask(mask=tuple(drawn.tolist()), of=subject_id)
+                    if is_protein
+                    else ALL,
+                )
+            )
+        layers.extend(
+            Layer(
+                style=Spheres(radius=sphere_radius, geometry="Point"),
+                material=Solid(rgb=rgb[symbol]),
+                select=AtomMask(
+                    mask=tuple((drawn & (atom_symbols == symbol)).tolist()), of=subject_id
+                ),
+            )
+            for symbol in symbols
         )
+        subject_layers = tuple(layers)
     entities = [
         Structure(path=subject, name="subject", layers=subject_layers, remove_solvent=False)
     ]
@@ -365,8 +442,8 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
 
     Raises:
         ValueError: From `prepare` when a species has no covalent radius, the frame has no
-            atoms left, or the cage does not hold the subject, or from `scene_for` when a
-            species has no colour.
+            atoms left, the cage does not hold the subject, or a protein's chains are not
+            the chains the panel names, or from `scene_for` when a species has no colour.
         RuntimeError: From `panel_checks.check_and_flatten` when the PNG breaks a
             section 6.2 rule, or from `panel_checks.crop_to_ink` when an uncaged square
             panel has no ink; nothing is then written to
