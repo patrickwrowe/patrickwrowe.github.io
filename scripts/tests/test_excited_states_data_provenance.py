@@ -18,6 +18,7 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
+import panel_checks
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
@@ -190,3 +191,58 @@ def test_every_row_is_on_page_11_of_the_manuscript_and_the_threshold_on_page_9()
         for row in TABLE["rows"]
     ]
     assert "minimum intermolecular distance D = 7 Å" in page(9)
+
+
+PANELS = {panel["id"]: panel for panel in panel_checks.load_panels(DATA / "manifest.json")}
+RENDERS = PROVENANCE["renders"]
+RENDER_IDS = sorted(key for key in RENDERS if key not in {"note", "method"})
+
+
+def test_every_panel_of_the_manifest_has_a_render_entry_and_every_entry_a_panel():
+    assert RENDER_IDS == sorted(PANELS) == ["hero"]
+
+
+@pytest.mark.parametrize("panel_id", RENDER_IDS)
+def test_a_render_entry_records_the_manifests_direction_and_radii_and_chose_one_candidate(panel_id):
+    entry, panel = RENDERS[panel_id], PANELS[panel_id]
+    assert entry["source"] == Path(panel["source"]).name
+    assert entry["direction"] == panel["direction"]
+    chosen = [c for c in entry["candidates"] if c["verdict"].startswith("Chosen.")]
+    assert [c["direction"] for c in chosen] == [panel["direction"]]
+    assert len(entry["candidates"]) >= 3  # directions tried, each with its verdict
+    assert entry["why"] and entry["limits"]
+    assert entry["radii"]["sphere_radius_angstrom"] == panel["sphere_radius_angstrom"]
+    assert entry["radii"]["bond_radius_angstrom"] == panel["bond_radius_angstrom"]
+    assert entry["wall_time_s"] > 0 and entry["summary_line"].startswith(f"{panel_id}: ")
+
+
+@pytest.mark.parametrize("panel_id", RENDER_IDS)
+def test_a_render_entry_records_the_manifest_resolution_the_dropped_atoms_and_the_summary_line(
+    panel_id,
+):
+    entry, panel = RENDERS[panel_id], PANELS[panel_id]
+    protein = boxprep.read_pdb(Path(panel["source"]))
+    assert entry["manifest"] == "scripts/figures/data/excited-states/manifest.json"
+    assert entry["resolution"] == panel["resolution"] == [1728, 972]
+    assert entry["dropped"] == {
+        "altloc": protein.n_dropped_altloc,
+        "water": protein.n_dropped_water,
+    }
+    line = entry["summary_line"]
+    assert f": {len(protein.species)} atoms (dropped {entry['dropped']['altloc']} altloc, " in line
+    assert (
+        f"{entry['dropped']['water']} water), wall {entry['wall_time_s']} s, blender exit 0" in line
+    )
+    assert str(Path.home()) not in line  # the repository-relative path, not this machine's
+
+
+def test_the_hero_ligand_bonds_recorded_are_the_ones_the_radius_rule_finds_among_the_bcl_atoms():
+    # What `render_box_grid.prepare` writes as CONECT: the hetero atoms with a covalent radius.
+    protein = boxprep.read_pdb(DATA / "3BSD.pdb")
+    hetero = np.flatnonzero(protein.is_hetero)
+    bonds = boxprep.find_bonds(
+        protein.positions_angstrom[hetero], [protein.species[atom] for atom in hetero]
+    )
+    entry = RENDERS["hero"]["ligand_bonds"]
+    assert entry["needed_conect"] is True
+    assert entry["bonds"] == len(bonds) == 568

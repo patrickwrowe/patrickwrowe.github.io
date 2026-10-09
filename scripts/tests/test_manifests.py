@@ -29,6 +29,7 @@ PANELS = [
 def test_every_manifest_is_found():
     assert {manifest.parent.name for manifest in MANIFESTS} == {
         "antibodies",
+        "excited-states",
         "graphitisation",
         "spheres",
     }

@@ -47,6 +47,7 @@ __all__ = [
     "ProteinStructure",
     "Structure",
     "box_edge_from_density",
+    "conect_records",
     "find_bonds",
     "find_bonds_periodic",
     "make_compact",
@@ -548,6 +549,42 @@ def read_lammps_last_frame(path: Path) -> tuple[np.ndarray, float, int]:
     return bounds[:, 0] + scaled * edges, float(edges[0]), timestep
 
 
+def conect_records(bonds: list[tuple[int, int]], serials: list[int]) -> list[str]:
+    """PDB CONECT records for a bond list: a line per atom, four partners to a line.
+
+    Each bond is written from both ends, so a reader that trusts CONECT sees it once from
+    either atom. Atoms are in index order, partners in the order the bonds were given. Used
+    for a whole file of one's own atoms (`write_pdb`, serials 1 to n) and for the hetero atoms
+    of a protein file, whose serials are the file's own (`render_box_grid.prepare`).
+
+    Args:
+        bonds: Zero-based (first, second) atom index pairs.
+        serials: PDB serial number of every atom, in index order.
+
+    Returns:
+        The CONECT lines, without newlines.
+
+    Raises:
+        ValueError: If a bond names an atom with no serial, or a serial does not fit the
+            five-column field (above 99,999); the message names the atom or the serial.
+    """
+    unserialled = sorted({atom for bond in bonds for atom in bond if not 0 <= atom < len(serials)})
+    if unserialled:
+        raise ValueError(f"a bond names atom {unserialled[0]}, which has no serial")
+    if serials and max(serials) > 99_999:
+        raise ValueError(f"CONECT: serial {max(serials)} exceeds 99,999")
+    partners: dict[int, list[int]] = {}
+    for first, second in bonds:
+        partners.setdefault(first, []).append(serials[second])
+        partners.setdefault(second, []).append(serials[first])
+    lines = []
+    for atom in sorted(partners):
+        for chunk_start in range(0, len(partners[atom]), 4):
+            chunk = partners[atom][chunk_start : chunk_start + 4]
+            lines.append(f"CONECT{serials[atom]:5d}" + "".join(f"{serial:5d}" for serial in chunk))
+    return lines
+
+
 def write_pdb(
     path: Path,
     species: list[str],
@@ -604,16 +641,6 @@ def write_pdb(
             zip(species, positions_angstrom, strict=True)
         )
     ]
-    partners: dict[int, list[int]] = {}
-    for first, second in bonds:
-        partners.setdefault(first, []).append(second)
-        partners.setdefault(second, []).append(first)
-    for atom in sorted(partners):
-        neighbours = partners[atom]
-        for chunk_start in range(0, len(neighbours), 4):
-            chunk = neighbours[chunk_start : chunk_start + 4]
-            lines.append(
-                f"CONECT{atom + 1:5d}" + "".join(f"{neighbour + 1:5d}" for neighbour in chunk)
-            )
+    lines += conect_records(bonds, list(range(1, n_atoms + 1)))
     lines.append("END")
     path.write_text("\n".join(lines) + "\n")

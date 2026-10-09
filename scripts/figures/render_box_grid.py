@@ -79,9 +79,11 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            in the palette's carbon (`colour` may override it) over
                            `cartoon_chains`, and every atom of `stick_chains` and every
                            HETATM drawn as a multi-species frame is (the sticks and
-                           spheres above), so the file's chains must be exactly the two
-                           lists together. sphere_radius_angstrom sets the spheres and
-                           bond_radius_angstrom the sticks; `grey` is required but unused
+                           spheres above), its bonds written as CONECT records by `prepare`
+                           because Molecular Nodes bonds no ligand of an older file, so the
+                           file's chains must be exactly the two lists together.
+                           sphere_radius_angstrom sets the spheres and bond_radius_angstrom
+                           the sticks; `grey` is required but unused
     panels[].cartoon_chains
                            protein only, required: a non-empty list of auth chain ids (PDB
                            column 22) drawn as Cartoon
@@ -161,6 +163,7 @@ import numpy as np
 import panel_checks
 from constants import (
     CARBON_VDW_RADIUS_ANGSTROM,
+    COVALENT_RADIUS_ANGSTROM,
     RELATIVE_LUMINANCE_WEIGHTS,
     SPECIES_COLOUR,
     srgb_hex_to_linear,
@@ -234,7 +237,10 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
     the atom records `boxprep.read_pdb` kept (model 1, one conformer, no water), verbatim and
     in the file's order, after the source's HELIX and SHEET records, which Molecular Nodes
     reads for the cartoon: the chain masks `scene_for` measures on this file are then
-    indexed by the atoms Molecular Nodes loads from it.
+    indexed by the atoms Molecular Nodes loads from it. It ends with a CONECT record for each
+    bond `boxprep.find_bonds` finds among the HETATM atoms whose element has a covalent
+    radius, using the file's own serial numbers: Molecular Nodes would otherwise draw a ligand
+    as unbonded spheres. The source's own CONECT records are not copied.
 
     Args:
         spec: One panel from `panel_checks.load_panels`.
@@ -251,7 +257,8 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
             with its spheres on every axis, which would let the subject frame itself and
             break the plate's shared scale (`panel_checks.assert_fits_cage`); for a protein,
             if the file's chains are not exactly the chains the panel names in
-            `cartoon_chains` and `stick_chains`, so that no chain is left undrawn by a typo.
+            `cartoon_chains` and `stick_chains`, so that no chain is left undrawn by a typo,
+            or an atom serial is not a number.
     """
     if spec.get("kind", "box") == "protein":
         protein = boxprep.read_pdb(Path(spec["source"]))
@@ -262,9 +269,38 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
                 f"panel {spec['id']}: {spec['source']} has chains {sorted(chains)} but the "
                 f"panel names {sorted(named)} in cartoon_chains and stick_chains"
             )
+        # Molecular Nodes bonds a residue from biotite's templates, which know the twenty amino
+        # acids by their modern atom names and nothing of a ligand in an older file: the eight
+        # BCL of 3BSD came out as 504 unbonded spheres (2026-10-09). So every bond the radius
+        # rule finds among the hetero atoms is written as a CONECT record, which it reads. An
+        # atom whose element has no covalent radius (zinc) is left unbonded: a lone ion.
+        hetero = np.flatnonzero(
+            protein.is_hetero & np.isin(protein.species, list(COVALENT_RADIUS_ANGSTROM))
+        )
+        hetero_bonds = [
+            (int(hetero[first]), int(hetero[second]))
+            for first, second in boxprep.find_bonds(
+                protein.positions_angstrom[hetero], [protein.species[atom] for atom in hetero]
+            )
+        ]
+        try:
+            serials = [int(record[6:11]) for record in protein.records]
+        except ValueError as error:
+            raise ValueError(
+                f"panel {spec['id']}: {spec['source']} has an atom serial (columns 7-11) that is "
+                "not a number, which a CONECT record needs"
+            ) from error
         subject = work_dir / f"{spec['id']}.pdb"
         subject.write_text(
-            "\n".join([*protein.secondary_structure_records, *protein.records, "END"]) + "\n"
+            "\n".join(
+                [
+                    *protein.secondary_structure_records,
+                    *protein.records,
+                    *boxprep.conect_records(hetero_bonds, serials),
+                    "END",
+                ]
+            )
+            + "\n"
         )
         return subject, None, protein.species
     structure = boxprep.read_xyz(Path(spec["source"]))

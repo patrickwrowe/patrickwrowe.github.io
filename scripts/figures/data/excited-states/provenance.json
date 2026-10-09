@@ -57,5 +57,86 @@
       "md5": "89093def10ff5d205f5ee30bacc23a37",
       "size_bytes": 4827
     }
+  },
+  "renders": {
+    "note": "Why each committed render looks as it does; free-form, read by people. The values in manifest.json are the record, test_excited_states_data_provenance.py checks that these agree with them.",
+    "method": "World +z is the image's up and render_box_grid.py does not rotate a structure, so candidate directions were generated rather than guessed: about 6,000 random points on the sphere (those within 18 degrees of the z axis dropped), orthographic projection of all 3,302 atoms at 1728 x 972 with margin 1.02, scored by scale (px per angstrom) and by the share of the 40 macrocycle atoms (the eight Mg and their 32 pyrrole N) that no backbone atom (N, CA, C, O; a 2 angstrom disc) lies in front of by more than 1 angstrom. The scoring script was a scratch one and is not committed; the numbers below are its output. Four well-separated directions were draft-rendered (--draft, 864 x 486; the four in one run took 17 min 55 s, 255 to 282 s each on 32 CPU cores) and the choice was made by eye on those drafts, then rendered at the production tier. 2026-10-09.",
+    "hero": {
+      "manifest": "scripts/figures/data/excited-states/manifest.json",
+      "source": "3BSD.pdb",
+      "direction": [
+        -0.7,
+        0.71,
+        0.14
+      ],
+      "resolution": [
+        1728,
+        972
+      ],
+      "why": "Chain A is a shell of beta-sheet and helices around the eight bacteriochlorophylls, and this view looks across the open face of the shell: the central stack of pigments shows through between the helices, the eighth bacteriochlorophyll (A 400, 42 atoms, its tail unmodelled) stands clear of the shell on the left, and the rings of the other seven can be told apart. Nothing is clipped: the frame is fitted to the subunit.",
+      "candidates": [
+        {
+          "direction": [
+            -0.53,
+            0.75,
+            0.39
+          ],
+          "px_per_angstrom": 14.65,
+          "macrocycle_visible": 0.7,
+          "draft_wall_time_s": 267,
+          "verdict": "The eighth pigment shows on the left but the central stack is partly behind the sheet's front strands, and the lower-left pigments are hidden by two helices. Rejected."
+        },
+        {
+          "direction": [
+            -0.25,
+            0.86,
+            -0.44
+          ],
+          "px_per_angstrom": 17.8,
+          "macrocycle_visible": 0.78,
+          "draft_wall_time_s": 271,
+          "verdict": "Looks up into the shell from below: the strands stack over the pigments and the composition reads as a bowl of beta-sheet with a few pigments inside it. Rejected."
+        },
+        {
+          "direction": [
+            -0.7,
+            0.71,
+            0.14
+          ],
+          "px_per_angstrom": 15.33,
+          "macrocycle_visible": 0.78,
+          "draft_wall_time_s": 282,
+          "verdict": "Chosen."
+        },
+        {
+          "direction": [
+            -0.11,
+            0.68,
+            0.72
+          ],
+          "px_per_angstrom": 13.78,
+          "macrocycle_visible": 0.75,
+          "draft_wall_time_s": 255,
+          "verdict": "Side-on to the sheet: the strands stack like the rungs of a ladder in front of the pigments, and one pigment is clear. Rejected."
+        }
+      ],
+      "limits": "The macrocycle score is a crude backbone-only z-buffer and ranks the four within 0.08 of each other; the choice rests on the drafts. In every direction tried between a fifth and three tenths of the macrocycle atoms are behind a helix or strand, and the stack at the centre is dense: the eight are not each separately countable in the frame, which is why the caption should say the pigments sit inside the protein rather than number them off the picture. The subunit fills about 16 per cent of the frame's area (the frame is 16:9 and the subunit is nearly square in projection). The one non-white border pixel, at the top right, is Molecular Nodes' known compositor stray (render_box_grid.py's docstring) and passes the border check.",
+      "radii": {
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.22,
+        "why": "The plate's values (the carbon plates'), not overridden. A production render at 0.6 and 0.3 was made for comparison (220 s) and the pigments clumped into a mass of spheres in which the rings could no longer be followed; 0.4 and 0.22 keep each ring's outline."
+      },
+      "ligand_bonds": {
+        "needed_conect": true,
+        "bonds": 568,
+        "why": "Molecular Nodes bonds a residue from biotite's templates, which know the twenty amino acids and nothing of BCL in this older file, and 3BSD carries no CONECT for them: the first draft drew the eight BCL as 504 unbonded spheres. render_box_grid.prepare now writes a CONECT record for every bond boxprep.find_bonds finds among the hetero atoms (568: 74 in each of seven residues and 50 in the eighth), and the render draws them as sticks."
+      },
+      "dropped": {
+        "altloc": 0,
+        "water": 178
+      },
+      "wall_time_s": 147,
+      "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 147 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 233])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
+    }
   }
 }

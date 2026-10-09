@@ -1,0 +1,20 @@
+{
+  "output_dir": "src/content/work/figures/excited-states",
+  "kind": "protein",
+  "cage_angstrom": null,
+  "slab_angstrom": null,
+  "margin": 1.02,
+  "resolution": [1728, 972],
+  "sphere_radius_angstrom": 0.4,
+  "bond_radius_angstrom": 0.22,
+  "grey": 0.35,
+  "panels": [
+    {
+      "id": "hero",
+      "source": "scripts/figures/data/excited-states/3BSD.pdb",
+      "direction": [-0.7, 0.71, 0.14],
+      "cartoon_chains": ["A"],
+      "stick_chains": []
+    }
+  ]
+}

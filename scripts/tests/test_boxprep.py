@@ -518,3 +518,26 @@ def test_read_pdb_names_the_file_and_line_of_a_record_it_cannot_parse(tmp_path, 
     broken.write_text("\n".join(lines) + "\n")
     with pytest.raises(ValueError, match=rf"broken\.pdb: line {index + 1}: .*not numbers"):
         boxprep.read_pdb(broken)
+
+
+def test_conect_records_use_the_serials_given_both_directions_and_four_partners_a_line():
+    # Atom 0 is bonded to five others, so its line runs on; serials are not 1 to n.
+    bonds = [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+    serials = [10, 20, 30, 40, 50, 60]
+    assert boxprep.conect_records(bonds, serials) == [
+        "CONECT   10   20   30   40   50",
+        "CONECT   10   60",
+        "CONECT   20   10",
+        "CONECT   30   10",
+        "CONECT   40   10",
+        "CONECT   50   10",
+        "CONECT   60   10",
+    ]
+    assert boxprep.conect_records([], serials) == []
+
+
+def test_conect_records_refuse_a_bond_without_a_serial_and_a_serial_too_wide_for_the_column():
+    with pytest.raises(ValueError, match="atom 1, which has no serial"):
+        boxprep.conect_records([(0, 1)], [5])
+    with pytest.raises(ValueError, match="serial 100000 exceeds 99,999"):
+        boxprep.conect_records([(0, 1)], [5, 100_000])

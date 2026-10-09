@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+import panel_checks
 import pytest
 from constants import SPECIES_COLOUR, srgb_hex_to_linear
 from PIL import Image
@@ -714,3 +715,97 @@ def test_a_coloured_cartoon_alone_protein_fails_the_whole_frame_chroma_limit(
         _render_panel(
             render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (200, 60, 40)
         )
+
+
+# A three-atom ligand beside the toy protein, serials 14 to 16 (13 is model 2's atom): C-C
+# 1.40 A and C-O 1.43 A, and an ion that has no covalent radius.
+LIGAND_RECORDS = [
+    "HETATM   14  C2  LIG B 301      13.400   3.000   1.000  1.00 20.00           C",
+    "HETATM   15  O2  LIG B 301      14.830   3.000   1.000  1.00 20.00           O",
+]
+
+
+def test_prepare_writes_a_conect_record_for_each_bond_among_the_hetero_atoms_with_the_files_serials(
+    render_box_grid_module, tmp_path
+):
+    # The toy file's HETATM C1 (serial 11) is bonded to the two new atoms in a chain.
+    lines = TOY_PROTEIN.read_text().splitlines()
+    lines.insert(lines.index("ENDMDL"), "\n".join(LIGAND_RECORDS))
+    source = tmp_path / "ligand.pdb"
+    source.write_text("\n".join(lines) + "\n")
+    subject, _cage, _species = render_box_grid_module.prepare(
+        {**PROTEIN_SPEC, "source": str(source)}, tmp_path
+    )
+    written = subject.read_text().splitlines()
+    assert [line for line in written if line.startswith("CONECT")] == [
+        "CONECT   11   14",
+        "CONECT   14   11   15",
+        "CONECT   15   14",
+    ]
+    assert written[-1] == "END" and written[-2].startswith("CONECT")
+
+
+def test_a_protein_with_no_bonded_hetero_atoms_gets_no_conect_record(
+    render_box_grid_module, tmp_path
+):
+    # The toy's zinc has no covalent radius and its magnesium is 6 A from the ligand carbon.
+    subject, _cage, _species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
+    assert not any(line.startswith("CONECT") for line in subject.read_text().splitlines())
+
+
+def test_a_protein_atom_serial_that_is_not_a_number_is_refused_naming_the_panel(
+    render_box_grid_module, tmp_path
+):
+    source = tmp_path / "hybrid36.pdb"
+    source.write_text(
+        TOY_PROTEIN.read_text().replace("ATOM      1  N   ALA", "ATOM  A0000  N   ALA")
+    )
+    with pytest.raises(ValueError, match=r"panel toy: .*hybrid36\.pdb has an atom serial"):
+        render_box_grid_module.prepare({**PROTEIN_SPEC, "source": str(source)}, tmp_path)
+
+
+REPO = Path(__file__).resolve().parents[2]
+FMO_MANIFEST = REPO / "scripts/figures/data/excited-states/manifest.json"
+
+
+def test_the_fmo_hero_is_prepared_with_the_568_bonds_of_its_eight_bchl_and_no_other(
+    render_box_grid_module, tmp_path
+):
+    # The real 3BSD through the real `prepare`: the ligand's bonds are the one thing Molecular
+    # Nodes would not draw for itself (504 unbonded spheres in the first draft, 2026-10-09).
+    spec = next(panel for panel in panel_checks.load_panels(FMO_MANIFEST) if panel["id"] == "hero")
+    subject, cage, species = render_box_grid_module.prepare(spec, tmp_path)
+    assert cage is None and len(species) == 3302
+    lines = subject.read_text().splitlines()
+    atoms = {
+        int(line[6:11]): (line[17:20], line[22:26].strip(), line[12:16].strip(), line[21])
+        for line in lines
+        if line.startswith(("ATOM", "HETATM"))
+    }
+    partners = {
+        int(line[6:11]): [int(line[start : start + 5]) for start in range(11, len(line), 5)]
+        for line in lines
+        if line.startswith("CONECT")
+    }
+    bonds = {frozenset((atom, partner)) for atom, others in partners.items() for partner in others}
+    assert len(bonds) == 568
+    # Both ends of every bond are ligand atoms of one residue, never protein and never two BCL.
+    assert all(
+        len({atoms[atom][:2] for atom in bond}) == 1 and atoms[next(iter(bond))][0] == "BCL"
+        for bond in bonds
+    )
+    per_residue = {}
+    for bond in bonds:
+        residue = atoms[next(iter(bond))][1]
+        per_residue[residue] = per_residue.get(residue, 0) + 1
+    assert per_residue == {
+        **dict.fromkeys(("367", "368", "369", "370", "371", "372", "373"), 74),
+        "400": 50,
+    }
+    # Each magnesium is bound to the four pyrrole nitrogens and to nothing else.
+    magnesium = [
+        atom for atom, (_name, _residue, atom_name, _chain) in atoms.items() if atom_name == "MG"
+    ]
+    assert len(magnesium) == 8
+    for atom in magnesium:
+        assert sorted(atoms[partner][2][0] for partner in partners[atom]) == ["N"] * 4
