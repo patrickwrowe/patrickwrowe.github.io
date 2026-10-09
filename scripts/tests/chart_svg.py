@@ -50,9 +50,9 @@ def numeric_labels(panel: str, anchor: str) -> tuple[np.ndarray, np.ndarray]:
         (the ticks' x for "middle" or y for "end", in viewBox units; the printed numbers).
     """
     positions, values = [], []
-    for x, y, text_anchor, _size, _attributes, content in TEXT.findall(panel):
+    for x_position, y_position, text_anchor, _size, _attributes, content in TEXT.findall(panel):
         if text_anchor == anchor and NUMBER.fullmatch(content):
-            positions.append(float(x) if anchor == "middle" else float(y) - 1.0)
+            positions.append(float(x_position) if anchor == "middle" else float(y_position) - 1.0)
             values.append(float(content.replace("−", "-")))
     return np.array(positions), np.array(values)
 
@@ -91,11 +91,13 @@ def assert_text_fits(svg: str) -> None:
     width, height = map(float, re.search(r'viewBox="0 0 ([\d.]+) ([\d.]+)"', svg).groups())
     texts = TEXT.findall(svg)
     assert texts
-    for x, y, anchor, size, attributes, content in texts:
+    for x_position, y_position, anchor, size, attributes, content in texts:
         assert float(size) >= LABEL_SIZE, content
         extent = MONO_ADVANCE_EM * len(content) * float(size)
         reach = {"start": 0.0, "middle": 0.5, "end": 1.0}[anchor] * extent
         if "rotate" in attributes:  # runs up the page from its anchor
-            assert float(y) - reach >= 0 and float(y) - reach + extent <= height, content
+            assert float(y_position) - reach >= 0, content
+            assert float(y_position) - reach + extent <= height, content
         else:
-            assert float(x) - reach >= 0 and float(x) - reach + extent <= width, content
+            assert float(x_position) - reach >= 0, content
+            assert float(x_position) - reach + extent <= width, content

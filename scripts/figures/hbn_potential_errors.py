@@ -15,15 +15,13 @@ A dot, not a bar: a bar's length means nothing on a log axis.
 
 Two of the energies are lower bounds. The paper says Tersoff and ExTeP, which cannot tell
 one number of sheets from another for want of a cut-off beyond 2.0 angstrom, yield an RMSE
-"of more than 54 and 67 meV/atom" (p.8). The dossier's table gives 54 and 67 without
-"more than"; the chart labels them ">54" and ">67" and marks their rows `data-bound="lower"`.
+"of more than 54 and 67 meV/atom" (p.8); the chart labels them ">54" and ">67" and marks their
+rows `data-bound="lower"`, from the `formation_energy_is_lower_bound` flags of the data.
 
-Data: scripts/figures/data/two-dimensional-and-confined/hbn-potential-errors.json, the
-numbers of the "Boron nitride rippling" table of docs/dossiers/two-dimensional-and-confined/
-dossier.md (lines 181-183 for the forces, 187-188 for the energies; the plate row is line
-628), which take them from Thiemann et al., J. Phys. Chem. C 2020, p.7 (forces, on a
-validation set of 1450 structures) and p.8 (formation energies). Every value the chart needs
-is in that table; none is added here.
+Data: scripts/figures/data/two-dimensional-and-confined/hbn-potential-errors.json. The values
+are the paper's own, Thiemann et al., J. Phys. Chem. C 2020: the force RMSEs on p.7 (on a
+validation set of 1450 structures), the formation-energy RMSEs on p.8. Every value the chart
+needs is printed there; none is added here. The paper is the source recorded in provenance.json.
 
 House style of the site's figures (figure_style.py): emitted as SVG by hand over a unitless
 viewBox, every stroke and fill in `var(--ink)`, `var(--graphite)` or `var(--plate)`, no hue.
@@ -47,7 +45,6 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import json
 import math
 from pathlib import Path
@@ -57,13 +54,14 @@ from figure_style import (
     AXIS_WIDTH,
     LABEL_SIZE,
     MARKER_RADIUS,
-    MARKER_STROKE,
     NARROW_CHART_EM,
-    TICK_LENGTH,
+    X_AXIS_TITLE_DROP,
     svg_axis,
     svg_document,
     svg_line,
+    svg_marker,
     svg_text,
+    write_figure,
 )
 
 DATA_FILE = "hbn-potential-errors.json"
@@ -81,7 +79,7 @@ POTENTIAL_FIELDS = (
 QUANTITIES = {
     "force": {
         "key": "force_rmse_ev_per_angstrom",
-        "title": "force RMSE (eV/Å)",
+        "title": "force RMSE (eV/Å, log scale)",
         "log": True,
         "axis": (0.05, 30.0),
         "ticks": (0.1, 1.0, 10.0),
@@ -172,7 +170,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
         panel.append(
             svg_text(
                 plot_left + plot_width / 2,
-                plot_bottom + TICK_LENGTH + 2 * LABEL_SIZE + 3.2,
+                plot_bottom + X_AXIS_TITLE_DROP,
                 spec["title"],
                 AXIS_TITLE_SIZE,
             )
@@ -183,21 +181,10 @@ def build(data_dir: Path, narrow: bool = False) -> str:
             value = potential[spec["key"]]
             dot_x = plot_left + (transform(value) - transform(axis_low)) / axis_span * plot_width
             is_lower_bound = quantity == "energy" and potential["formation_energy_is_lower_bound"]
-            if potential["kind"] == "gap":
-                marker = (
-                    f'<circle cx="{dot_x:.2f}" cy="{row_y:.2f}" r="{MARKER_RADIUS}" '
-                    f'fill="var(--ink)" stroke="none"/>'
-                )
-            else:
-                marker = (
-                    f'<circle cx="{dot_x:.2f}" cy="{row_y:.2f}" '
-                    f'r="{MARKER_RADIUS - MARKER_STROKE / 2:.2f}" fill="var(--plate)" '
-                    f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
-                )
             value_label = ("&gt;" if is_lower_bound else "") + format(value, spec["value_format"])
             row = [
                 svg_line(plot_left, row_y, dot_x - MARKER_RADIUS, row_y, AXIS_WIDTH, GUIDE_DASH),
-                marker,
+                svg_marker(dot_x, row_y, potential["kind"] == "gap"),
                 svg_text(dot_x + VALUE_LABEL_GAP, row_y + 1.0, value_label, LABEL_SIZE, "start"),
             ]
             if narrow or panel_index == 0:
@@ -224,24 +211,5 @@ def build(data_dir: Path, narrow: bool = False) -> str:
     return svg_document(width, height, parts)
 
 
-def main(argv: list[str] | None = None) -> None:
-    """Write the hBN potential-error figure.
-
-    Args:
-        argv: Command-line arguments; None reads `sys.argv`.
-    """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data-dir", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument(
-        "--narrow", action="store_true", help="write the phone-width variant instead"
-    )
-    args = parser.parse_args(argv)
-    svg = build(args.data_dir, args.narrow)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(svg)
-    print(f"-> {args.output}")
-
-
 if __name__ == "__main__":
-    main()
+    write_figure(build, __doc__.splitlines()[0])

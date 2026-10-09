@@ -36,16 +36,18 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
-from pathlib import Path
-
 from figure_style import (
     AXIS_TITLE_SIZE,
     AXIS_WIDTH,
     LABEL_SIZE,
     NARROW_CHART_EM,
-    TICK_LENGTH,
+    X_AXIS_TITLE_DROP,
+    format_tick,
+    svg_axis,
+    svg_document,
+    svg_marker,
     svg_text,
+    write_figure,
 )
 
 # (method label, cohesive energy in eV per atom, marker kind). Order is DFT first, then
@@ -90,26 +92,6 @@ NARROW_PLOT_LEFT = NARROW_LABEL_END_X + LABEL_GAP
 NARROW_PLOT_WIDTH = NARROW_WIDTH - NARROW_PLOT_LEFT - MARGIN_RIGHT
 
 STEM_WIDTH = 0.6
-MARKER_STROKE = 0.7
-MARKER_RADIUS = 1.7
-
-MINUS_SIGN = "−"
-
-
-def _format_ev_per_atom(cohesive_energy_ev_per_atom: float) -> str:
-    """Format a cohesive energy to one decimal place with a true minus sign.
-
-    The mono face draws U+2212 as a real minus, matching the prose; Python's own
-    float formatting uses hyphen-minus, which reads shorter and sits high next to
-    a digit.
-
-    Args:
-        cohesive_energy_ev_per_atom: Cohesive energy of C60, in eV per atom.
-
-    Returns:
-        The value formatted to one decimal place, e.g. "−7.6" or "1.0".
-    """
-    return f"{cohesive_energy_ev_per_atom:.1f}".replace("-", MINUS_SIGN)
 
 
 def x_for_value(
@@ -132,33 +114,6 @@ def x_for_value(
     return plot_left + fraction * plot_width
 
 
-def _marker(pos_x: float, pos_y: float, filled: bool) -> str:
-    """A row's data marker: filled for DFT and GAP-20, open for the classical potentials.
-
-    The open marker is filled with `var(--plate)`, not "none", so it knocks out the stem
-    line behind it rather than reading as a bead threaded on a wire — the same reasoning
-    graphitisation_figure.py's `_series` gives for its own open markers.
-
-    Args:
-        pos_x: Marker centre x, in viewBox units.
-        pos_y: Marker centre y, in viewBox units.
-        filled: True for a filled marker (DFT, GAP-20), False for an open one.
-
-    Returns:
-        The SVG element as a string.
-    """
-    if filled:
-        return (
-            f'<circle cx="{pos_x:.2f}" cy="{pos_y:.2f}" r="{MARKER_RADIUS}" '
-            f'fill="var(--ink)" stroke="none"/>'
-        )
-    radius = MARKER_RADIUS - MARKER_STROKE / 2
-    return (
-        f'<circle cx="{pos_x:.2f}" cy="{pos_y:.2f}" r="{radius:.2f}" fill="var(--plate)" '
-        f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
-    )
-
-
 def build(narrow: bool = False) -> str:
     """The C₆₀ cohesive-energy benchmark figure as an SVG document.
 
@@ -179,24 +134,21 @@ def build(narrow: bool = False) -> str:
         f'<line x1="{reference_x:.2f}" y1="{MARGIN_TOP:.2f}" x2="{reference_x:.2f}" '
         f'y2="{baseline_y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}" '
         f'stroke-dasharray="2 1.6" data-reference="DFT"/>',
-        # Bottom axis.
-        f'<line x1="{plot_left:.2f}" y1="{baseline_y:.2f}" x2="{plot_left + plot_width:.2f}" '
-        f'y2="{baseline_y:.2f}" stroke="var(--graphite)" stroke-width="{AXIS_WIDTH}"/>',
     ]
-
-    for tick_value in X_TICKS_EV_PER_ATOM:
-        tick_x = x_for_value(tick_value, plot_left, plot_width)
-        parts.append(
-            f'<line x1="{tick_x:.2f}" y1="{baseline_y:.2f}" x2="{tick_x:.2f}" '
-            f'y2="{baseline_y + TICK_LENGTH:.2f}" stroke="var(--graphite)" '
-            f'stroke-width="{AXIS_WIDTH}"/>'
-        )
-        tick_label_y = baseline_y + TICK_LENGTH + LABEL_SIZE + 0.4
-        parts.append(svg_text(tick_x, tick_label_y, _format_ev_per_atom(tick_value), LABEL_SIZE))
+    parts += svg_axis(
+        "bottom",
+        plot_left,
+        baseline_y,
+        plot_width,
+        [
+            (x_for_value(tick_value, plot_left, plot_width) - plot_left, format_tick(tick_value, 1))
+            for tick_value in X_TICKS_EV_PER_ATOM
+        ],
+    )
     parts.append(
         svg_text(
             plot_left + plot_width / 2,
-            baseline_y + TICK_LENGTH + LABEL_SIZE * 2 + 3.2,
+            baseline_y + X_AXIS_TITLE_DROP,
             # Plain "C60": the mono face's loaded subset has no subscript digits, so
             # "C₆₀" falls back glyph by glyph and reads "C 6 0" (design review C7).
             # Mono data labels stay plain, like the grid labels ("C40", not "C₄₀").
@@ -216,7 +168,7 @@ def build(narrow: bool = False) -> str:
                 f'<line x1="{reference_x:.2f}" y1="{row_y:.2f}" x2="{value_x:.2f}" '
                 f'y2="{row_y:.2f}" stroke="var(--graphite)" stroke-width="{STEM_WIDTH}"/>'
             )
-        row_parts.append(_marker(value_x, row_y, filled))
+        row_parts.append(svg_marker(value_x, row_y, filled))
         label_x = plot_left - LABEL_GAP
         row_parts.append(svg_text(label_x, row_y + 1.0, method_label, LABEL_SIZE, "end"))
 
@@ -226,31 +178,8 @@ def build(narrow: bool = False) -> str:
 
     width = plot_left + plot_width + MARGIN_RIGHT
     height = MARGIN_TOP + PLOT_HEIGHT + MARGIN_BOTTOM
-    body = "\n  ".join(parts)
-    # data-chart-em: the viewBox width in labels, the page wrapper's --chart-em.
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width:.2f} {height:.2f}" '
-        f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n  <g>\n  {body}\n  </g>\n</svg>\n'
-    )
-
-
-def main(argv: list[str] | None = None) -> None:
-    """Write the C₆₀ cohesive-energy benchmark figure.
-
-    Args:
-        argv: Command-line arguments; None reads `sys.argv`.
-    """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument(
-        "--narrow", action="store_true", help="write the phone-width variant instead"
-    )
-    args = parser.parse_args(argv)
-    svg = build(args.narrow)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(svg)
-    print(f"-> {args.output}")
+    return svg_document(width, height, parts)
 
 
 if __name__ == "__main__":
-    main()
+    write_figure(build, __doc__.splitlines()[0], data_dir=False)

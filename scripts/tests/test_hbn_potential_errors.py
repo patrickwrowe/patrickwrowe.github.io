@@ -1,4 +1,9 @@
-"""Tests for scripts/figures/hbn_potential_errors.py."""
+"""Tests for scripts/figures/hbn_potential_errors.py.
+
+The committed hbn-potential-errors.json is the root of trust: the chart is checked against it
+and against its own lower-bound flags, and the paper's pages are checked against it where the
+paper is on this machine. Nothing here reads docs/, which is gitignored.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,6 @@ from figure_style import LABEL_SIZE, MARKER_RADIUS, MARKER_STROKE, NARROW_CHART_
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/two-dimensional-and-confined"
 FIGURES = REPO / "src/content/work/figures/two-dimensional-and-confined"
-DOSSIER = REPO / "docs/dossiers/two-dimensional-and-confined/dossier.md"
 PAPER = REPO.parent / "papers/hbn-rippling/paper.pdf"
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 LAYOUTS = [(False, "hbn-potential-errors.svg"), (True, "hbn-potential-errors-narrow.svg")]
@@ -106,6 +110,21 @@ def test_the_numbers_printed_beside_the_dots_are_the_data_with_the_lower_bounds_
     assert not any(row["bound"] for row in forces.values())
 
 
+def test_the_chart_follows_the_flags_of_the_data_on_which_energies_are_lower_bounds():
+    flagged = [
+        potential["name"]
+        for potential in POTENTIALS
+        if potential["formation_energy_is_lower_bound"]
+    ]
+    assert flagged == ["Tersoff", "ExTeP"]  # paper p.8: "more than 54 and 67 meV/atom"
+    energies = read_dots(hbn_potential_errors.build(DATA), "energy")
+    for potential in POTENTIALS:
+        row = energies[potential["name"]]
+        assert row["bound"] == potential["formation_energy_is_lower_bound"]
+        printed = f"{potential['formation_energy_rmse_mev_per_atom']:g}"
+        assert row["label"] == ("&gt;" if row["bound"] else "") + printed
+
+
 def test_hbn_gap_is_the_filled_marker_and_the_classical_potentials_are_open_in_ink_and_plate():
     svg = hbn_potential_errors.build(DATA)
     assert not HEX_COLOUR.search(svg)
@@ -138,7 +157,7 @@ def test_the_wide_chart_names_the_potentials_once_and_the_narrow_names_them_in_e
 
 def test_every_axis_title_carries_its_unit():
     svg = hbn_potential_errors.build(DATA)
-    assert "force RMSE (eV/Å)" in svg
+    assert "force RMSE (eV/Å, log scale)" in svg
     assert "formation-energy RMSE (meV per atom)" in svg
 
 
@@ -177,32 +196,8 @@ def test_the_order_of_magnitude_holds_for_every_classical_force_but_not_for_ever
     )
     assert min(ratios["energy"].values()) < 10
     # Three of the five exceed ten times hBN-GAP's energy error; two of those are lower bounds.
-    assert [n for n, r in ratios["energy"].items() if r > 10] == ["Tersoff", "ExTeP", "ReaxFF"]
-
-
-@pytest.mark.skipif(not DOSSIER.exists(), reason="the dossier is local (docs/ is gitignored)")
-def test_the_data_are_the_dossiers_table_row_for_row():
-    section = DOSSIER.read_text().split("### Boron nitride rippling")[1].split("\n### ")[0]
-    rows = [
-        line.split("|")[1:4]
-        for line in section.splitlines()
-        if line.startswith("|") and "RMSE" in line
-    ]
-    forces, energies = {}, {}
-    for number_cell, _unit, meaning in rows:
-        numbers = [float(number) for number in re.findall(r"\d+(?:\.\d+)?", number_cell)]
-        potentials = (
-            [name.strip() for name in meaning.split("RMSE,")[1].split(",")]
-            if "RMSE," in meaning
-            else ["hBN-GAP"]
-        )
-        target = forces if "force" in meaning else energies
-        assert len(numbers) == len(potentials), meaning
-        target.update(zip(potentials, numbers, strict=True))
-    assert [potential["name"] for potential in POTENTIALS] == list(forces) == list(energies)
-    for potential in POTENTIALS:
-        assert potential[KEY["force"]] == forces[potential["name"]]
-        assert potential[KEY["energy"]] == energies[potential["name"]]
+    over_ten = [name for name, ratio in ratios["energy"].items() if ratio > 10]
+    assert over_ten == ["Tersoff", "ExTeP", "ReaxFF"]
 
 
 @pytest.mark.skipif(

@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import vermiculite_contact_angles
 from chart_svg import assert_text_fits, panel_body, read_curves
-from figure_style import DASHED_SERIES, LABEL_SIZE, NARROW_CHART_EM
+from figure_style import LABEL_SIZE, NARROW_CHART_EM
 from xlsx_source_data import read_sheet
 
 REPO = Path(__file__).resolve().parents[2]
@@ -62,7 +62,7 @@ def test_each_cation_is_drawn_in_its_own_colour_the_first_layer_solid_and_the_se
     for angle, cation in PANELS:
         panel = panel_body(svg, panel=cation, variable=angle)
         series = dict(re.findall(r'<g data-series="(\w+)">(.*?)</g>', panel, re.DOTALL))
-        for layer, dash in (("layer1", None), ("layer2", DASHED_SERIES)):
+        for layer, dash in (("layer1", None), ("layer2", vermiculite_contact_angles.DASHED_SERIES)):
             assert f'stroke="var(--species-{cation.lower()})"' in series[layer], (angle, cation)
             assert (f'stroke-dasharray="{dash}"' in series[layer]) == (dash is not None)
         # The panel's swatch beside its name is the same colour.

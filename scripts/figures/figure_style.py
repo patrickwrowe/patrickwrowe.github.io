@@ -14,12 +14,15 @@ Import it as a sibling module (`from figure_style import ...`); the scripts run 
 
 from __future__ import annotations
 
+import argparse
+from collections.abc import Callable
+from pathlib import Path
+
 from constants import SPECIES_COLOUR
 
 __all__ = [
     "AXIS_TITLE_SIZE",
     "AXIS_WIDTH",
-    "DASHED_SERIES",
     "LABEL_SIZE",
     "MARKER_RADIUS",
     "MARKER_STROKE",
@@ -27,23 +30,27 @@ __all__ = [
     "NARROW_CHART_EM",
     "SERIES_WIDTH",
     "TICK_LENGTH",
+    "X_AXIS_TITLE_DROP",
     "format_tick",
     "species_colour",
     "svg_axis",
     "svg_document",
     "svg_line",
+    "svg_marker",
     "svg_series",
     "svg_text",
+    "write_figure",
 ]
 
 AXIS_WIDTH = 0.45
 TICK_LENGTH = 1.6
 LABEL_SIZE = 3.0
 AXIS_TITLE_SIZE = 3.2
-# A data line, and the dash that tells a second series from the first in the same colour
-# (graphitisation_figure.py's open-marker series dashes its line the same way).
+# From a bottom axis line to the baseline of its title: the ticks, one line of tick labels
+# (svg_axis puts them a label size and 0.4 below the ticks) and a gap of 3.2.
+X_AXIS_TITLE_DROP = TICK_LENGTH + 2 * LABEL_SIZE + 3.2
+# A data line.
 SERIES_WIDTH = 0.9
-DASHED_SERIES = "2.5 1.8"
 # A data marker: the circle's outer radius, and the stroke of an open one.
 MARKER_RADIUS = 1.7
 MARKER_STROKE = 0.7
@@ -152,6 +159,33 @@ def svg_line(
     )
 
 
+def svg_marker(x_position: float, y_position: float, filled: bool) -> str:
+    """A data marker: filled in `var(--ink)`, or open with a `var(--plate)` centre.
+
+    The open marker is filled with `var(--plate)`, not "none", so it knocks out the line
+    behind it rather than reading as a bead threaded on a wire. Both are `MARKER_RADIUS`
+    across; the open one's stroke (`MARKER_STROKE`) lies inside that radius.
+
+    Args:
+        x_position: Marker centre x, in viewBox units.
+        y_position: Marker centre y, in viewBox units.
+        filled: True for a filled marker, False for an open one.
+
+    Returns:
+        The SVG `<circle>` element as a string.
+    """
+    if filled:
+        return (
+            f'<circle cx="{x_position:.2f}" cy="{y_position:.2f}" r="{MARKER_RADIUS}" '
+            f'fill="var(--ink)" stroke="none"/>'
+        )
+    return (
+        f'<circle cx="{x_position:.2f}" cy="{y_position:.2f}" '
+        f'r="{MARKER_RADIUS - MARKER_STROKE / 2:.2f}" fill="var(--plate)" '
+        f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
+    )
+
+
 def svg_series(points: list[tuple[float, float]], colour: str, dash: str | None = None) -> str:
     """A data line through points, `SERIES_WIDTH` wide with round joins.
 
@@ -233,3 +267,35 @@ def svg_document(width: float, height: float, body: list[str]) -> str:
         f'role="img" data-chart-em="{width / LABEL_SIZE:.1f}">\n'
         f"  <g>\n  {elements}\n  </g>\n</svg>\n"
     )
+
+
+def write_figure(
+    build: Callable[..., str],
+    description: str,
+    argv: list[str] | None = None,
+    data_dir: bool = True,
+) -> None:
+    """Parse a figure script's command line, build the figure and write it.
+
+    The command line is `--output PATH [--data-dir DIR] [--narrow]`; `--data-dir` is there
+    only for a figure that reads files.
+
+    Args:
+        build: The script's `build`, called as `build(data_dir, narrow)` or, without a data
+            directory, `build(narrow)`; it returns the SVG document.
+        description: One line for `--help`, usually the module docstring's first line.
+        argv: Command-line arguments; None reads `sys.argv`.
+        data_dir: Whether the figure reads a data directory.
+    """
+    parser = argparse.ArgumentParser(description=description)
+    if data_dir:
+        parser.add_argument("--data-dir", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--narrow", action="store_true", help="write the phone-width variant instead"
+    )
+    args = parser.parse_args(argv)
+    svg = build(args.data_dir, args.narrow) if data_dir else build(args.narrow)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(svg)
+    print(f"-> {args.output}")

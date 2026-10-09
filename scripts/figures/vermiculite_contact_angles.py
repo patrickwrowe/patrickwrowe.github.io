@@ -51,17 +51,15 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 
 import numpy as np
 from figure_style import (
     AXIS_TITLE_SIZE,
-    DASHED_SERIES,
     LABEL_SIZE,
     NARROW_CHART_EM,
     SERIES_WIDTH,
-    TICK_LENGTH,
+    X_AXIS_TITLE_DROP,
     format_tick,
     species_colour,
     svg_axis,
@@ -69,6 +67,7 @@ from figure_style import (
     svg_line,
     svg_series,
     svg_text,
+    write_figure,
 )
 
 CATIONS = ("K", "Li")
@@ -107,6 +106,9 @@ ANGLES = {
 # A bin starting at -0.000004 is the bin starting at 0 (the files' grid is 0.02 apart): the
 # fold keeps it and the axis check lets it stand at the axis's end.
 COS_TOLERANCE = 1e-3
+
+# The dash that tells the second layer from the first in the same colour.
+DASHED_SERIES = "2.5 1.8"
 
 # (series key, column of its probability, stroke-dasharray, legend label).
 LAYERS = (
@@ -264,7 +266,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
                 panel.append(
                     svg_text(
                         group_left + plot_width / 2,
-                        plot_bottom + TICK_LENGTH + 2 * LABEL_SIZE + 3.2,
+                        plot_bottom + X_AXIS_TITLE_DROP,
                         spec["cos_label"],
                         AXIS_TITLE_SIZE,
                     )
@@ -299,24 +301,5 @@ def build(data_dir: Path, narrow: bool = False) -> str:
     return svg_document(width, height, parts)
 
 
-def main(argv: list[str] | None = None) -> None:
-    """Write the contact-angle figure.
-
-    Args:
-        argv: Command-line arguments; None reads `sys.argv`.
-    """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data-dir", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument(
-        "--narrow", action="store_true", help="write the phone-width variant instead"
-    )
-    args = parser.parse_args(argv)
-    svg = build(args.data_dir, args.narrow)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(svg)
-    print(f"-> {args.output}")
-
-
 if __name__ == "__main__":
-    main()
+    write_figure(build, __doc__.splitlines()[0])

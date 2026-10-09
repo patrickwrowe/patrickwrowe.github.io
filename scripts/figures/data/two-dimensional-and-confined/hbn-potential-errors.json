@@ -3,14 +3,11 @@
   "paper": "Thiemann, Rowe, Muller and Michaelides, J. Phys. Chem. C 2020, doi 10.1021/acs.jpcc.0c05831 (papers/hbn-rippling/paper.pdf)",
   "sources": {
     "force_rmse_ev_per_angstrom": {
-      "paper_page": 7,
-      "dossier": "docs/dossiers/two-dimensional-and-confined/dossier.md",
-      "dossier_lines": [181, 182, 183]
+      "paper_page": 7
     },
     "formation_energy_rmse_mev_per_atom": {
       "paper_page": 8,
-      "dossier": "docs/dossiers/two-dimensional-and-confined/dossier.md",
-      "dossier_lines": [187, 188]
+      "lower_bounds": "p.8 says Tersoff and ExTeP yield an RMSE of more than 54 and 67 meV/atom"
     }
   },
   "potentials": [

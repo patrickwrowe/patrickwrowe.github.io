@@ -8,7 +8,7 @@
     <text x="55.21" y="55.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">1</text>
     <line x1="78.42" y1="50.00" x2="78.42" y2="51.60" stroke="var(--graphite)" stroke-width="0.45"/>
     <text x="78.42" y="55.00" text-anchor="middle" font-size="3.0" fill="var(--graphite)" stroke="none" font-family="var(--mono)">10</text>
-    <text x="57.25" y="60.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">force RMSE (eV/Å)</text>
+    <text x="57.25" y="60.80" text-anchor="middle" font-size="3.2" fill="var(--graphite)" stroke="none" font-family="var(--mono)">force RMSE (eV/Å, log scale)</text>
     <g data-potential="hBN-GAP" data-kind="gap">
       <line x1="25.00" y1="8.75" x2="29.23" y2="8.75" stroke="var(--graphite)" stroke-width="0.45" stroke-dasharray="0.5 1.5"/>
       <circle cx="30.93" cy="8.75" r="1.7" fill="var(--ink)" stroke="none"/>

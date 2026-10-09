@@ -52,7 +52,6 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 
 import numpy as np
@@ -61,7 +60,7 @@ from figure_style import (
     LABEL_SIZE,
     NARROW_CHART_EM,
     SERIES_WIDTH,
-    TICK_LENGTH,
+    X_AXIS_TITLE_DROP,
     format_tick,
     species_colour,
     svg_axis,
@@ -69,6 +68,7 @@ from figure_style import (
     svg_line,
     svg_series,
     svg_text,
+    write_figure,
 )
 
 # Sheets "Fig. 4a" (K) and "Fig.4b" (Li) of the Source Data workbook, six columns each:
@@ -102,6 +102,9 @@ MARGIN_RIGHT = 4.0
 PANEL_GAP = 10.0
 # Below the axis: tick labels, then the axis title, then a little air.
 AXIS_BAND = 13.0
+# From the axis line to the baseline of the rotated height title: clear of tick labels of two
+# digits (the contact-angle chart's is wider for its four-character labels).
+Y_TITLE_OFFSET = 9.0
 
 # --narrow: the panels stack, each as wide as the 31.5 em viewBox leaves after the margins.
 NARROW_WIDTH = NARROW_CHART_EM * LABEL_SIZE
@@ -183,7 +186,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
         panel.append(
             svg_text(
                 plot_left + plot_width / 2,
-                plot_bottom + TICK_LENGTH + 2 * LABEL_SIZE + 3.2,
+                plot_bottom + X_AXIS_TITLE_DROP,
                 "probability density (a.u.)",
                 AXIS_TITLE_SIZE,
             )
@@ -191,7 +194,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
         if narrow or panel_index == 0:
             panel.append(
                 svg_text(
-                    plot_left - 9.0,
+                    plot_left - Y_TITLE_OFFSET,
                     plot_top + plot_height / 2,
                     "height above surface (Å)",
                     AXIS_TITLE_SIZE,
@@ -254,24 +257,5 @@ def build(data_dir: Path, narrow: bool = False) -> str:
     return svg_document(width, height, parts)
 
 
-def main(argv: list[str] | None = None) -> None:
-    """Write the K- and Li-vermiculite z-density figure.
-
-    Args:
-        argv: Command-line arguments; None reads `sys.argv`.
-    """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--data-dir", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument(
-        "--narrow", action="store_true", help="write the phone-width variant instead"
-    )
-    args = parser.parse_args(argv)
-    svg = build(args.data_dir, args.narrow)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(svg)
-    print(f"-> {args.output}")
-
-
 if __name__ == "__main__":
-    main()
+    write_figure(build, __doc__.splitlines()[0])

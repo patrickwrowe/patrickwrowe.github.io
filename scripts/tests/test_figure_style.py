@@ -7,15 +7,21 @@ import re
 import pytest
 from constants import SPECIES_COLOUR
 from figure_style import (
+    AXIS_TITLE_SIZE,
     LABEL_SIZE,
+    MARKER_RADIUS,
+    MARKER_STROKE,
     MINUS_SIGN,
     TICK_LENGTH,
+    X_AXIS_TITLE_DROP,
     format_tick,
     species_colour,
     svg_axis,
     svg_document,
     svg_line,
+    svg_marker,
     svg_series,
+    write_figure,
 )
 
 
@@ -71,3 +77,49 @@ def test_the_document_root_carries_its_width_in_labels():
     assert 'viewBox="0 0 94.50 30.00"' in svg
     assert float(re.search(r'data-chart-em="([\d.]+)"', svg).group(1)) == 94.5 / LABEL_SIZE
     assert svg.endswith("</svg>\n")
+
+
+def test_a_filled_marker_is_ink_and_an_open_one_has_a_plate_centre_inside_the_same_radius():
+    assert svg_marker(10.0, 20.0, True) == (
+        f'<circle cx="10.00" cy="20.00" r="{MARKER_RADIUS}" fill="var(--ink)" stroke="none"/>'
+    )
+    open_radius = MARKER_RADIUS - MARKER_STROKE / 2
+    assert svg_marker(10.0, 20.0, False) == (
+        f'<circle cx="10.00" cy="20.00" r="{open_radius:.2f}" fill="var(--plate)" '
+        f'stroke="var(--ink)" stroke-width="{MARKER_STROKE}"/>'
+    )
+
+
+def test_the_x_axis_title_clears_the_tick_labels_below_the_axis():
+    labels_baseline = TICK_LENGTH + LABEL_SIZE + 0.4  # where svg_axis puts the tick labels
+    assert X_AXIS_TITLE_DROP - AXIS_TITLE_SIZE > labels_baseline
+
+
+def test_write_figure_builds_with_the_data_dir_and_the_narrow_flag_and_writes_the_output(
+    tmp_path, capsys
+):
+    calls = []
+
+    def build(data_dir, narrow):
+        calls.append((data_dir, narrow))
+        return "<svg/>\n"
+
+    output = tmp_path / "new" / "figure.svg"
+    argv = ["--data-dir", str(tmp_path), "--output", str(output), "--narrow"]
+    write_figure(build, "one line", argv)
+    assert calls == [(tmp_path, True)]
+    assert output.read_text() == "<svg/>\n"
+    assert capsys.readouterr().out == f"-> {output}\n"
+
+
+def test_write_figure_for_a_figure_without_data_calls_build_with_the_flag_alone(tmp_path):
+    output = tmp_path / "figure.svg"
+    write_figure(lambda narrow: f"narrow={narrow}", "one line", ["--output", str(output)], False)
+    assert output.read_text() == "narrow=False"
+    with pytest.raises(SystemExit):  # --data-dir is not an option of such a figure
+        write_figure(lambda narrow: "", "one line", ["--data-dir", "x", "--output", "y"], False)
+
+
+def test_write_figure_without_an_output_exits_before_building(tmp_path):
+    with pytest.raises(SystemExit):
+        write_figure(lambda *_: pytest.fail("built"), "one line", ["--data-dir", str(tmp_path)])

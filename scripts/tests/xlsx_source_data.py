@@ -3,7 +3,7 @@
 The project environment has neither openpyxl nor pandas, and the sheets of a journal's
 Source Data hold a header row over plain numbers. An xlsx is a zip of XML, so this reads that
 much of it: the sheet's name-to-file mapping, the shared strings and each cell's value.
-Formulas, styles and merged cells are not read.
+Formulas, styles and merged cells are not read. Header cells may be shared or inline strings.
 """
 
 from __future__ import annotations
@@ -35,10 +35,14 @@ def read_sheet(workbook: Path, sheet: str) -> tuple[list[str], np.ndarray]:
         ValueError: If a body cell is not a number or is missing.
     """
     with zipfile.ZipFile(workbook) as archive:
-        shared = [
-            "".join(text.text or "" for text in item.iter(f"{MAIN}t"))
-            for item in ElementTree.fromstring(archive.read("xl/sharedStrings.xml"))
-        ]
+        shared = (
+            [
+                "".join(text.text or "" for text in item.iter(f"{MAIN}t"))
+                for item in ElementTree.fromstring(archive.read("xl/sharedStrings.xml"))
+            ]
+            if "xl/sharedStrings.xml" in archive.namelist()
+            else []
+        )
         sheets = ElementTree.fromstring(archive.read("xl/workbook.xml")).find(f"{MAIN}sheets")
         targets = {
             relationship.get("Id"): relationship.get("Target")
@@ -54,9 +58,13 @@ def read_sheet(workbook: Path, sheet: str) -> tuple[list[str], np.ndarray]:
         for letter in reference.group(1):
             column = column * 26 + ord(letter) - ord("A") + 1
         value = cell.find(f"{MAIN}v")
-        if value is not None:
+        if cell.get("t") == "inlineStr":
+            text = "".join(piece.text or "" for piece in cell.iter(f"{MAIN}t"))
+        elif value is not None:
             text = shared[int(value.text)] if cell.get("t") == "s" else value.text
-            rows.setdefault(int(reference.group(2)), {})[column - 1] = text
+        else:
+            continue
+        rows.setdefault(int(reference.group(2)), {})[column - 1] = text
 
     header_row, *body_rows = (rows[number] for number in sorted(rows))
     width = len(header_row)
