@@ -105,11 +105,12 @@ const work = defineCollection({
           message: 'a theme needs a shortTitle for "Read in … →" links',
         });
       }
-      if (entry.hero && !entry.heroCaption) {
+      if (entry.hero && !(entry.heroAlt && entry.heroCaption)) {
+        const missing = entry.heroAlt ? "heroCaption" : "heroAlt";
         ctx.addIssue({
           code: "custom",
-          path: ["heroCaption"],
-          message: "a theme with a hero needs a heroCaption; heroAlt is the alt text, not the caption",
+          path: [missing],
+          message: `a theme with a hero needs a ${missing}: heroAlt is the alt text, heroCaption the caption under it`,
         });
       }
       if (entry.published !== undefined) {
