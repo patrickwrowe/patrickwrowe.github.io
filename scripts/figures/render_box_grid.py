@@ -224,7 +224,9 @@ def tool_versions() -> str:
     location molrender never stores), so that one reads "unknown" until molrender exposes it.
     molrender's version alone cannot tell a release from the unmerged branch the renders need,
     so when the package's file lives in a git checkout the version carries that checkout's
-    short SHA, as "0.1.0 (081ded2)"; a failed `git` call leaves the plain version.
+    short SHA, as "0.1.0 (081ded2)", with "-dirty" appended when the checkout has uncommitted
+    changes to tracked files, since a SHA alone would then name code that did not render; a
+    failed `git` call leaves the plain version.
     Cached: Blender starts once per run, not once per panel.
 
     Returns:
@@ -253,7 +255,20 @@ def tool_versions() -> str:
             text=True,
             check=True,
         ).stdout.strip()
-        molrender_version += f" ({checkout_sha})"
+        dirty = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(Path(molrender.__file__).parent),
+                "status",
+                "--porcelain",
+                "--untracked-files=no",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        molrender_version += f" ({checkout_sha}{'-dirty' if dirty else ''})"
     except (OSError, subprocess.CalledProcessError):  # no git, or not a checkout: plain version
         pass
     return f"Blender {blender_version}, Molecular Nodes unknown, molrender {molrender_version}"

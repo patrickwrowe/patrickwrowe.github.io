@@ -573,6 +573,20 @@ def test_tool_versions_names_the_checkout_commit_molrender_runs_from(
         f"Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3 ({short_sha})"
     )
 
+    # A tracked file edited after the commit marks the SHA dirty: that code did not render.
+    tracked = checkout / "tracked.txt"
+    tracked.write_text("a\n")
+    subprocess.run([*git, "add", "tracked.txt"], check=True)
+    subprocess.run([*git, "commit", "-q", "-m", "y"], check=True)
+    dirty_sha = subprocess.run(
+        [*git, "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    tracked.write_text("b\n")
+    tool_versions.cache_clear()
+    assert tool_versions() == (
+        f"Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3 ({dirty_sha}-dirty)"
+    )
+
 
 # ---------------------------------------------------------------------------
 # protein panels
