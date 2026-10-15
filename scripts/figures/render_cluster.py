@@ -638,6 +638,10 @@ def main() -> None:
     if args.mark_closest:
         if not args.together or len(structures) != 2:
             parser.error("--mark-closest needs --together and exactly two inputs")
+        if args.slab is not None:
+            parser.error(
+                "--mark-closest cannot be drawn with --slab, which can cut the contact away"
+            )
         contact = closest_pair(*structures)
     if args.together:
         structures = [

@@ -155,7 +155,7 @@ def test_table_1_has_the_fifteen_own_rows_of_three_systems_all_inside_the_close_
 
 @pytest.mark.skipif(
     not (MANUSCRIPT and MANUSCRIPT.exists() and shutil.which("pdftotext")),
-    reason="no manuscript or no pdftotext here",
+    reason="PAPERS_DIR unset, no excitonic-interactions/paper.pdf there, or no pdftotext",
 )
 def test_every_row_is_on_page_11_of_the_manuscript_and_the_threshold_on_page_9():
     def page(number: int) -> str:
