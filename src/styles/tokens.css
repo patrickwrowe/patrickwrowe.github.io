@@ -55,6 +55,15 @@
   --species-si: #4a5c64;
   --species-al: #5a3547;
 
+  /* Chain colours, for a protein render's cartoon, one per chain in the panel's order
+   * (Patrick, 2026-10-09): the species palette's key, each distinct from every species.
+   * The same values as CHAIN_COLOUR in scripts/figures/constants.py;
+   * scripts/tests/test_palette.py fails if the two drift. Identity, never --lustre. */
+  --chain-1: #3f6e5b;
+  --chain-2: #664634;
+  --chain-3: #7c5e63;
+  --chain-4: #1c707a;
+
   /* §5.2 Type — sans labels, serif reads, mono is data.
    * --font-* are injected by the Astro Fonts API (see astro.config.mjs) and already
    * carry their fallback stacks. */

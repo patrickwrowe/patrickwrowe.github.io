@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 import panel_checks
 import pytest
-from constants import SPECIES_COLOUR, srgb_hex_to_linear
+from constants import CHAIN_COLOUR, MATTE, RIG, SPECIES_COLOUR, WORLD_STRENGTH, srgb_hex_to_linear
 from PIL import Image
 
 TOY_PROTEIN = Path(__file__).parent / "fixtures" / "toy-protein.pdb"
@@ -29,6 +29,10 @@ TOY_PROTEIN = Path(__file__).parent / "fixtures" / "toy-protein.pdb"
 @dataclass(frozen=True)
 class StandInSolid:
     rgb: tuple[float, float, float]
+    roughness: float = 0.55
+    coat: float = 0.20
+    subsurface: float = 0.20
+    specular: float = 0.5
 
 
 @dataclass(frozen=True)
@@ -96,6 +100,19 @@ class StandInQuality:
 
 
 @dataclass(frozen=True)
+class StandInWorld:
+    strength: float = 1.0
+
+
+@dataclass(frozen=True)
+class StandInLight:
+    key_power: float = 4.0
+    world: StandInWorld | None = None
+    sun_strength: float = 0.0
+    side_power: float = 0.0
+
+
+@dataclass(frozen=True)
 class StandInScene:
     entities: tuple[StandInStructure, ...]
     view: StandInView
@@ -103,6 +120,7 @@ class StandInScene:
     resolution: tuple[int, int]
     transparent: bool
     shadow_catcher: bool
+    light: StandInLight = StandInLight()
 
 
 MOLRENDER_STAND_INS = {
@@ -113,6 +131,7 @@ MOLRENDER_STAND_INS = {
     "BallAndStick": StandInBallAndStick,
     "Cartoon": StandInCartoon,
     "Layer": StandInLayer,
+    "Light": StandInLight,
     "Scene": StandInScene,
     "Solid": StandInSolid,
     "Spheres": StandInSpheres,
@@ -120,6 +139,7 @@ MOLRENDER_STAND_INS = {
     "Structure": StandInStructure,
     "StructureId": StandInStructureId,
     "View": StandInView,
+    "World": StandInWorld,
     "find_blender": None,
     "render": None,
 }
@@ -151,8 +171,8 @@ def render_box_grid(render_box_grid_module, monkeypatch, scene_calls):
         lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C"] * 7),
     )
 
-    def record_scene(spec, subject, cage, species, *, multi_species, draft):
-        scene_calls.append({"multi_species": multi_species, "draft": draft})
+    def record_scene(spec, subject, cage, species, *, coloured, draft):
+        scene_calls.append({"coloured": coloured, "draft": draft})
 
     monkeypatch.setattr(render_box_grid_module, "scene_for", record_scene)
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
@@ -291,7 +311,7 @@ def test_a_caged_panel_keeps_its_full_frame(render_box_grid, monkeypatch, tmp_pa
 
 
 @pytest.mark.parametrize(
-    ("species", "ink_rgb", "mode", "multi_species"),
+    ("species", "ink_rgb", "mode", "coloured"),
     [
         (["C"] * 7, (90, 90, 90), "L", False),
         (["C"] * 5 + ["O"] * 2, (200, 60, 40), "RGB", True),
@@ -299,7 +319,7 @@ def test_a_caged_panel_keeps_its_full_frame(render_box_grid, monkeypatch, tmp_pa
     ids=["one species stays grey", "two species keep their colour"],
 )
 def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
-    render_box_grid, monkeypatch, tmp_path, scene_calls, species, ink_rgb, mode, multi_species
+    render_box_grid, monkeypatch, tmp_path, scene_calls, species, ink_rgb, mode, coloured
 ):
     monkeypatch.setattr(
         render_box_grid,
@@ -314,7 +334,7 @@ def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
     assert saved.mode == mode
     assert saved.convert("RGB").getpixel((400, 400)) == ink_rgb
     # The one decision reaches the scene as well as the PNG's colour mode.
-    assert scene_calls == [{"multi_species": multi_species, "draft": False}]
+    assert scene_calls == [{"coloured": coloured, "draft": False}]
 
 
 def test_a_coloured_panel_with_ink_in_its_border_is_refused_and_leaves_nothing_behind(
@@ -352,10 +372,17 @@ def _scene(module, tmp_path: Path, species: list[str], cage: bool = False, **spe
         subject,
         subject if cage else None,
         species,
-        multi_species=len(set(species)) > 1,
+        coloured=len(set(species)) > 1,
         draft=False,
     )
     return scene, subject
+
+
+def test_the_scene_is_lit_by_the_rig_and_the_world_strength_in_constants(
+    render_box_grid_module, tmp_path
+):
+    scene, _ = _scene(render_box_grid_module, tmp_path, ["C"] * 4)
+    assert scene.light == StandInLight(**RIG, world=StandInWorld(strength=WORLD_STRENGTH))
 
 
 def test_one_species_is_one_grey_ball_and_stick_layer_whatever_the_colour_map_says(
@@ -368,7 +395,7 @@ def test_one_species_is_one_grey_ball_and_stick_layer_whatever_the_colour_map_sa
         style=StandInBallAndStick(
             sphere_radius=0.4 / 1.70, bond_radius=0.2, sphere_geometry="Point"
         ),
-        material=StandInSolid(rgb=(0.35, 0.35, 0.35)),
+        material=StandInSolid(rgb=(0.35, 0.35, 0.35), **MATTE),
     )
     subject, cage = scene.entities
     assert subject.layers == (grey_layer,) and not subject.hide
@@ -389,12 +416,12 @@ def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_sp
     # The palette's carbon whatever is drawn, here water: a neutral grey under the spheres.
     assert sticks == StandInLayer(
         style=StandInSticks(radius=0.2),
-        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"])),
+        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"]), **MATTE),
     )
     assert spheres == [
         StandInLayer(
             style=StandInSpheres(radius=0.4 / 1.70, geometry="Instance"),
-            material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR[symbol])),
+            material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR[symbol]), **MATTE),
             select=StandInAtomMask(mask=mask, of=structure_id),
         )
         for symbol, mask in (
@@ -522,7 +549,7 @@ def _protein_scene(module, work_dir: Path, **spec_overrides):
     spec = {**PROTEIN_SPEC, **spec_overrides}
     subject, cage, species = module.prepare(spec, work_dir)
     assert cage is None
-    scene = module.scene_for(spec, subject, cage, species, multi_species=True, draft=False)
+    scene = module.scene_for(spec, subject, cage, species, coloured=True, draft=False)
     return scene, subject
 
 
@@ -558,7 +585,7 @@ def test_a_protein_whose_chains_are_not_the_files_is_refused_naming_both(
     assert not (tmp_path / "toy.pdb").exists()
 
 
-def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_layers_over_the_rest(
+def test_a_protein_is_a_cartoon_layer_per_cartoon_chain_and_species_layers_over_the_rest(
     render_box_grid_module, tmp_path
 ):
     scene, subject = _protein_scene(render_box_grid_module, tmp_path)
@@ -572,7 +599,7 @@ def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_laye
     # Chain A is atoms 0-4 and the two ions; chain B is atoms 5, 6 and the ligand carbon.
     assert cartoon == StandInLayer(
         style=StandInCartoon(),
-        material=StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"])),
+        material=StandInSolid(rgb=srgb_hex_to_linear(CHAIN_COLOUR[0]), **MATTE),
         select=StandInAtomMask(
             mask=(True,) * 5 + (False,) * 2 + (True,) * 2 + (False,), of=structure_id
         ),
@@ -581,7 +608,7 @@ def test_a_protein_is_one_cartoon_layer_over_its_cartoon_chains_and_species_laye
     drawn = (False,) * 5 + (True,) * 5
     assert sticks.select == StandInAtomMask(mask=drawn, of=structure_id)
     # The sticks are the cartoon's carbon, not the darker magnesium, whose sphere then shows.
-    assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"]))
+    assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"]), **MATTE)
     masks = {
         symbol: layer.select.mask
         for symbol, layer in zip(["C", "Mg", "N", "Zn"], spheres, strict=True)
@@ -613,7 +640,7 @@ def _chain_a_only(tmp_path: Path) -> Path:
     return chain_a
 
 
-def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
+def test_a_protein_of_cartoon_chains_alone_is_its_cartoon_layers_alone(
     render_box_grid_module, tmp_path
 ):
     scene, _ = _protein_scene(
@@ -625,11 +652,38 @@ def test_a_protein_of_cartoon_chains_alone_is_the_cartoon_layer_alone(
     assert cartoon.select.mask == (True,) * 5
 
 
-def test_the_cartoon_takes_the_manifests_carbon_colour(render_box_grid_module, tmp_path):
-    scene, _ = _protein_scene(
-        render_box_grid_module, tmp_path, colour={"Zn": "#336699", "C": "#102030"}
+def test_each_cartoon_chain_takes_the_chain_palette_in_order_unless_the_manifest_names_one(
+    render_box_grid_module, tmp_path
+):
+    scene, subject = _protein_scene(
+        render_box_grid_module,
+        tmp_path,
+        cartoon_chains=["B", "A"],
+        stick_chains=[],
+        chain_colour={"A": "#102030"},
     )
-    assert scene.entities[0].layers[0].material.rgb == srgb_hex_to_linear("#102030")
+    structure_id = StandInStructureId(
+        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=10
+    )
+    chain_b, chain_a = scene.entities[0].layers[:2]
+    # Chain B is first in the list, so it takes the palette's first colour.
+    assert chain_b == StandInLayer(
+        style=StandInCartoon(),
+        material=StandInSolid(rgb=srgb_hex_to_linear(CHAIN_COLOUR[0]), **MATTE),
+        select=StandInAtomMask(
+            mask=(False,) * 5 + (True,) * 2 + (False,) * 2 + (True,), of=structure_id
+        ),
+    )
+    assert chain_a.material.rgb == srgb_hex_to_linear("#102030")
+    assert chain_a.select.mask == (True,) * 5 + (False,) * 2 + (True,) * 2 + (False,)
+
+
+def test_a_cartoon_chain_beyond_the_palette_with_no_manifest_colour_is_refused(
+    render_box_grid_module, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(render_box_grid_module, "CHAIN_COLOUR", ("#3f6e5b",))
+    with pytest.raises(ValueError, match=r"panel toy: no colour for chain\(s\) \['A'\]"):
+        _protein_scene(render_box_grid_module, tmp_path, cartoon_chains=["B", "A"], stick_chains=[])
 
 
 def test_a_hetero_atom_with_no_colour_is_refused_naming_it(render_box_grid_module, tmp_path):
@@ -662,14 +716,14 @@ def test_a_protein_panels_summary_line_counts_the_atom_records_read_pdb_dropped(
 
 
 @pytest.mark.parametrize(
-    ("stick_chains", "ink_rgb", "mode", "multi_species"),
+    ("stick_chains", "ink_rgb", "mode", "coloured"),
     [
         (["B"], (200, 60, 40), "RGB", True),
-        ([], (74, 74, 74), "L", False),
+        ([], (63, 110, 91), "RGB", True),
     ],
-    ids=["a peptide drawn by species is coloured", "cartoon chains alone are grey"],
+    ids=["a peptide drawn by species is coloured", "cartoon chains alone are coloured too"],
 )
-def test_a_protein_is_saved_grey_unless_it_draws_an_atom_by_species(
+def test_a_protein_is_always_saved_in_colour(
     render_box_grid_module,
     monkeypatch,
     tmp_path,
@@ -677,10 +731,10 @@ def test_a_protein_is_saved_grey_unless_it_draws_an_atom_by_species(
     stick_chains,
     ink_rgb,
     mode,
-    multi_species,
+    coloured,
 ):
-    # The cartoon-alone file has the atoms of C, N and O, so the old rule (more than one
-    # species among all atoms) would have called it coloured.
+    # Its chains are coloured, so a protein is coloured whether or not it draws an atom by
+    # species; the cartoon-alone file (the hero's case) was saved grey before 2026-10-09.
     source = TOY_PROTEIN if stick_chains else _chain_a_only(tmp_path)
     spec = {
         **PROTEIN_SPEC,
@@ -694,18 +748,18 @@ def test_a_protein_is_saved_grey_unless_it_draws_an_atom_by_species(
     monkeypatch.setattr(
         render_box_grid_module,
         "scene_for",
-        lambda spec, subject, cage, species, *, multi_species, draft: scene_calls.append(
-            {"multi_species": multi_species, "draft": draft}
+        lambda spec, subject, cage, species, *, coloured, draft: scene_calls.append(
+            {"coloured": coloured, "draft": draft}
         ),
     )
     output = _render_panel(
         render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), ink_rgb
     )
     assert Image.open(output).mode == mode
-    assert scene_calls == [{"multi_species": multi_species, "draft": False}]
+    assert scene_calls == [{"coloured": coloured, "draft": False}]
 
 
-def test_a_coloured_cartoon_alone_protein_fails_the_whole_frame_chroma_limit(
+def test_a_cartoon_alone_protein_is_judged_on_its_border_not_its_whole_frame(
     render_box_grid_module, monkeypatch, tmp_path
 ):
     spec = {
@@ -716,9 +770,9 @@ def test_a_coloured_cartoon_alone_protein_fails_the_whole_frame_chroma_limit(
         "resolution": [1728, 972],
     }
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
-    with pytest.raises(RuntimeError, match=r"max chroma 160/255 exceeds 32"):
+    with pytest.raises(RuntimeError, match=r"max chroma 160/255 in the 8 px border exceeds 32"):
         _render_panel(
-            render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (200, 60, 40)
+            render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 3, 1718), (200, 60, 40)
         )
 
 

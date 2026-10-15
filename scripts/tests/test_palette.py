@@ -1,4 +1,4 @@
-"""The species palette is defined once in constants.py and mirrored in tokens.css."""
+"""The species and chain palettes are defined once in constants.py and mirrored in tokens.css."""
 
 from __future__ import annotations
 
@@ -6,10 +6,11 @@ import re
 from pathlib import Path
 
 import pytest
-from constants import COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR, srgb_hex_to_linear
+from constants import CHAIN_COLOUR, COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR, srgb_hex_to_linear
 
 TOKENS = Path(__file__).resolve().parents[2] / "src" / "styles" / "tokens.css"
 SPECIES_TOKEN = re.compile(r"--species-([a-z]+):\s*(#[0-9a-fA-F]{6});")
+CHAIN_TOKEN = re.compile(r"--chain-([0-9]+):\s*(#[0-9a-fA-F]{6});")
 
 
 def test_the_species_tokens_are_the_palette_in_constants():
@@ -21,12 +22,23 @@ def test_the_species_tokens_are_the_palette_in_constants():
     assert tokens == palette
 
 
+def test_the_chain_tokens_are_the_chain_palette_in_constants_in_order():
+    tokens = [
+        (int(number), hex_colour.lower())
+        for number, hex_colour in CHAIN_TOKEN.findall(TOKENS.read_text())
+    ]
+    assert tokens == [(number, colour.lower()) for number, colour in enumerate(CHAIN_COLOUR, 1)]
+
+
 def test_every_species_the_bond_rule_knows_has_a_colour():
     assert set(COVALENT_RADIUS_ANGSTROM) <= set(SPECIES_COLOUR)
 
 
 def test_every_colour_is_six_hex_digits():
-    assert all(re.fullmatch(r"#[0-9a-f]{6}", colour) for colour in SPECIES_COLOUR.values())
+    assert all(
+        re.fullmatch(r"#[0-9a-f]{6}", colour)
+        for colour in (*SPECIES_COLOUR.values(), *CHAIN_COLOUR)
+    )
 
 
 def test_srgb_white_and_black_map_to_themselves():

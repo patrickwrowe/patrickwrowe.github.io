@@ -7,7 +7,7 @@
   "resolution": [1728, 972],
   "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
-  "grey": 0.35,
+  "grey": 0.30,
   "panels": [
     {
       "id": "hero",

@@ -218,6 +218,11 @@ def test_load_panels_accepts_a_protein_with_a_null_cage_slab_and_no_stick_chains
     assert panel["kind"] == "protein" and panel["stick_chains"] == []
 
 
+def test_load_panels_accepts_a_chain_colour_for_a_cartoon_chain(tmp_path):
+    manifest_path = _manifest(tmp_path, [{**PROTEIN_PANEL, "chain_colour": {"B": "#ABCDEF"}}])
+    assert panel_checks.load_panels(manifest_path)[0]["chain_colour"] == {"B": "#ABCDEF"}
+
+
 @pytest.mark.parametrize(
     ("override", "expected"),
     [
@@ -232,6 +237,10 @@ def test_load_panels_accepts_a_protein_with_a_null_cage_slab_and_no_stick_chains
         ({"stick_chains": "C"}, "stick_chains is"),
         ({"kind": "cartoon"}, "kind is"),
         ({"source": "p.xyz"}, "not a .pdb file"),
+        ({"chain_colour": {"A": "red"}}, "chain_colour is"),
+        ({"chain_colour": {"AB": "#123456"}}, "chain_colour is"),
+        ({"chain_colour": ["#123456"]}, "chain_colour is"),
+        ({"chain_colour": {"C": "#123456"}}, r"chain_colour names chain\(s\) \['C'\]"),
     ],
 )
 def test_load_panels_refuses_a_protein_that_breaks_a_rule_naming_manifest_and_panel(
@@ -250,9 +259,12 @@ def test_load_panels_refuses_a_protein_without_both_chain_lists(tmp_path, missin
         panel_checks.load_panels(_manifest(tmp_path, [panel]))
 
 
-def test_load_panels_refuses_chain_lists_on_a_box_panel(tmp_path):
-    panel = {"id": "b", "source": "b.xyz", "cartoon_chains": ["A"]}
-    with pytest.raises(ValueError, match="panel b has chain lists but is not a protein"):
+@pytest.mark.parametrize(
+    "chain_key", [{"cartoon_chains": ["A"]}, {"chain_colour": {"A": "#123456"}}]
+)
+def test_load_panels_refuses_chain_keys_on_a_box_panel(tmp_path, chain_key):
+    panel = {"id": "b", "source": "b.xyz", **chain_key}
+    with pytest.raises(ValueError, match="panel b has chain keys but is not a protein"):
         panel_checks.load_panels(_manifest(tmp_path, [panel]))
 
 
@@ -424,7 +436,7 @@ def _coloured_panel(
 
 def test_a_coloured_centre_in_a_white_world_passes_and_keeps_its_colour(tmp_path):
     png = _coloured_panel(tmp_path)
-    strays = panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+    strays = panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
     assert strays == []
     saved = Image.open(png)
     assert saved.mode == "RGB"
@@ -443,7 +455,7 @@ def test_a_coloured_corner_block_fails_naming_the_corner_blocks(tmp_path):
     png = tmp_path / "coloured-corner.png"
     _write_image(png, pixels)
     with pytest.raises(RuntimeError, match="corner block medians are not white"):
-        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
 
 
 def test_one_coloured_pixel_in_a_corner_block_fails_the_border_chroma_limit(tmp_path):
@@ -451,7 +463,7 @@ def test_one_coloured_pixel_in_a_corner_block_fails_the_border_chroma_limit(tmp_
     # border, so only the chroma limit over the 8 px border can catch it.
     png = _coloured_panel(tmp_path, {(3, 3): RED_RGB})
     with pytest.raises(RuntimeError, match=r"max chroma 160/255 in the 8 px border"):
-        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
 
 
 def test_the_border_chroma_limit_is_the_same_32_as_a_grey_panels(tmp_path):
@@ -459,19 +471,19 @@ def test_the_border_chroma_limit_is_the_same_32_as_a_grey_panels(tmp_path):
     # measured at 14-16/255); a tint past MAX_CHROMA is a coloured world.
     tint = (255, 255, 255 - panel_checks.MAX_CHROMA)
     png = _coloured_panel(tmp_path, {(4, 16): tint})
-    panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+    panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
     png = _coloured_panel(tmp_path, {(4, 16): (255, 255, 255 - panel_checks.MAX_CHROMA - 1)})
     with pytest.raises(RuntimeError, match="in the 8 px border"):
-        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
 
 
 def test_a_coloured_panel_still_fails_the_stray_rule_on_its_outer_border(tmp_path):
     png = _coloured_panel(tmp_path, {(0, 12): RED_RGB, (0, 13): RED_RGB})
     with pytest.raises(RuntimeError, match="non-white neighbour"):
-        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
     png = _coloured_panel(tmp_path, {(0, 2): RED_RGB, (0, 14): RED_RGB, (0, 26): RED_RGB})
     with pytest.raises(RuntimeError, match="non-white border pixels"):
-        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), multi_species=True)
+        panel_checks.check_and_flatten(png, (IMAGE_SIZE, IMAGE_SIZE), coloured=True)
 
 
 SMALLEST_COMMITTED_PANEL = (

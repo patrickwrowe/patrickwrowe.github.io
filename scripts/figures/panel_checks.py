@@ -55,6 +55,7 @@ OPTIONAL_KEYS = frozenset(
         "kind",
         "cartoon_chains",
         "stick_chains",
+        "chain_colour",
     }
 )
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | OPTIONAL_KEYS
@@ -120,6 +121,18 @@ def _is_colour_map(value: object) -> bool:
     )
 
 
+def _is_chain_colour_map(value: object) -> bool:
+    """A dict of one-character chain id ("A") to sRGB hex ("#rrggbb"), possibly empty."""
+    return (
+        isinstance(value, dict)
+        and _is_chain_list(list(value))
+        and all(
+            isinstance(hex_colour, str) and HEX_COLOUR.fullmatch(hex_colour)
+            for hex_colour in value.values()
+        )
+    )
+
+
 # Value rules for load_panels, checked on each panel's merged dict wherever the key is
 # present: (test, what a valid value is). Paths are relative to the repository root,
 # where every command in CLAUDE.md runs.
@@ -158,6 +171,7 @@ VALUE_RULES = {
         "a non-empty list of distinct one-character chain ids",
     ),
     "stick_chains": (_is_chain_list, "a list of distinct one-character chain ids"),
+    "chain_colour": (_is_chain_colour_map, "a map of one-character chain id to sRGB hex"),
     "source": (
         lambda value: isinstance(value, str) and Path(value).is_file(),
         "the path of an existing XYZ file (a PDB file for a protein panel)",
@@ -165,6 +179,8 @@ VALUE_RULES = {
 }
 # Keys that only a protein panel (kind "protein") may carry, and must carry.
 PROTEIN_KEYS = ("cartoon_chains", "stick_chains")
+# Keys that only a protein panel may carry, and need not.
+PROTEIN_OPTIONAL_KEYS = ("chain_colour",)
 # Keys a protein panel cannot use: it is framed to its own complex, with no periodic cell.
 PROTEIN_UNUSED_KEYS = ("cage_angstrom", "slab_angstrom", "density_g_cm3", "tile")
 
@@ -175,8 +191,9 @@ MAX_BORDER_STRAYS = 2  # compositor artefacts, see render_box_grid.py's module d
 # grey neutral, so this does not catch it; render_box_grid.scene_for's
 # view_transform="Standard" enforces that.) The residual is HDRI specular on sphere
 # highlights, measured 14-16/255 on 2026-09-27; the output is saved as 8-bit grey anyway.
-# A panel of more than one species is coloured on purpose, so there the limit judges the
-# world instead: the CORNER_BLOCK_PX border round the frame, where no species is drawn.
+# A coloured panel (more than one species, or any protein) is coloured on purpose, so there
+# the limit judges the world instead: the CORNER_BLOCK_PX border round the frame, where
+# nothing is drawn.
 MAX_CHROMA = 32
 INK_THRESHOLD = 245  # pixels darker than this are drawn atoms or bonds
 # Border round the ink of a self-framed panel, per side, as a fraction of its square.
@@ -207,7 +224,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
             "protein"; chain lists of distinct one-character ids, the cartoon list not
             empty), a protein panel that lacks PROTEIN_KEYS, whose source is not a .pdb
             file, that sets a non-null PROTEIN_UNUSED_KEYS entry, or whose two chain lists
-            share a chain, a box panel that carries chain lists,
+            share a chain, whose chain_colour (a map of chain id to "#rrggbb") names a chain
+            not in cartoon_chains, a box panel that carries chain lists or chain_colour,
             an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
             panels share an id. Every message names the manifest, the panel and the key.
     """
@@ -252,8 +270,14 @@ def load_panels(manifest_path: Path) -> list[dict]:
                     f"{manifest_path}: panel {name}: chain(s) {shared} are in both "
                     "cartoon_chains and stick_chains"
                 )
-        elif any(key in panel for key in PROTEIN_KEYS):
-            raise ValueError(f"{manifest_path}: panel {name} has chain lists but is not a protein")
+            uncoloured = sorted(set(panel.get("chain_colour", {})) - set(panel["cartoon_chains"]))
+            if uncoloured:
+                raise ValueError(
+                    f"{manifest_path}: panel {name}: chain_colour names chain(s) {uncoloured}, "
+                    "which are not in cartoon_chains"
+                )
+        elif any(key in panel for key in (*PROTEIN_KEYS, *PROTEIN_OPTIONAL_KEYS)):
+            raise ValueError(f"{manifest_path}: panel {name} has chain keys but is not a protein")
         if not PANEL_ID.fullmatch(str(name)):
             raise ValueError(f"{manifest_path}: panel id {name!r} does not match [\\w.-]+")
         if name in seen_ids:
@@ -302,7 +326,7 @@ def check_and_flatten(
     png: Path,
     expected_size: tuple[int, int],
     label: str | None = None,
-    multi_species: bool = False,
+    coloured: bool = False,
 ) -> list[tuple[int, int, list[int]]]:
     """Assert size, a white world and near-zero chroma, then save as 8-bit grey or RGB.
 
@@ -314,18 +338,19 @@ def check_and_flatten(
     single-pixel tangential graze of a sphere against the border would pass as one of
     those strays; anything wider is a run of non-white pixels and still fails.
 
-    A panel of one species is grey, so the chroma limit holds over the whole frame and the
-    file is saved as mode L. A panel of more than one species is coloured on purpose: the
-    limit then holds only over the CORNER_BLOCK_PX border round the frame, and the file
-    keeps its three channels.
+    A grey panel (a box of one species) is held to the chroma limit over the whole frame and
+    saved as mode L. A coloured panel (a box of more than one species, or any protein) is
+    coloured on purpose: the limit then holds only over the CORNER_BLOCK_PX border round the
+    frame, and the file keeps its three channels.
 
     Args:
         png: The rendered PNG, overwritten in place as mode L, or as mode RGB when
-            `multi_species`.
+            `coloured`.
         expected_size: (width, height) in pixels the file on disk must have.
         label: What every error message names in place of `png`: the panel and its output
             path, since the scratch file checked here is gone by the time anyone reads it.
-        multi_species: Whether the panel draws more than one species.
+        coloured: Whether the panel is coloured: a box of more than one species, or a
+            protein.
 
     Returns:
         The tolerated border strays as (row, column, [r, g, b]) in pixels, 0-255.
@@ -334,7 +359,7 @@ def check_and_flatten(
         RuntimeError: If the size differs, a corner block's median is not white, the
             border has more than MAX_BORDER_STRAYS non-white pixels or one that is not
             isolated, or the largest per-pixel channel spread exceeds MAX_CHROMA (over
-            the whole frame, or over the CORNER_BLOCK_PX border when `multi_species`).
+            the whole frame, or over the CORNER_BLOCK_PX border when `coloured`).
     """
     name = label or png
     image = Image.open(png).convert("RGB")
@@ -374,15 +399,15 @@ def check_and_flatten(
                 "has a non-white neighbour"
             )
     spread = pixels.max(axis=2) - pixels.min(axis=2)
-    if multi_species:
+    if coloured:
         ring = np.ones_like(non_white)
         ring[block:-block, block:-block] = False
         spread = spread[ring]
     chroma = int(spread.max())
     if chroma > MAX_CHROMA:
-        where = f" in the {block} px border" if multi_species else ""
+        where = f" in the {block} px border" if coloured else ""
         raise RuntimeError(f"{name}: max chroma {chroma}/255{where} exceeds {MAX_CHROMA}")
-    (image if multi_species else image.convert("L")).save(png, optimize=True)
+    (image if coloured else image.convert("L")).save(png, optimize=True)
     return strays
 
 

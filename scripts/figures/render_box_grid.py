@@ -2,7 +2,12 @@
 
 A frame of one species is greyscale; a frame of more than one is coloured from the species
 palette (`constants.SPECIES_COLOUR`), the same colours the SVG renderer reads from the
-`--species-*` tokens.
+`--species-*` tokens, and a protein's cartoon takes one colour per chain
+(`constants.CHAIN_COLOUR`, the `--chain-*` tokens). Every material is the matte
+`constants.MATTE`, lit by the rig in `constants.RIG` and `constants.WORLD_STRENGTH`: molrender's
+three-point key at half power, a sun fill just above the camera axis, a side light
+perpendicular to the view and the studio HDRI (candidate c3-three-point-plus, chosen
+2026-10-15).
 
 One PNG per panel. The page lays panels out with `src/components/Grid.astro`, so labels
 are real text in the site's mono face rather than pixels (restructure spec section 6.2, 7).
@@ -75,9 +80,10 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            sliced (cage_angstrom, slab_angstrom, density_g_cm3 and tile must
                            be null or absent), framed to the complex with `margin` and
                            `direction`. boxprep.read_pdb reads model 1, one conformer
-                           (altloc blank or A) and no water; a protein is a Cartoon layer
-                           in the palette's carbon (`colour` may override it) over
-                           `cartoon_chains`, and every atom of `stick_chains` and every
+                           (altloc blank or A) and no water; a protein is one Cartoon layer
+                           per chain of `cartoon_chains`, coloured from `chain_colour`, then
+                           constants.CHAIN_COLOUR in list order, and every atom of
+                           `stick_chains` and every
                            HETATM drawn as a multi-species frame is (the sticks and
                            spheres above), its bonds written as CONECT records by `prepare`
                            because Molecular Nodes bonds no ligand of an older file, so the
@@ -90,6 +96,10 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     panels[].stick_chains  protein only, required: a list of auth chain ids drawn
                            species-coloured as sticks and spheres; [] for none, disjoint from
                            cartoon_chains
+    chain_colour           protein only, optional {"A": "#rrggbb", ...}: sRGB hex per chain
+                           of cartoon_chains, which beats constants.CHAIN_COLOUR for that
+                           chain; a protein of more cartoon chains than CHAIN_COLOUR holds
+                           must name the rest here
     panels[].density_g_cm3 present for a periodic box: the cell edge follows from it and the
                            frame is wrapped; absent for a free cluster
     panels[].tile          [nx, ny, nz] periodic images (boxes only), default [1, 1, 1]
@@ -111,10 +121,10 @@ view transform Standard, never AgX; transparent film and shadow catcher off toge
 corner white (the median of each panel_checks.CORNER_BLOCK_PX square corner block is 255 on
 every channel); at most panel_checks.MAX_BORDER_STRAYS non-white pixels on the outer
 one-pixel border, each isolated, and reported in the summary line; residual chroma at most
-panel_checks.MAX_CHROMA, over the whole frame for one species and over the
-CORNER_BLOCK_PX border only for more than one; output saved as 8-bit greyscale, or as RGB
-for more than one species (a protein: for any atom drawn by species, so a protein of cartoon
-chains alone is grey, judged over the whole frame). The colour path in `scene_for` is
+panel_checks.MAX_CHROMA, over the whole frame for a grey panel (a box of one species) and
+over the CORNER_BLOCK_PX border only for a coloured one (a box of more than one species, or
+any protein, whose chains are coloured); output saved as 8-bit greyscale, or as RGB when
+coloured. The colour path in `scene_for` is
 exercised without Blender only through a stand-in molrender, which cannot show what Blender
 draws: the species spheres were Points that all took one colour until the first real
 multi-species render (6TRO, 2026-10-09) showed it, so a change to that path is checked on the
@@ -163,8 +173,12 @@ import numpy as np
 import panel_checks
 from constants import (
     CARBON_VDW_RADIUS_ANGSTROM,
+    CHAIN_COLOUR,
     COVALENT_RADIUS_ANGSTROM,
+    MATTE,
+    RIG,
     SPECIES_COLOUR,
+    WORLD_STRENGTH,
     srgb_hex_to_linear,
 )
 from molrender import (
@@ -175,6 +189,7 @@ from molrender import (
     BallAndStick,
     Cartoon,
     Layer,
+    Light,
     Scene,
     Solid,
     Spheres,
@@ -182,6 +197,7 @@ from molrender import (
     Structure,
     StructureId,
     View,
+    World,
     find_blender,
     render,
 )
@@ -359,13 +375,17 @@ def scene_for(
     cage: Path | None,
     species: list[str],
     *,
-    multi_species: bool,
+    coloured: bool,
     draft: bool,
 ) -> Scene:
     """The molrender scene for one panel under the section 6.2 constraints.
 
-    A subject of one species (`multi_species` False) is one grey `BallAndStick` layer. A
-    subject of more than one is a `Sticks` layer over every atom, in the palette's carbon,
+    Every layer's material is `Solid` with `constants.MATTE`, and the scene's light is
+    `Light(**constants.RIG, world=World(strength=constants.WORLD_STRENGTH))`: the three-point
+    key at 2 W, a sun fill, a side light and the studio HDRI, with the backdrop still pure
+    white. A subject of one species
+    (`coloured` False) is one grey `BallAndStick` layer. A subject of more than one is a
+    `Sticks` layer over every atom, in the palette's carbon,
     and one `Spheres` layer per species, selected by an `AtomMask`
     against the subject PDB and coloured from the manifest's `colour` map, then
     `constants.SPECIES_COLOUR`. The species spheres are Instances, not Points: a Blender
@@ -377,29 +397,36 @@ def scene_for(
     (the excited-states hero, 2026-10-09); in carbon, the colour of most bonds and of the
     cartoon, a sphere of any other species stands out from the sticks it sits on.
 
-    A protein panel (`kind` "protein") ignores `multi_species`, which `render_panel` sets
-    from whether the panel draws any atom by species: one `Cartoon` layer in the
-    palette's carbon, selected by an `AtomMask` over `cartoon_chains`, and, over the atoms
-    of `stick_chains` and every HETATM (water is already gone), the multi-species `Sticks`
-    and per-species `Spheres` layers restricted by an `AtomMask`. With no such atoms (the
-    hero) it is the Cartoon alone. The masks are measured on `subject`, the file
-    `prepare` wrote, by `boxprep.read_pdb`.
+    A protein panel (`kind` "protein") is always coloured: one `Cartoon` layer per chain of
+    `cartoon_chains`, selected by an `AtomMask` over that chain and coloured from the
+    manifest's `chain_colour`, then `constants.CHAIN_COLOUR` in list order, and, over the
+    atoms of `stick_chains` and every HETATM (water is already gone), the multi-species
+    `Sticks` and per-species `Spheres` layers restricted by an `AtomMask`. With no such
+    atoms (the hero) it is the Cartoon layers alone. The masks are measured on `subject`,
+    the file `prepare` wrote, by `boxprep.read_pdb`.
+
+    One layer per chain needs a molrender whose camera fit evaluates the scene after its
+    last layer: one that does not fits the frame to every layer but the last, which cut the
+    hero's last chain off at the top edge (2026-10-09), and the border check refused it.
 
     Args:
         spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
         subject: PDB of the atoms to draw.
         cage: PDB of the hidden cage that fixes the scale, or None to fit the subject.
         species: Element symbol of every atom in `subject`, in file order.
-        multi_species: Whether `species` holds more than one element, decided once by the
-            caller (`render_panel`), which also chooses the saved PNG's colour mode by it.
+        coloured: Whether the panel is coloured (a box of more than one element, or a
+            protein), decided once by the caller (`render_panel`), which also chooses the
+            saved PNG's colour mode by it.
         draft: Use the DRAFT tier (EEVEE, half resolution) instead of PRODUCTION.
 
     Returns:
-        A scene with view transform Standard, opaque film and no shadow catcher.
+        A scene with view transform Standard, the `constants.RIG` light, opaque film and no
+        shadow catcher.
 
     Raises:
         ValueError: If a drawn species has a colour neither in the panel's `colour` map nor
-            in `constants.SPECIES_COLOUR`.
+            in `constants.SPECIES_COLOUR`, or a cartoon chain has none in `chain_colour` and
+            lies beyond the length of `constants.CHAIN_COLOUR`.
     """
     grey = float(spec["grey"])
     sphere_radius = float(spec["sphere_radius_angstrom"]) / CARBON_VDW_RADIUS_ANGSTROM
@@ -409,10 +436,10 @@ def scene_for(
             bond_radius=float(spec["bond_radius_angstrom"]),
             sphere_geometry="Point",
         ),
-        material=Solid(rgb=(grey, grey, grey)),
+        material=Solid(rgb=(grey, grey, grey), **MATTE),
     )
     protein = boxprep.read_pdb(subject) if spec.get("kind", "box") == "protein" else None
-    if protein is None and not multi_species:
+    if protein is None and not coloured:
         subject_layers = (grey_layer,)
     else:
         atom_symbols = np.asarray(species)
@@ -435,21 +462,31 @@ def scene_for(
         carbon = srgb_hex_to_linear(palette["C"])
         layers = []
         if protein is not None:
-            layers.append(
+            chain_colour = {
+                **dict(zip(spec["cartoon_chains"], CHAIN_COLOUR, strict=False)),
+                **spec.get("chain_colour", {}),
+            }
+            uncoloured = [chain for chain in spec["cartoon_chains"] if chain not in chain_colour]
+            if uncoloured:
+                raise ValueError(
+                    f"panel {spec['id']}: no colour for chain(s) {uncoloured}; constants."
+                    f"CHAIN_COLOUR holds {len(CHAIN_COLOUR)}, so name them in chain_colour"
+                )
+            layers.extend(
                 Layer(
                     style=Cartoon(),
-                    material=Solid(rgb=carbon),
+                    material=Solid(rgb=srgb_hex_to_linear(chain_colour[chain]), **MATTE),
                     select=AtomMask(
-                        mask=tuple(np.isin(protein.chain_ids, spec["cartoon_chains"]).tolist()),
-                        of=subject_id,
+                        mask=tuple((protein.chain_ids == chain).tolist()), of=subject_id
                     ),
                 )
+                for chain in spec["cartoon_chains"]
             )
         if symbols:  # a protein of cartoon chains alone draws no atom by species
             layers.append(
                 Layer(
                     style=Sticks(radius=float(spec["bond_radius_angstrom"])),
-                    material=Solid(rgb=carbon),
+                    material=Solid(rgb=carbon, **MATTE),
                     select=ALL
                     if protein is None
                     else AtomMask(mask=tuple(drawn.tolist()), of=subject_id),
@@ -458,7 +495,7 @@ def scene_for(
         layers.extend(
             Layer(
                 style=Spheres(radius=sphere_radius, geometry="Instance"),
-                material=Solid(rgb=rgb[symbol]),
+                material=Solid(rgb=rgb[symbol], **MATTE),
                 select=AtomMask(
                     mask=tuple((drawn & (atom_symbols == symbol)).tolist()), of=subject_id
                 ),
@@ -477,6 +514,7 @@ def scene_for(
     return Scene(
         entities=tuple(entities),
         view=View(direction=tuple(spec["direction"]), margin=float(spec.get("margin", 1.02))),
+        light=Light(**RIG, world=World(strength=WORLD_STRENGTH)),
         quality=replace(tier, view_transform="Standard", look=None),
         resolution=tuple(spec["resolution"]),
         transparent=False,
@@ -487,11 +525,10 @@ def scene_for(
 def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     """Render one panel to `<output_dir>/<id>.png` and print one summary line.
 
-    The PNG is saved grey and judged over the whole frame when the panel draws one species
-    and in colour, judged on its border, when it draws more. A box counts the species of
-    its atoms; a protein counts those it draws as sticks and spheres, so a protein of
-    cartoon chains alone is grey whatever its atoms are. A protein's summary line also
-    gives the atom records `boxprep.read_pdb` dropped as altloc B or later and as water.
+    The PNG is saved grey and judged over the whole frame when the panel is a box of one
+    species, and in colour, judged on its border, when it is a box of more or any protein
+    (whose chains are coloured). A protein's summary line also gives the atom records
+    `boxprep.read_pdb` dropped as altloc B or later and as water.
 
     Args:
         spec: One panel from `panel_checks.load_panels`.
@@ -512,18 +549,15 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     started_s = time.perf_counter()
     subject, cage, species = prepare(spec, work_dir)
     if spec.get("kind", "box") == "protein":
-        # The subject holds the atoms the source's `read_pdb` keeps, in order, so the source's
-        # mask indexes `species`. A protein is coloured where it draws atoms by species; one of
-        # cartoon chains alone (the hero) is one grey, judged over the whole frame.
         protein = boxprep.read_pdb(Path(spec["source"]))
-        multi_species = bool(protein.drawn_by_species(spec["stick_chains"]).any())
+        coloured = True
         dropped = f" (dropped {protein.n_dropped_altloc} altloc, {protein.n_dropped_water} water)"
     else:
-        multi_species = len(set(species)) > 1
+        coloured = len(set(species)) > 1
         dropped = ""
     rendered = work_dir / output.name
     result = render(
-        scene_for(spec, subject, cage, species, multi_species=multi_species, draft=draft),
+        scene_for(spec, subject, cage, species, coloured=coloured, draft=draft),
         rendered,
         timeout=RENDER_TIMEOUT_S,
     )
@@ -533,7 +567,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
         rendered,
         (int(width_px * scale), int(height_px * scale)),
         label=f"{spec['id']} ({output})",
-        multi_species=multi_species,
+        coloured=coloured,
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
     # its empty ground away to a square; a panel with a cage shares a scale and keeps its

@@ -72,6 +72,39 @@ SPECIES_COLOUR: dict[str, str] = {
     "Al": "#5a3547",
 }
 
+# Protein cartoon colours, one per chain in a panel's `cartoon_chains` order (Patrick,
+# 2026-10-09: "just black" does not suit a protein). In the species palette's key: low
+# chroma, lightness at the graphite end of graphite to ink (CIELAB L* 33-43), no gold, and
+# each at least CIEDE2000 13.0 from every SPECIES_COLOUR and --graphite, --ink and --lustre, so
+# a ligand's carbon sticks and species spheres still read against the ribbon. Verdigris,
+# umber, old rose, petrol: the first two, the pair most often in contact (an antibody's light
+# and heavy chains), differ by 33. A manifest's `chain_colour` beats this per chain. The same
+# values are the --chain-* tokens in src/styles/tokens.css (scripts/tests/test_palette.py).
+# sRGB hex.
+CHAIN_COLOUR: tuple[str, ...] = ("#3f6e5b", "#664634", "#7c5e63", "#1c707a")
+
+# The matte finish every Blender panel's material takes (Patrick, 2026-10-09): molrender
+# Solid fields, so `Solid(rgb=..., **MATTE)`. A rough, coat-free surface with a low specular
+# level has no hard white highlight, so the lightness gradient across each sphere and ribbon
+# comes from the light rig alone; no subsurface, which would lighten a dark colour. This is
+# candidate c3's recipe, roughness/specular 0.9/0.15, as Patrick judged it on 2026-10-15; the
+# other two candidates rendered 1.0/0.05 and 0.95/0.1. With every light fixed, 0.9/0.2 against
+# 1.0/0.05 moved the carbon slab's mean ink luma by 0.003, so the choice is about sheen, not tone.
+MATTE: dict[str, float] = {"roughness": 0.9, "coat": 0.0, "subsurface": 0.0, "specular": 0.15}
+
+# The light rig every Blender panel takes (Patrick chose candidate c3-three-point-plus,
+# 2026-10-15), as the keyword arguments of molrender `Light`: the three-point rig at half
+# molrender's 4 W key (its fill and rim ratios stay at their defaults), a sun fill
+# (W/m2, a SUN lamp's irradiance) just above the camera axis, and an area light perpendicular
+# to the view on the image's left (W at 1 m, scaled by distance squared). Measured on
+# 2026-10-09 at the production tier: zero clipped pixels on the antibodies hero, 6TRO, the FMO
+# hero and the carbon slab, and the 5th percentile of protein ink luma no lower than 0.133.
+RIG: dict[str, float] = {"key_power": 2.0, "sun_strength": 1.5, "side_power": 12.0}
+
+# molrender `World.strength`: the studio HDRI's share of the ambient light. The backdrop stays
+# pure white whatever it is (the camera sees `World.background`, the subject sees the HDRI).
+WORLD_STRENGTH: float = 0.8
+
 # Molecular Nodes' van der Waals radius for carbon (molecularnodes assets/data.py). Its
 # BallAndStick style reads sphere_radius as a factor on this, not as a length.
 CARBON_VDW_RADIUS_ANGSTROM = 1.70
