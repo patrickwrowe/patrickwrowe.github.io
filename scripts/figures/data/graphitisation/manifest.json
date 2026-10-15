@@ -13,7 +13,7 @@
   ],
   "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
-  "grey": 0.30,
+  "grey": 0.25,
   "panels": [
     {
       "id": "density-0.5gcc-3500K",
