@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -15,7 +16,13 @@ from xlsx_source_data import read_sheet
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/two-dimensional-and-confined"
 FIGURES = REPO / "src/content/work/figures/two-dimensional-and-confined"
-WORKBOOK = REPO.parent / "papers/vermiculite-membranes/originals/nature_commun_source_data.xlsx"
+# The papers live outside the repository, wherever PAPERS_DIR says; unset, their tests skip.
+PAPERS_DIR = os.environ.get("PAPERS_DIR")
+WORKBOOK = (
+    Path(PAPERS_DIR, "vermiculite-membranes/originals/nature_commun_source_data.xlsx")
+    if PAPERS_DIR
+    else None
+)
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 LAYOUTS = [
     (False, "vermiculite-contact-angles.svg"),
@@ -152,7 +159,9 @@ def test_the_phi_files_are_mirror_symmetric_so_the_half_from_zero_loses_nothing(
     assert len(load("phi", cation)) == 50
 
 
-@pytest.mark.skipif(not WORKBOOK.exists(), reason="the Source Data workbook is not on this machine")
+@pytest.mark.skipif(
+    not (WORKBOOK and WORKBOOK.exists()), reason="the Source Data workbook is not on this machine"
+)
 @pytest.mark.parametrize(("angle", "cation"), PANELS)
 def test_the_data_are_the_source_data_sheets_of_fig_4c_and_4d_to_the_sheets_rounding(angle, cation):
     header, body = read_sheet(WORKBOOK, SHEET_OF[angle])

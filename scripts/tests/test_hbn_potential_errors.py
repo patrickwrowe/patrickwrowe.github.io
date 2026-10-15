@@ -8,6 +8,7 @@ paper is on this machine. Nothing here reads docs/, which is gitignored.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -23,7 +24,9 @@ from figure_style import LABEL_SIZE, MARKER_RADIUS, MARKER_STROKE, NARROW_CHART_
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/two-dimensional-and-confined"
 FIGURES = REPO / "src/content/work/figures/two-dimensional-and-confined"
-PAPER = REPO.parent / "papers/hbn-rippling/paper.pdf"
+# The papers live outside the repository, wherever PAPERS_DIR says; unset, their tests skip.
+PAPERS_DIR = os.environ.get("PAPERS_DIR")
+PAPER = Path(PAPERS_DIR, "hbn-rippling/paper.pdf") if PAPERS_DIR else None
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 LAYOUTS = [(False, "hbn-potential-errors.svg"), (True, "hbn-potential-errors-narrow.svg")]
 POTENTIALS = json.loads((DATA / "hbn-potential-errors.json").read_text())["potentials"]
@@ -201,7 +204,8 @@ def test_the_order_of_magnitude_holds_for_every_classical_force_but_not_for_ever
 
 
 @pytest.mark.skipif(
-    not (PAPER.exists() and shutil.which("pdftotext")), reason="no paper or no pdftotext here"
+    not (PAPER and PAPER.exists() and shutil.which("pdftotext")),
+    reason="no paper or no pdftotext here",
 )
 def test_the_data_are_what_pages_7_and_8_of_the_paper_say_including_the_lower_bounds():
     def page(number: int) -> str:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -15,7 +16,13 @@ from xlsx_source_data import read_sheet
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/two-dimensional-and-confined"
 FIGURES = REPO / "src/content/work/figures/two-dimensional-and-confined"
-WORKBOOK = REPO.parent / "papers/vermiculite-membranes/originals/nature_commun_source_data.xlsx"
+# The papers live outside the repository, wherever PAPERS_DIR says; unset, their tests skip.
+PAPERS_DIR = os.environ.get("PAPERS_DIR")
+WORKBOOK = (
+    Path(PAPERS_DIR, "vermiculite-membranes/originals/nature_commun_source_data.xlsx")
+    if PAPERS_DIR
+    else None
+)
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b")
 SHEETS = {"K": "Fig. 4a", "Li": "Fig.4b"}
 # Column pair (density, height) of each series in the data files.
@@ -142,7 +149,9 @@ def test_the_densities_are_histograms_summing_to_one_with_a_bin_width_that_diffe
         assert (np.diff(columns[:, [1, 3, 5]], axis=0) > 0).all(), "heights must rise"
 
 
-@pytest.mark.skipif(not WORKBOOK.exists(), reason="the Source Data workbook is not on this machine")
+@pytest.mark.skipif(
+    not (WORKBOOK and WORKBOOK.exists()), reason="the Source Data workbook is not on this machine"
+)
 @pytest.mark.parametrize("cation", ["K", "Li"])
 def test_the_data_are_the_source_data_sheets_of_fig_4a_and_4b(cation):
     # The first of the cross-checks that failed for the archive's data_K.dat and data_Li.dat.

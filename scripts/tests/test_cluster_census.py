@@ -198,17 +198,6 @@ def test_ring_census_does_not_depend_on_atom_order():
     assert counts[0][5:7].sum() > 100
 
 
-def test_radial_profile_accounts_for_every_atom():
-    positions_angstrom, _ = census.load_frame("C686-3000K")
-    inner_radius_angstrom, density_per_angstrom3 = census.radial_density_profile(
-        positions_angstrom, positions_angstrom.mean(axis=0)
-    )
-    shell_volume_angstrom3 = (
-        4 / 3 * np.pi * ((inner_radius_angstrom + 1) ** 3 - inner_radius_angstrom**3)
-    )
-    assert (density_per_angstrom3 * shell_volume_angstrom3).sum() == pytest.approx(686)
-
-
 def test_c60_at_2000k_is_a_single_closed_cage():
     record = census.census(*census.load_frame("C60-2000K"))
     assert census.classify(record) == "cage"

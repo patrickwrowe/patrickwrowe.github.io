@@ -240,32 +240,6 @@ def largest_fragment_centre(positions_angstrom: np.ndarray, adjacency: np.ndarra
     return positions_angstrom[largest_fragment_mask(fragment_labels(adjacency))].mean(axis=0)
 
 
-def radial_density_profile(
-    positions_angstrom: np.ndarray, centre_angstrom: np.ndarray, shell_width_angstrom: float = 1.0
-) -> tuple[np.ndarray, np.ndarray]:
-    """Number density in concentric 1 A (by default) shells about a centre.
-
-    A graphitic onion shows as separate peaks roughly one interlayer spacing apart; a
-    compact sphere shows a plateau falling off at the surface; a hollow cage shows one
-    peak at its radius and nothing inside. For a dissociated frame it means little.
-
-    Args:
-        positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
-        centre_angstrom: Reference point, shape (3,), in angstrom.
-        shell_width_angstrom: Shell thickness, in angstrom.
-
-    Returns:
-        (shell_inner_radius_angstrom, number_density_per_angstrom3), both of length
-        n_shells, covering every atom.
-    """
-    radius_angstrom = np.linalg.norm(positions_angstrom - centre_angstrom, axis=1)
-    n_shells = int(radius_angstrom.max() // shell_width_angstrom) + 1
-    edges_angstrom = np.arange(n_shells + 1) * shell_width_angstrom
-    counts, _ = np.histogram(radius_angstrom, bins=edges_angstrom)
-    shell_volume_angstrom3 = 4.0 / 3.0 * np.pi * np.diff(edges_angstrom**3)
-    return edges_angstrom[:-1], counts / shell_volume_angstrom3
-
-
 def shells(
     positions_angstrom: np.ndarray,
     centre_angstrom: np.ndarray,

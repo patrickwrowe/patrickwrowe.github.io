@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -25,7 +26,9 @@ REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "scripts/figures/data/excited-states"
 PROVENANCE = json.loads((DATA / "provenance.json").read_text())
 ARCHIVE = Path(PROVENANCE["archive_root"])
-MANUSCRIPT = REPO.parent / "papers/excitonic-interactions/paper.pdf"
+# The papers live outside the repository, wherever PAPERS_DIR says; unset, their tests skip.
+PAPERS_DIR = os.environ.get("PAPERS_DIR")
+MANUSCRIPT = Path(PAPERS_DIR, "excitonic-interactions/paper.pdf") if PAPERS_DIR else None
 TABLE = json.loads((DATA / "table1-short-range-share.json").read_text())
 REQUIRED = {"source_path", "what", "edit", "md5", "size_bytes"}
 VERBATIM = sorted(
@@ -151,7 +154,7 @@ def test_table_1_has_the_fifteen_own_rows_of_three_systems_all_inside_the_close_
 
 
 @pytest.mark.skipif(
-    not (MANUSCRIPT.exists() and shutil.which("pdftotext")),
+    not (MANUSCRIPT and MANUSCRIPT.exists() and shutil.which("pdftotext")),
     reason="no manuscript or no pdftotext here",
 )
 def test_every_row_is_on_page_11_of_the_manuscript_and_the_threshold_on_page_9():
