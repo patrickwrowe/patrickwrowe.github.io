@@ -160,6 +160,32 @@ def test_internal_href_to_a_missing_page_fails_and_a_file_passes(tmp_path: Path)
     assert failed == ["/work/carbon/ -> /work/gone/"]
 
 
+def test_a_same_page_fragment_must_be_an_id_of_the_page_it_sits_on(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    contents = '<nav><a href="#gap-20">GAP-20</a><a href="#cho-gap">CHO-GAP</a></nav>'
+    returns = '<a href="#contents">Contents ↑</a>'
+    # A page without a Contents list carries the theme template's styles all the same: a
+    # selector is not a link (the 14 project pages, 2026-10-15).
+    styles = '<style>.prose a[href="#contents"]{color:red}.x a[href="#nowhere"]{}</style>'
+    src, dist = make_site(tmp_path / "styles", page_ids=("gap-20", "cho-gap"), extra_html=styles)
+    assert statuses(check_links.run_all(src, dist), "href") == []
+    src, dist = make_site(tmp_path, extra_html=contents + returns)
+    assert check_links.main(["--src", str(src), "--dist", str(dist)]) == 0
+    # The Contents list's first link mistyped, as a reader would meet it: the page is fine,
+    # the fragment goes nowhere.
+    broken = contents.replace('href="#gap-20"', 'href="#gap-21"')
+    src, dist = make_site(tmp_path / "bad", extra_html=broken + returns)
+    findings = check_links.run_all(src, dist)
+    failed = [finding for finding in findings if finding.status == "FAIL"]
+    assert [(finding.check, finding.subject) for finding in failed] == [
+        ("href", "/work/carbon/ -> #gap-21")
+    ]
+    assert failed[0].detail == "page exists but has no id 'gap-21'"
+    assert check_links.main(["--src", str(src), "--dist", str(dist)]) == 1
+    assert "1 failed" in capsys.readouterr().out
+
+
 def test_every_theme_section_must_end_with_the_return_line(tmp_path: Path) -> None:
     body = THEME_BODY.replace(
         "## CHO-GAP\n\n[Contents ↑](#contents)\n", "## CHO-GAP\n\nSome prose.\n"

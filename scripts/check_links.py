@@ -16,7 +16,8 @@ Checks, each reported per subject as OK, SKIPPED or FAIL:
 * ``redirect``: every entry of ``src/data/redirects.json`` has a built page at the old
   path and a target whose page and fragment exist.
 * ``href``: every site-relative ``href`` in ``dist/`` resolves to a built page or file,
-  fragment included.
+  fragment included, and every same-page ``href="#x"`` (a Contents list, a return link) to
+  an id of the page it sits on.
 * ``contents-return``: every ``##`` section of a theme article ends with the line
   ``[Contents ↑](#contents)``.
 * ``figures``: the ``Fig. n`` plate markers on each page run 1 to N in order.
@@ -45,7 +46,9 @@ import yaml
 
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---", re.S)
 ID_ATTR = re.compile(r'(?<![\w-])id="([^"]+)"')
-HREF_ATTR = re.compile(r'(?<![\w-])href="([^"]+)"')
+# An attribute follows whitespace inside a tag; a CSS selector's `a[href="#contents"]`, in the
+# page's inlined styles, follows "[" and is not a link.
+HREF_ATTR = re.compile(r'(?<=\s)href="([^"]+)"')
 FIGURE_MARK = re.compile(r'class="label plate__fig"[^>]*>Fig\.\s*(\d+)<')
 PLATE_MARK = re.compile(r'class="label plate__fig"')
 SECTION_START = re.compile(r"^## ", re.M)
@@ -179,13 +182,16 @@ def check_redirects(redirects: dict[str, str], pages: dict[str, str], dist: Path
 
 
 def check_internal_hrefs(pages: dict[str, str], dist: Path) -> list[Finding]:
-    """Every site-relative href in the built HTML resolves; only failures are listed."""
+    """Every site-relative or same-page href in the built HTML resolves; only failures listed."""
     findings: list[Finding] = []
     for route, html in pages.items():
         for href in sorted(set(HREF_ATTR.findall(html))):
-            if not href.startswith("/") or href.startswith("//"):
+            if href.startswith("#"):
+                path, fragment = split_target(route + href)  # the page it sits on
+            elif href.startswith("/") and not href.startswith("//"):
+                path, fragment = split_target(href)
+            else:
                 continue
-            path, fragment = split_target(href)
             ok, detail = target_exists(path, fragment, pages, dist)
             if not ok:
                 findings.append(Finding("href", f"{route} -> {href}", "FAIL", detail))
