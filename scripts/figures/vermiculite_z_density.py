@@ -10,8 +10,8 @@ panel per cation, height above the surface on the vertical axis (zero is the mea
 surface oxygen atoms, the paper's caption) and probability density on the horizontal, as the
 paper draws it. Every curve is one column pair of the workbook, drawn as it is stored.
 
-Read two things off it. The ion is a narrow spike near the surface (K at one height, Li at
-two). The first contact layer of water is a sharp oxygen peak above K and a lower, broader
+Read two things off it. The ion is a narrow spike near the surface (one peak for K, two for
+Li). The first contact layer of water is a sharp oxygen peak above K and a lower, broader
 one above Li.
 
 The densities are histograms of 100 bins that each sum to 1, and the bins differ between
