@@ -99,7 +99,7 @@ def test_a_series_paints_carbon_the_same_in_every_panel_once_any_panel_has_a_sec
 def test_a_species_with_no_palette_entry_is_refused_by_name_not_painted_black(monkeypatch):
     monkeypatch.delitem(SPECIES_COLOUR, "O")
     oxygen_and_carbon = boxprep.Structure(["C", "O"], np.array([[0.0, 0.0, 0.0], [1.2, 0.0, 0.0]]))
-    with pytest.raises(ValueError, match=r"\['O'\]"):
+    with pytest.raises(ValueError, match="'O'"):
         render_cluster.render(oxygen_and_carbon, (0, 0, 0))
 
 

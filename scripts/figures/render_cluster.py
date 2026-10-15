@@ -74,7 +74,7 @@ from pathlib import Path
 import boxprep
 import numpy as np
 from constants import COVALENT_RADIUS_ANGSTROM, SPECIES_COLOUR
-from figure_style import NARROW_CHART_EM
+from figure_style import NARROW_CHART_EM, species_colour
 
 # Deliberately far below a physical carbon radius. These cages are hollow and
 # nested front-to-back, so anything approaching space-filling collapses into a
@@ -125,8 +125,13 @@ def _species_colour(species: str, multi_species: bool) -> str:
     Returns:
         `var(--species-<symbol>)` when `multi_species`, otherwise DRAW_COLOUR's `var(--ink)` or
         `var(--graphite)`.
+
+    Raises:
+        ValueError: From figure_style.species_colour, if `multi_species` and the species has no
+            entry in SPECIES_COLOUR, because its `--species-*` token would not exist and the
+            browser would paint it black without a warning.
     """
-    return f"var(--species-{species.lower()})" if multi_species else DRAW_COLOUR[species]
+    return species_colour(species) if multi_species else DRAW_COLOUR[species]
 
 
 def _colour_attr(species: str, attribute: str, multi_species: bool) -> str:
@@ -169,22 +174,16 @@ def depth_opacity(depth: float, near: float, far: float) -> float:
 def _is_multi_species(species: list[str]) -> bool:
     """Whether a figure draws more than one species, which switches it to the palette.
 
+    A species with no palette entry is refused when it is drawn (`_species_colour`).
+
     Args:
         species: Element symbol of every atom the figure draws.
 
     Returns:
         True for two or more distinct species.
-
-    Raises:
-        ValueError: If the figure has several species and one has no entry in SPECIES_COLOUR,
-            because its `--species-*` token would not exist and the browser would paint it
-            black without a warning.
     """
-    symbols = set(species)
-    unknown = sorted(symbols - SPECIES_COLOUR.keys())
-    if len(symbols) > 1 and unknown:
-        raise ValueError(f"no colour for {unknown} in constants.SPECIES_COLOUR")
-    return len(symbols) > 1
+    distinct_species = set(species)
+    return len(distinct_species) > 1
 
 
 def _draw(
@@ -273,6 +272,26 @@ def _draw(
     return "\n    ".join(element for _, element in drawables)
 
 
+def closest_pair(first: boxprep.Structure, second: boxprep.Structure) -> tuple[int, int]:
+    """The closest pair of atoms, one from each structure, as `render`'s `contact`.
+
+    Args:
+        first: The first structure, in angstrom.
+        second: The second structure, in the same frame.
+
+    Returns:
+        The pair's indices in the two structures drawn together: the first's atom as it is,
+        the second's offset by `len(first)`.
+    """
+    separations_angstrom = np.linalg.norm(
+        first.positions_angstrom[:, None, :] - second.positions_angstrom[None, :, :], axis=-1
+    )
+    first_atom, second_atom = np.unravel_index(
+        separations_angstrom.argmin(), separations_angstrom.shape
+    )
+    return int(first_atom), len(first) + int(second_atom)
+
+
 def render(
     structure: boxprep.Structure,
     rotate_degrees: tuple[float, float, float],
@@ -280,6 +299,27 @@ def render(
     slab_angstrom: float | None = None,
     contact: tuple[int, int] | None = None,
 ) -> str:
+    """One cluster as a ball-and-stick SVG.
+
+    Args:
+        structure: The atoms, in angstrom.
+        rotate_degrees: Extrinsic X, Y, Z rotation of the view, in degrees.
+        radius_scale: Factor on the atom and bond sizes.
+        slab_angstrom: Draw only a slab this thick about the median depth, or None for all.
+        contact: Indices of two atoms to join with a dotted line edge to edge (see
+            `closest_pair`), or None.
+
+    Returns:
+        The SVG document.
+
+    Raises:
+        ValueError: If `contact` and `slab_angstrom` are both given, since the slab can cut
+            the contact's atoms away; or if the two atoms of `contact` are, in this view, no
+            further apart than their drawn radii (a contact along the view direction), so the
+            line would have no length or run backwards over both atoms.
+    """
+    if contact is not None and slab_angstrom is not None:
+        raise ValueError("a marked contact cannot be drawn in a slab, which may cut its atoms")
     centred = structure.positions_angstrom - structure.positions_angstrom.mean(axis=0)
     rotated = centred @ rotation_matrix(rotate_degrees).T
     species = structure.species
@@ -289,7 +329,19 @@ def render(
         # marked contact is a fact the caption states, so it is never hidden behind an atom.
         first, second = contact
         start, end = rotated[first, :2], rotated[second, :2]
-        unit = (end - start) / np.linalg.norm(end - start)
+        projected_gap_angstrom = np.linalg.norm(end - start)
+        drawn_radii_angstrom = (
+            ATOM_RADIUS
+            * radius_scale
+            * (DRAW_RADIUS_FACTOR[species[first]] + DRAW_RADIUS_FACTOR[species[second]])
+        )
+        if projected_gap_angstrom <= drawn_radii_angstrom:
+            raise ValueError(
+                f"the marked contact is {projected_gap_angstrom:.2f} A apart in this view, "
+                f"inside its atoms' drawn radii ({drawn_radii_angstrom:.2f} A); "
+                "rotate it side-on"
+            )
+        unit = (end - start) / projected_gap_angstrom
         start = start + unit * ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[first]] * radius_scale
         end = end - unit * ATOM_RADIUS * DRAW_RADIUS_FACTOR[species[second]] * radius_scale
         width = CONTACT_WIDTH_FRACTION * BOND_WIDTH * radius_scale
@@ -584,15 +636,9 @@ def main() -> None:
         structures.append(structure)
     contact = None
     if args.mark_closest:
-        if not args.together or len(structures) != 2 or args.slab is not None:
-            parser.error("--mark-closest needs --together, exactly two inputs and no --slab")
-        separations_angstrom = np.linalg.norm(
-            structures[0].positions_angstrom[:, None, :]
-            - structures[1].positions_angstrom[None, :, :],
-            axis=-1,
-        )
-        first, second = np.unravel_index(separations_angstrom.argmin(), separations_angstrom.shape)
-        contact = (int(first), len(structures[0]) + int(second))
+        if not args.together or len(structures) != 2:
+            parser.error("--mark-closest needs --together and exactly two inputs")
+        contact = closest_pair(*structures)
     if args.together:
         structures = [
             boxprep.Structure(
@@ -687,7 +733,7 @@ def _self_check() -> None:
 
     # A species with no palette entry is refused by name rather than painted black.
     try:
-        _is_multi_species(["C", "Xe"])
+        _species_colour("Xe", True)
     except ValueError as error:
         assert "Xe" in str(error), error
     else:

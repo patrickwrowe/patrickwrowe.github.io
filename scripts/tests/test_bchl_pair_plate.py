@@ -141,7 +141,6 @@ def test_a_dotted_ink_line_joins_the_oxygen_and_the_hydrogen_edge_to_edge():
     ("names", "extra"),
     [
         (["chromophore-1.xyz", "chromophore-2.xyz"], []),
-        (["chromophore-1.xyz", "chromophore-2.xyz"], ["--together", "--slab", "10"]),
         (["chromophore-1.xyz", "chromophore-2.xyz", "chromophore-1.xyz"], ["--together"]),
     ],
 )
@@ -152,3 +151,60 @@ def test_mark_closest_is_refused_without_exactly_two_inputs_drawn_together(
     with pytest.raises(SystemExit):
         run_cli(monkeypatch, capsys, *argv, "--output", str(tmp_path / "pair.svg"))
     assert "--mark-closest needs --together" in capsys.readouterr().err
+
+
+def test_a_marked_contact_in_a_slab_is_refused_since_the_slab_can_cut_its_atoms_away():
+    first = boxprep.read_xyz(DATA / "chromophore-1.xyz")
+    second = boxprep.read_xyz(DATA / "chromophore-2.xyz")
+    together = boxprep.Structure(
+        first.species + second.species,
+        np.vstack([first.positions_angstrom, second.positions_angstrom]),
+    )
+    contact = render_cluster.closest_pair(first, second)
+    assert render_cluster.render(together, (0, 0, 0), contact=contact).count("data-contact") == 1
+    with pytest.raises(ValueError, match="slab"):
+        render_cluster.render(together, (0, 0, 0), slab_angstrom=10.0, contact=contact)
+
+
+def test_closest_pair_names_the_closest_atoms_one_from_each_structure():
+    first = boxprep.Structure(["C", "O"], np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0]]))
+    second = boxprep.Structure(["H", "C"], np.array([[20.0, 0.0, 0.0], [7.0, 0.0, 0.0]]))
+    # O (index 1) and the second's C (index 1, so 2 + 1 once drawn together), 2 A apart.
+    assert render_cluster.closest_pair(first, second) == (1, 3)
+
+
+@pytest.mark.parametrize(
+    ("second_hydrogen_angstrom", "drawn"),
+    [
+        ((0.0, 0.0, 2.5), False),  # along the default view direction: no projected gap at all
+        ((0.1, 0.0, 2.5), False),  # projected 0.1 A, inside the two hydrogens' drawn radii
+        ((2.5, 0.0, 0.0), True),  # side-on: the whole 2.5 A is drawn as a gap
+    ],
+)
+def test_a_marked_contact_inside_its_atoms_drawn_radii_is_refused_and_a_side_on_one_is_drawn(
+    second_hydrogen_angstrom, drawn, tmp_path, monkeypatch, capsys
+):
+    # Two 2-atom files, an O-H pair each, whose closest contact is between the two hydrogens;
+    # the second oxygen sits 1 A beyond its hydrogen, away from the first molecule.
+    x, y, z = second_hydrogen_angstrom
+    oxygen_x, oxygen_z = (x + 1.0, z) if drawn else (x, z + 1.0)
+    first, second = tmp_path / "first.xyz", tmp_path / "second.xyz"
+    first.write_text("2\n\nO -1.0 0.0 0.0\nH 0.0 0.0 0.0\n")
+    second.write_text(f"2\n\nH {x} {y} {z}\nO {oxygen_x} {y} {oxygen_z}\n")
+    output = tmp_path / "pair.svg"
+    argv = [str(first), str(second), "--together", "--mark-closest", "--output", str(output)]
+    if not drawn:
+        with pytest.raises(ValueError, match="rotate it side-on"):
+            run_cli(monkeypatch, capsys, *argv)
+        assert not output.exists()
+        return
+    run_cli(monkeypatch, capsys, *argv)
+    (line,) = re.findall(r"<line data-contact-angstrom=[^>]*/>", output.read_text())
+    assert 'data-contact-angstrom="2.500"' in line
+    start_x, start_y, end_x, end_y = (
+        float(value) for value in re.findall(r'[xy]\d="([-\d.]+)"', line)
+    )
+    assert np.isfinite([start_x, start_y, end_x, end_y]).all()
+    # Edge to edge, from the first hydrogen towards the second, not reversed over them.
+    hydrogen_radius = render_cluster.ATOM_RADIUS * render_cluster.DRAW_RADIUS_FACTOR["H"]
+    assert end_x - start_x == pytest.approx(2.5 - 2 * hydrogen_radius, abs=2e-3)
