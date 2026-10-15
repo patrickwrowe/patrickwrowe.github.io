@@ -70,19 +70,14 @@ def test_a_source_in_the_archive_is_the_file_the_entry_checksums(name):
         assert entry["md5"] == entry["source_md5"], f"{name} is meant to be a verbatim copy"
 
 
-def test_the_pdb_differs_from_its_source_by_the_one_magnesium_line_and_no_other():
+def test_the_pdb_is_the_deposited_file_as_it_was_downloaded():
+    # Verbatim since 2026-10-15: the lone Mg ion is left out by prepare's rule, not by hand.
     entry = PROVENANCE["files"]["3BSD.pdb"]
-    source = ARCHIVE / entry["source_path"]
-    if not source.exists():
-        pytest.skip("the archive is not on this machine")
-    original = source.read_text().splitlines(keepends=True)
-    staged = (DATA / "3BSD.pdb").read_text().splitlines(keepends=True)
-    removed = [line for line in original if line not in staged]
-    assert [line[:26] for line in removed] == ["HETATM 3262 MG    MG A 374"]
-    assert [line for line in original if line not in removed] == staged
+    assert entry["edit"].startswith("none") and entry["md5"] == entry["source_md5"]
+    assert entry["size_bytes"] == entry["source_size_bytes"]
 
 
-def test_the_pdb_holds_one_chain_eight_bchl_and_178_waters_and_no_lone_ion():
+def test_the_pdb_holds_one_chain_eight_bchl_178_waters_and_one_lone_magnesium_ion():
     lines = (DATA / "3BSD.pdb").read_text().splitlines()
     atoms = [line for line in lines if line.startswith(("ATOM  ", "HETATM"))]
     bchl = [line for line in atoms if line[17:20] == "BCL"]
@@ -93,20 +88,24 @@ def test_the_pdb_holds_one_chain_eight_bchl_and_178_waters_and_no_lone_ion():
         "400": 42,
     }
     assert sum(line[17:20] == "HOH" for line in atoms) == 178
-    assert {line[17:20] for line in atoms if line.startswith("HETATM")} == {"BCL", "HOH"}
-    assert not any(line[12:16].strip() == "MG" and line[17:20] != "BCL" for line in atoms)
+    hetero_residues = {line[17:20].strip() for line in atoms if line.startswith("HETATM")}
+    assert hetero_residues == {"BCL", "HOH", "MG"}
+    lone_magnesium = [line for line in atoms if line[17:20].strip() == "MG"]
+    assert [line[:26] for line in lone_magnesium] == ["HETATM 3262 MG    MG A 374"]
+    assert lone_magnesium[0][54:60] == "  0.33"  # occupancy
 
 
-def test_read_pdb_draws_the_protein_and_the_eight_bchl_and_no_water():
+def test_read_pdb_reads_the_protein_the_eight_bchl_and_the_lone_ion_and_no_water():
+    # The lone ion is read here and left out by render_box_grid.prepare (test_render_box_grid).
     protein = boxprep.read_pdb(DATA / "3BSD.pdb")
     assert (protein.n_dropped_altloc, protein.n_dropped_water) == (0, 178)
     assert set(protein.chain_ids.tolist()) == {"A"}
-    assert protein.is_hetero.sum() == 504
+    assert protein.is_hetero.sum() == 505
     assert Counter(np.array(protein.species)[protein.is_hetero].tolist()) == {
         "C": 418,
         "O": 46,
         "N": 32,
-        "Mg": 8,
+        "Mg": 9,
     }
 
 
@@ -231,7 +230,10 @@ def test_a_render_entry_records_the_manifest_resolution_the_dropped_atoms_and_th
         "water": protein.n_dropped_water,
     }
     line = entry["summary_line"]
-    assert f": {len(protein.species)} atoms (dropped {entry['dropped']['altloc']} altloc, " in line
+    # prepare draws every atom read_pdb keeps but the lone Mg ion, MG A 374, which it leaves
+    # out by rule (test_render_box_grid pins that on this file).
+    drawn = len(protein.species) - sum(record[17:20] == " MG" for record in protein.records)
+    assert f": {drawn} atoms (dropped {entry['dropped']['altloc']} altloc, " in line
     assert (
         f"{entry['dropped']['water']} water), wall {entry['wall_time_s']} s, blender exit 0" in line
     )

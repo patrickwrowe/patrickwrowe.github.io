@@ -55,7 +55,9 @@ def test_each_panel_has_its_source_and_a_png_of_the_size_it_renders_to(panel):
     assert size_px[0] < min(width_px, height_px), f"{output} is {size_px}: never cropped"
 
 
-PROTEIN_PANELS = [param for param in PANELS if param.values[0].get("kind") == "protein"]
+PROTEIN_PANELS = [
+    param for param in PANELS if param.values[0]["kind"] == panel_checks.PanelKind.PROTEIN
+]
 
 
 @pytest.mark.parametrize("panel", PROTEIN_PANELS)

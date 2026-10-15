@@ -122,8 +122,7 @@ def build(data_dir: Path, narrow: bool = False) -> str:
     Raises:
         ValueError: If a row lacks a field or names a system the chart has no marker for, if a
             system has no row, or if a distance or share is not a finite number (a JSON `true`
-            included) or leaves its
-            axis, which would draw a marker off the plot.
+            included) or leaves its axis, which would draw a marker off the plot.
     """
     path = data_dir / DATA_FILE
     table = json.loads(path.read_text())

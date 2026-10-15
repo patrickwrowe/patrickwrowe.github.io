@@ -133,7 +133,7 @@
       "margin": 1.06,
       "wall_time_s": 35,
       "summary_line": "hero: 4651 atoms (dropped 0 altloc, 0 water), wall 35 s, blender exit 0, src/content/work/figures/antibodies/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [233, 255, 232])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0",
-      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (L #3f6e5b, H #664634, A #7c5e63), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\"."
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (L #3f6e5b, H #664634, A #7c5e63), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\". Molecular Nodes was 4.5.13, the version render_box_grid.tool_versions now reads from the extension's blender_manifest.toml (installed 2026-08-08, before these renders); the summary lines at the time read \"Molecular Nodes unknown\"."
     },
     "mage-a4-pmhc-tcr": {
       "source": "6TRO.pdb",
@@ -187,7 +187,7 @@
       "margin": 1.02,
       "wall_time_s": 56,
       "summary_line": "mage-a4-pmhc-tcr: 6572 atoms (dropped 0 altloc, 23 water), wall 56 s, blender exit 0, src/content/work/figures/antibodies/mage-a4-pmhc-tcr.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 233])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0",
-      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b, B #664634, D #7c5e63, E #1c707a; the peptide, chain C, is sticks and spheres in species colours), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\"."
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b, B #664634, D #7c5e63, E #1c707a; the peptide, chain C, is sticks and spheres in species colours), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\". Molecular Nodes was 4.5.13, the version render_box_grid.tool_versions now reads from the extension's blender_manifest.toml (installed 2026-08-08, before these renders); the summary lines at the time read \"Molecular Nodes unknown\"."
     }
   }
 }

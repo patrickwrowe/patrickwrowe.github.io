@@ -18,11 +18,12 @@ because molrender is not on PyPI and `uv` would fetch an unrelated package of th
 The command below, with the molrender Python, is the only way to run this script. It needs
 molrender at commit 081ded2 or later on the branch `fix-masked-layer-collision` of the local
 checkout (an opt-in `Light.sun_strength` and `side_power`, and a camera fitted after a
-view-layer update); against molrender `main` the script raises `TypeError`. A summary line
+view-layer update); importing this module against a molrender whose `Light` lacks a field of
+`constants.RIG` (molrender `main`) raises `ImportError` naming that commit. A summary line
 names the commit molrender ran from when it is a git checkout (`tool_versions`). The checks
 that do not need molrender (manifest loading, the cage containment guard, the rendered-PNG
-whiteness check) live in `panel_checks.py` instead, so they can still be imported and tested
-from `.venv`.
+whiteness check, whether a panel is coloured) live in `panel_checks.py` instead, so they can
+still be imported and tested from `.venv`.
 
     # MOLRENDER_PYTHON (required): the python of the environment that has molrender
     $MOLRENDER_PYTHON scripts/figures/render_box_grid.py \
@@ -32,10 +33,10 @@ from `.venv`.
 Molecular Nodes copies its startup template into Blender's user-scripts directory on every
 render (molecularnodes scene/base.py, Canvas.__init__), and ~/.config is read-only inside a
 sandboxed session. So when BLENDER_USER_SCRIPTS is unset the driver points it at a fresh
-directory inside the run's scratch directory before the first render; the same command then
-works inside and outside the sandbox. Fresh per run because Blender executes any Python under
-<dir>/startup/. It holds only the template; extensions and preferences still load from
-~/.config.
+directory inside the run's scratch directory before the first render, and unsets it again when
+the run ends; the same command then works inside and outside the sandbox. Fresh per run
+because Blender executes any Python under <dir>/startup/. It holds only the template;
+extensions and preferences still load from ~/.config.
 
 Manifest (JSON; plate-level keys are defaults every panel may override):
     output_dir             where `<id>.png` goes
@@ -62,14 +63,15 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     sphere_radius_angstrom, bond_radius_angstrom
                            Molecular Nodes reads BallAndStick.sphere_radius as a factor on
                            each atom's vdW radius, not a length, so the sphere radius is
-                           divided by constants.CARBON_VDW_RADIUS_ANGSTROM (1.70 A, Molecular
-                           Nodes' carbon, so each species is drawn at that factor of its own van
-                           der Waals radius). bond_radius is a length.
-    grey                   the material's linear RGB value, 0-1, on all three channels (what
-                           Solid(rgb=...) receives); not a display value, since the Standard
-                           view transform applies the sRGB curve on output. Used for a frame
-                           of one species (and the hidden cage); a frame of more than one is
-                           coloured instead.
+                           divided by carbon's in constants.VDW_RADIUS_ANGSTROM (1.70 A,
+                           Molecular Nodes' own), so each species is drawn at that factor of
+                           its own van der Waals radius, the radius the cage guard allows it.
+                           bond_radius is a length.
+    grey                   box panels only, required: the material's linear RGB value, 0-1, on
+                           all three channels (what Solid(rgb=...) receives); not a display
+                           value, since the Standard view transform applies the sRGB curve on
+                           output. Used for a frame of one species (and the hidden cage); a
+                           frame of more than one is coloured instead.
     colour                 optional {"O": "#rrggbb", ...}: sRGB hex per element symbol, which
                            beats constants.SPECIES_COLOUR for that species on every panel of the
                            plate (a panel's own map replaces the plate's whole map). A frame of
@@ -92,9 +94,12 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            HETATM drawn as a multi-species frame is (the sticks and
                            spheres above), its bonds written as CONECT records by `prepare`
                            because Molecular Nodes bonds no ligand of an older file, so the
-                           file's chains must be exactly the two lists together.
-                           sphere_radius_angstrom sets the spheres and bond_radius_angstrom
-                           the sticks; `grey` is required but unused
+                           file's chains must be exactly the two lists together. A hetero
+                           atom of a residue of more than one atom must have a covalent
+                           radius, or the panel is refused naming it; a lone ion of a metal
+                           in constants.METALS that bonds to no other hetero atom is not
+                           drawn. sphere_radius_angstrom sets the spheres and
+                           bond_radius_angstrom the sticks; a protein has no `grey`
     panels[].cartoon_chains
                            protein only, required: a non-empty list of auth chain ids (PDB
                            column 22) drawn as Cartoon
@@ -117,9 +122,10 @@ letters, digits, "_", "." and "-", because each names a file. Values are checked
 three positive extents, density positive, tile three positive integers, colour a map of
 element symbol to "#rrggbb", kind "box" or "protein", the chain lists of one-character ids,
 every number finite, and a source that exists, relative to the repository root where this
-command runs; a protein panel also needs both chain lists (the cartoon list not empty, the
-two disjoint), a .pdb source and no cage, slab, density or tile. `panel_checks.load_panels`
-enforces all of this, naming the manifest, panel and key of the first value it refuses.
+command runs; a box panel also needs a grey, and a protein panel both chain lists (the
+cartoon list not empty, the two disjoint), a .pdb source and no cage, slab, density or tile.
+`panel_checks.load_panels` enforces all of this, naming the manifest, panel and key of the
+first value it refuses, and sets every panel's `kind`.
 
 Rules this script enforces (spec section 6.2): production tier with the resolution named;
 view transform Standard, never AgX; transparent film and shadow catcher off together; every
@@ -168,7 +174,8 @@ import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import replace
+from collections import Counter
+from dataclasses import fields, replace
 from functools import cache
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -178,12 +185,13 @@ import molrender
 import numpy as np
 import panel_checks
 from constants import (
-    CARBON_VDW_RADIUS_ANGSTROM,
     CHAIN_COLOUR,
     COVALENT_RADIUS_ANGSTROM,
     MATTE,
+    METALS,
     RIG,
     SPECIES_COLOUR,
+    VDW_RADIUS_ANGSTROM,
     WORLD_STRENGTH,
     srgb_hex_to_linear,
 )
@@ -207,8 +215,27 @@ from molrender import (
     find_blender,
     render,
 )
+from panel_checks import PanelKind
+
+# RIG needs a Light with the opt-in sun fill and side light, which only molrender at commit
+# 081ded2 or later on its branch fix-masked-layer-collision has: refuse any other molrender
+# here, before a manifest is read, not with a TypeError at the first Light(...).
+if missing_light_fields := sorted(set(RIG) - {field.name for field in fields(Light)}):
+    raise ImportError(
+        f"molrender's Light has no {missing_light_fields}: render_box_grid needs molrender at "
+        "commit 081ded2 or later on the branch fix-masked-layer-collision"
+    )
 
 RENDER_TIMEOUT_S = 3600
+# Run inside the one Blender start `tool_versions` makes: Blender's version and Molecular
+# Nodes', read from the extension's own manifest under Blender's user extensions directory.
+VERSIONS_EXPR = (
+    "import bpy, pathlib, tomllib\n"
+    "manifests = sorted(pathlib.Path(bpy.utils.user_resource('EXTENSIONS'))"
+    ".glob('*/molecularnodes/blender_manifest.toml'))\n"
+    "print('TOOL_VERSIONS', bpy.app.version_string, "
+    "tomllib.loads(manifests[0].read_text())['version'] if manifests else 'unknown')"
+)
 
 
 @cache
@@ -217,11 +244,11 @@ def tool_versions() -> str:
 
     This script runs under the molrender interpreter, which cannot `import bpy` (the `bpy`
     wheel is cp313-only and molrender's own README says its environment has none), so
-    Blender's version comes from asking the executable molrender itself would start
-    (`molrender.find_blender`: `BLENDER_PATH`, the macOS bundle, then `PATH`). molrender
-    records neither where Molecular Nodes is installed nor its version (the add-on is
-    imported only inside Blender, and its version sits in a `blender_manifest.toml` whose
-    location molrender never stores), so that one reads "unknown" until molrender exposes it.
+    Blender's version and Molecular Nodes' come from one background start of the executable
+    molrender itself would start (`molrender.find_blender`: `BLENDER_PATH`, the macOS bundle,
+    then `PATH`), running VERSIONS_EXPR: `bpy.app.version_string`, and the `version` of the
+    `blender_manifest.toml` of the molecularnodes extension under Blender's user extensions
+    directory, "unknown" when it has none.
     molrender's version alone cannot tell a release from the unmerged branch the renders need,
     so when the package's file lives in a git checkout the version carries that checkout's
     short SHA, as "0.1.0 (081ded2)", with "-dirty" appended when the checkout has uncommitted
@@ -233,17 +260,32 @@ def tool_versions() -> str:
         "Blender <version>, Molecular Nodes <version>, molrender <version>"; any version
         that cannot be found reads "unknown".
     """
+    blender_version = molecular_nodes_version = "unknown"
     try:
         result = subprocess.run(
-            [str(find_blender()), "--version"], capture_output=True, text=True, check=False
+            [
+                str(find_blender()),
+                "--background",
+                "--factory-startup",
+                "--python-expr",
+                VERSIONS_EXPR,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
         )
-        blender_version = (
-            result.stdout.splitlines()[0].removeprefix("Blender ")
-            if result.returncode == 0 and result.stdout
-            else "unknown"
+        reported = next(
+            (
+                line.split()[1:]
+                for line in result.stdout.splitlines()
+                if line.startswith("TOOL_VERSIONS ")
+            ),
+            [],
         )
+        if result.returncode == 0 and len(reported) == 2:
+            blender_version, molecular_nodes_version = reported
     except OSError:  # no Blender located (FileNotFoundError), or it would not start
-        blender_version = "unknown"
+        pass
     try:
         molrender_version = version("molrender")
     except PackageNotFoundError:
@@ -271,7 +313,10 @@ def tool_versions() -> str:
         molrender_version += f" ({checkout_sha}{'-dirty' if dirty else ''})"
     except (OSError, subprocess.CalledProcessError):  # no git, or not a checkout: plain version
         pass
-    return f"Blender {blender_version}, Molecular Nodes unknown, molrender {molrender_version}"
+    return (
+        f"Blender {blender_version}, Molecular Nodes {molecular_nodes_version}, "
+        f"molrender {molrender_version}"
+    )
 
 
 def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
@@ -289,7 +334,11 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
     indexed by the atoms Molecular Nodes loads from it. It ends with a CONECT record for each
     bond `boxprep.find_bonds` finds among the HETATM atoms whose element has a covalent
     radius, using the file's own serial numbers: Molecular Nodes would otherwise draw a ligand
-    as unbonded spheres. The source's own CONECT records are not copied.
+    as unbonded spheres. The source's own CONECT records are not copied. A lone ion of a metal
+    (a one-atom HETATM residue whose element is in constants.METALS) that bonds to no other
+    hetero atom is left out of the file: it is an ion of the crystal, such as 3BSD's Mg 3262
+    at occupancy 0.33, whose partners were waters, and would draw as a loose sphere. A lone
+    ion with no covalent radius (zinc) is drawn as it is, unbonded.
 
     Args:
         spec: One panel from `panel_checks.load_panels`.
@@ -307,9 +356,11 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
             break the plate's shared scale (`panel_checks.assert_fits_cage`); for a protein,
             if the file's chains are not exactly the chains the panel names in
             `cartoon_chains` and `stick_chains`, so that no chain is left undrawn by a typo,
-            or an atom serial is not a number.
+            if a hetero atom with no covalent radius belongs to a residue of more than one
+            atom (a phosphate's P, a drug's Cl), whose bonds could then not be written, or
+            if an atom serial is not a number.
     """
-    if spec.get("kind", "box") == "protein":
+    if spec["kind"] == PanelKind.PROTEIN:
         protein = boxprep.read_pdb(Path(spec["source"]))
         chains = set(protein.chain_ids.tolist())
         named = {*spec["cartoon_chains"], *spec["stick_chains"]}
@@ -322,16 +373,39 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
         # acids by their modern atom names and nothing of a ligand in an older file: the eight
         # BCL of 3BSD came out as 504 unbonded spheres (2026-10-09). So every bond the radius
         # rule finds among the hetero atoms is written as a CONECT record, which it reads. An
-        # atom whose element has no covalent radius (zinc) is left unbonded: a lone ion.
-        hetero = np.flatnonzero(
-            protein.is_hetero & np.isin(protein.species, list(COVALENT_RADIUS_ANGSTROM))
-        )
+        # atom whose element has no covalent radius is left unbonded, which is right only for
+        # a lone ion (zinc): in a ligand of more atoms it would be a loose sphere, so refuse it.
+        residue_of = [record[17:27] for record in protein.records]  # name, chain, number, code
+        atoms_in_residue = Counter(residue_of)
+        has_radius = np.isin(protein.species, list(COVALENT_RADIUS_ANGSTROM))
+        if in_ligand := sorted(
+            {
+                f"{protein.species[atom]} in {' '.join(residue_of[atom].split())}"
+                for atom in np.flatnonzero(protein.is_hetero & ~has_radius)
+                if atoms_in_residue[residue_of[atom]] > 1
+            }
+        ):
+            raise ValueError(
+                f"panel {spec['id']}: {spec['source']}: no covalent radius for {in_ligand}, so "
+                "their bonds cannot be written and they would draw as loose spheres; add the "
+                "species to constants.COVALENT_RADIUS_ANGSTROM"
+            )
+        hetero = np.flatnonzero(protein.is_hetero & has_radius)
         hetero_bonds = [
             (int(hetero[first]), int(hetero[second]))
             for first, second in boxprep.find_bonds(
                 protein.positions_angstrom[hetero], [protein.species[atom] for atom in hetero]
             )
         ]
+        # ponytail: bonds are looked for among hetero atoms only, so a metal held by protein
+        # side chains alone (a structural Mg) would be dropped too; bond METALS against every
+        # atom if a panel ever needs one.
+        drawn = ~(
+            protein.is_hetero
+            & (np.array([atoms_in_residue[residue] for residue in residue_of]) == 1)
+            & np.isin(protein.species, list(METALS))
+            & ~np.isin(np.arange(len(protein)), hetero_bonds)
+        )
         try:
             serials = [int(record[6:11]) for record in protein.records]
         except ValueError as error:
@@ -344,14 +418,14 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
             "\n".join(
                 [
                     *protein.secondary_structure_records,
-                    *protein.records,
+                    *(record for record, keep in zip(protein.records, drawn, strict=True) if keep),
                     *boxprep.conect_records(hetero_bonds, serials),
                     "END",
                 ]
             )
             + "\n"
         )
-        return subject, None, protein.species
+        return subject, None, np.asarray(protein.species)[drawn].tolist()
     structure = boxprep.read_xyz(Path(spec["source"]))
     species = np.asarray(structure.species)
     positions_angstrom = structure.positions_angstrom
@@ -391,6 +465,7 @@ def prepare(spec: dict, work_dir: Path) -> tuple[Path, Path | None, list[str]]:
         return subject, None, species.tolist()
     panel_checks.assert_fits_cage(
         positions_angstrom,
+        species.tolist(),
         centre_angstrom,
         extent_angstrom,
         float(spec["sphere_radius_angstrom"]),
@@ -409,7 +484,6 @@ def scene_for(
     cage: Path | None,
     species: list[str],
     *,
-    coloured: bool,
     draft: bool,
 ) -> Scene:
     """The molrender scene for one panel under the section 6.2 constraints.
@@ -417,8 +491,9 @@ def scene_for(
     Every layer's material is `Solid` with `constants.MATTE`, and the scene's light is
     `Light(**constants.RIG, world=World(strength=constants.WORLD_STRENGTH))`: the three-point
     key at 2 W, a sun fill, a side light and the studio HDRI, with the backdrop still pure
-    white. A subject of one species
-    (`coloured` False) is one grey `BallAndStick` layer. A subject of more than one is a
+    white. Whether the panel is coloured is `panel_checks.is_coloured`, the rule
+    `render_panel` saves the PNG by. A box of one species is one grey `BallAndStick` layer. A
+    subject of more than one is a
     `Sticks` layer over every atom, in the palette's carbon,
     and one `Spheres` layer per species, selected by an `AtomMask`
     against the subject PDB and coloured from the manifest's `colour` map, then
@@ -445,13 +520,11 @@ def scene_for(
     hero's last chain off at the top edge (2026-10-09), and the border check refused it.
 
     Args:
-        spec: One panel from `panel_checks.load_panels`; radii in angstrom, grey linear RGB in 0-1.
+        spec: One panel from `panel_checks.load_panels`; radii in angstrom, a box's grey
+            linear RGB in 0-1.
         subject: PDB of the atoms to draw.
         cage: PDB of the hidden cage that fixes the scale, or None to fit the subject.
         species: Element symbol of every atom in `subject`, in file order.
-        coloured: Whether the panel is coloured (a box of more than one element, or a
-            protein), decided once by the caller (`render_panel`), which also chooses the
-            saved PNG's colour mode by it.
         draft: Use the DRAFT tier (EEVEE, half resolution) instead of PRODUCTION.
 
     Returns:
@@ -463,18 +536,20 @@ def scene_for(
             in `constants.SPECIES_COLOUR`, or a cartoon chain has none in `chain_colour` and
             lies beyond the length of `constants.CHAIN_COLOUR`.
     """
-    grey = float(spec["grey"])
-    sphere_radius = float(spec["sphere_radius_angstrom"]) / CARBON_VDW_RADIUS_ANGSTROM
-    grey_layer = Layer(
-        style=BallAndStick(
-            sphere_radius=sphere_radius,
-            bond_radius=float(spec["bond_radius_angstrom"]),
-            sphere_geometry="Point",
-        ),
-        material=Solid(rgb=(grey, grey, grey), **MATTE),
-    )
-    protein = boxprep.read_pdb(subject) if spec.get("kind", "box") == "protein" else None
-    if protein is None and not coloured:
+    sphere_radius = float(spec["sphere_radius_angstrom"]) / VDW_RADIUS_ANGSTROM["C"]
+    protein = boxprep.read_pdb(subject) if spec["kind"] == PanelKind.PROTEIN else None
+    grey_layer = None  # a protein has no grey: it is coloured and never caged
+    if protein is None:
+        grey = float(spec["grey"])
+        grey_layer = Layer(
+            style=BallAndStick(
+                sphere_radius=sphere_radius,
+                bond_radius=float(spec["bond_radius_angstrom"]),
+                sphere_geometry="Point",
+            ),
+            material=Solid(rgb=(grey, grey, grey), **MATTE),
+        )
+    if not panel_checks.is_coloured(spec, species):
         subject_layers = (grey_layer,)
     else:
         atom_symbols = np.asarray(species)
@@ -583,26 +658,24 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     output = Path(spec["output_dir"]) / f"{spec['id']}.png"
     started_s = time.perf_counter()
     subject, cage, species = prepare(spec, work_dir)
-    if spec.get("kind", "box") == "protein":
+    dropped = ""
+    if spec["kind"] == PanelKind.PROTEIN:
         protein = boxprep.read_pdb(Path(spec["source"]))
-        coloured = True
         dropped = f" (dropped {protein.n_dropped_altloc} altloc, {protein.n_dropped_water} water)"
-    else:
-        coloured = len(set(species)) > 1
-        dropped = ""
     rendered = work_dir / output.name
     result = render(
-        scene_for(spec, subject, cage, species, coloured=coloured, draft=draft),
+        scene_for(spec, subject, cage, species, draft=draft),
         rendered,
         timeout=RENDER_TIMEOUT_S,
     )
     scale = 0.5 if draft else 1.0
     width_px, height_px = spec["resolution"]
+    frame_px = (int(width_px * scale), int(height_px * scale))  # what the tier rendered
     strays = panel_checks.check_and_flatten(
         rendered,
-        (int(width_px * scale), int(height_px * scale)),
+        frame_px,
         label=f"{spec['id']} ({output})",
-        coloured=coloured,
+        coloured=panel_checks.is_coloured(spec, species),
     )
     # A panel with no cage is framed to its own subject, so nothing is lost by cropping
     # its empty ground away to a square; a panel with a cage shares a scale and keeps its
@@ -610,7 +683,7 @@ def render_panel(spec: dict, work_dir: Path, draft: bool) -> None:
     if spec.get("cage_angstrom"):
         crop = "none (caged)"
     elif width_px != height_px:
-        crop = f"skipped (uncaged, but {width_px} x {height_px} is not square)"
+        crop = f"skipped (uncaged, but {frame_px[0]} x {frame_px[1]} is not square)"
     else:
         crop = f"{panel_checks.crop_to_ink(rendered)} px"
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -650,16 +723,23 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"unknown panel ids: {sorted(unknown)}")
         panels = [panel for panel in panels if panel["id"] in args.only]
     with tempfile.TemporaryDirectory(prefix="render-box-grid-") as scratch:
-        if "BLENDER_USER_SCRIPTS" not in os.environ:
+        # Set for this run only: after it the directory is gone, and a dead path would reach
+        # the next Blender this process starts.
+        set_here = "BLENDER_USER_SCRIPTS" not in os.environ
+        if set_here:
             user_scripts = Path(scratch) / "blender-user-scripts"
             user_scripts.mkdir()
             os.environ["BLENDER_USER_SCRIPTS"] = str(user_scripts)
-        for spec in panels:
-            output = Path(spec["output_dir"]) / f"{spec['id']}.png"
-            if output.exists() and not args.force:
-                print(f"{spec['id']}: exists, skipped (use --force)")
-                continue
-            render_panel(spec, Path(scratch), args.draft)
+        try:
+            for spec in panels:
+                output = Path(spec["output_dir"]) / f"{spec['id']}.png"
+                if output.exists() and not args.force:
+                    print(f"{spec['id']}: exists, skipped (use --force)")
+                    continue
+                render_panel(spec, Path(scratch), args.draft)
+        finally:
+            if set_here:
+                os.environ.pop("BLENDER_USER_SCRIPTS", None)
     return 0
 
 

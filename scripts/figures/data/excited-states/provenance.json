@@ -6,12 +6,12 @@
       "source_path": "Protein Crystal Structures/FMO Complex/3BSD.pdb",
       "source_md5": "46142c4d150df3a42c19d7f5dfcad8f4",
       "source_size_bytes": 389853,
-      "what": "PDB 3BSD, 'Light harvesting protein from RC of Chlorobium tepidum' (HEADER 23-DEC-07, released 22-JAN-08, 2.30 A): the FMO complex, one protein chain A (2,798 ATOM records) with eight bacteriochlorophyll a residues (BCL A 367-373 of 66 atoms each, A 400 of 42 atoms; 504 atoms) and 178 HOH. Ben-Shem, Frolow, Nelson, FEBS Lett. 564, 274 (2004), doi:10.1016/S0014-5793(04)00360-6. The file is the PDB's own, as downloaded in October 2015; its AUTHOR record spells Ben-Shem 'BRN-SHEM'.",
-      "edit": "One line removed, the lone magnesium ion 'HETATM 3262 MG    MG A 374      39.661 124.026 127.725  0.33 51.51          MG' (source line 4069), which would otherwise draw as a loose sphere. Nothing else changed: the HET/HETNAM/FORMUL/MASTER records still count it, and four CONECT records that name atom 3262 (3262 to 3480-3482, and the three reverse records) now point at a missing atom. boxprep.read_pdb ignores CONECT and render_box_grid.prepare writes only ATOM and HETATM records, so the render is unaffected.",
-      "edit_check": "diff against the source shows exactly one deleted line",
-      "md5": "9fb0c598b278074d84ade444731ffa1f",
-      "size_bytes": 389772,
-      "checked_before_use": "chain A only (2,798 ATOM records), 8 BCL residues with 504 atoms, 178 HOH, no HETATM left outside BCL and HOH, 522 CONECT records in the source (none are read), no alternate locations"
+      "what": "PDB 3BSD, 'Light harvesting protein from RC of Chlorobium tepidum' (HEADER 23-DEC-07, released 22-JAN-08, 2.30 A): the FMO complex, one protein chain A (2,798 ATOM records) with eight bacteriochlorophyll a residues (BCL A 367-373 of 66 atoms each, A 400 of 42 atoms; 504 atoms), one magnesium ion (MG A 374, HETATM 3262, occupancy 0.33, its CONECT partners three waters) and 178 HOH. Ben-Shem, Frolow, Nelson, FEBS Lett. 564, 274 (2004), doi:10.1016/S0014-5793(04)00360-6. The file is the PDB's own, as downloaded in October 2015; its AUTHOR record spells Ben-Shem 'BRN-SHEM'.",
+      "edit": "none; a verbatim copy. Until 2026-10-15 the lone magnesium ion HETATM 3262 was deleted by hand so it would not draw as a loose sphere; the deposited file is now kept as it is and render_box_grid.prepare leaves the ion out by rule: a one-atom HETATM residue of a metal (constants.METALS) bonded to no other hetero atom is not drawn. The subject PDB prepare writes for the hero is byte-identical either way, so the render is unaffected.",
+      "edit_check": "md5 equals source_md5",
+      "md5": "46142c4d150df3a42c19d7f5dfcad8f4",
+      "size_bytes": 389853,
+      "checked_before_use": "chain A only (2,798 ATOM records), 8 BCL residues with 504 atoms, 178 HOH, no HETATM outside BCL and HOH but the one MG ion, 522 CONECT records in the source (none are read), no alternate locations"
     },
     "chromophore-1.xyz": {
       "source_path": "Coupling_Monte_Carlo/Chromophores/Chromophore_1.xyz",
@@ -158,7 +158,7 @@
         "water": 178
       },
       "margin": 1.06,
-      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\".",
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\". Molecular Nodes was 4.5.13, the version render_box_grid.tool_versions now reads from the extension's blender_manifest.toml (installed 2026-08-08, before these renders); the summary lines at the time read \"Molecular Nodes unknown\".",
       "wall_time_s": 63,
       "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 63 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 234])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
     }

@@ -66,6 +66,35 @@ def test_load_panels_merges_plate_defaults_into_each_panel(tmp_path):
     assert [panel["id"] for panel in panels] == ["a", "b"]
     assert panels[0]["grey"] == 0.35
     assert panels[1]["grey"] == 0.5
+    # The kind's default is set once, here, so no reader applies it again.
+    assert [panel["kind"] for panel in panels] == [panel_checks.PanelKind.BOX] * 2
+
+
+def test_load_panels_requires_a_grey_of_a_box_and_not_of_a_protein(tmp_path):
+    manifest_path = _manifest(tmp_path, [{"id": "b", "source": "b.xyz"}], grey=None)
+    manifest = json.loads(manifest_path.read_text())
+    del manifest["grey"]
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match=r"panel b lacks \['grey'\]"):
+        panel_checks.load_panels(manifest_path)
+    manifest["panels"] = [{**PROTEIN_PANEL, "source": str(tmp_path / "p.pdb")}]
+    (tmp_path / "p.pdb").touch()
+    manifest_path.write_text(json.dumps(manifest))
+    (protein,) = panel_checks.load_panels(manifest_path)
+    assert protein["kind"] == panel_checks.PanelKind.PROTEIN and "grey" not in protein
+
+
+@pytest.mark.parametrize(
+    ("kind", "species", "coloured"),
+    [
+        ("box", ["C", "C", "C"], False),
+        ("box", ["C", "O"], True),
+        ("protein", ["C", "C"], True),  # its cartoon chains are coloured
+        ("protein", [], True),
+    ],
+)
+def test_a_protein_or_a_frame_of_more_than_one_species_is_coloured(kind, species, coloured):
+    assert panel_checks.is_coloured({"kind": kind}, species) is coloured
 
 
 def test_load_panels_rejects_a_panel_missing_a_required_key(tmp_path):
@@ -276,7 +305,7 @@ def test_load_panels_refuses_chain_keys_on_a_box_panel(tmp_path, chain_key):
 def test_assert_fits_cage_passes_when_the_subject_fits_with_its_spheres():
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [-5.0, 0.0, 0.0]])
     panel_checks.assert_fits_cage(
-        positions_angstrom, np.zeros(3), [12.0, 12.0, 12.0], 0.5, "fits-panel"
+        positions_angstrom, ["C"] * 3, np.zeros(3), [12.0, 12.0, 12.0], 0.5, "fits-panel"
     )
 
 
@@ -284,7 +313,21 @@ def test_assert_fits_cage_raises_naming_the_panel_when_it_does_not_fit():
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [-5.0, 0.0, 0.0]])
     with pytest.raises(ValueError, match="too-small-panel"):
         panel_checks.assert_fits_cage(
-            positions_angstrom, np.zeros(3), [9.0, 9.0, 9.0], 0.5, "too-small-panel"
+            positions_angstrom, ["C"] * 3, np.zeros(3), [9.0, 9.0, 9.0], 0.5, "too-small-panel"
+        )
+
+
+def test_assert_fits_cage_allows_each_species_the_radius_molecular_nodes_draws_it_at():
+    # An atom 5.5 A from the centre of a 12 A cage, spheres 0.4 A for carbon: carbon reaches
+    # 5.9 A and fits; potassium is drawn at 0.4 x 2.75 / 1.70 = 0.65 A and reaches 6.15 A,
+    # past the 6 A wall.
+    positions_angstrom = np.array([[0.0, 0.0, 0.0], [5.5, 0.0, 0.0]])
+    panel_checks.assert_fits_cage(
+        positions_angstrom, ["C", "C"], np.zeros(3), [12.0, 12.0, 12.0], 0.4, "carbon"
+    )
+    with pytest.raises(ValueError, match=r"panel potassium: .* needs a cage of \[12\.29, "):
+        panel_checks.assert_fits_cage(
+            positions_angstrom, ["C", "K"], np.zeros(3), [12.0, 12.0, 12.0], 0.4, "potassium"
         )
 
 

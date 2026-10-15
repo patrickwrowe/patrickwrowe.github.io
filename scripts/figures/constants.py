@@ -47,6 +47,10 @@ BOND_TOLERANCE = 1.2
 BARE_IONS = frozenset({"Li", "K", "Na"})
 # Layer cations: bonded to their anions by the radius rule, never to each other.
 LAYER_METALS = frozenset({"Mo", "Mg", "Al"})
+# Every metal with a covalent radius above. In a protein panel a lone ion of one of them, a
+# one-atom HETATM residue bonded to no other hetero atom (3BSD's Mg 3262, occupancy 0.33, whose
+# partners were waters), is not drawn (render_box_grid.prepare).
+METALS = BARE_IONS | LAYER_METALS
 # The flat carbon-carbon cutoff: 1.2 x (0.76 + 0.76) = 1.824 A.
 CARBON_BOND_CUTOFF_ANGSTROM = BOND_TOLERANCE * 2 * COVALENT_RADIUS_ANGSTROM["C"]
 
@@ -105,16 +109,36 @@ RIG: dict[str, float] = {"key_power": 2.0, "sun_strength": 1.5, "side_power": 12
 # pure white whatever it is (the camera sees `World.background`, the subject sees the HDRI).
 WORLD_STRENGTH: float = 0.8
 
-# Molecular Nodes' van der Waals radius for carbon (molecularnodes assets/data.py). Its
-# BallAndStick style reads sphere_radius as a factor on this, not as a length.
-CARBON_VDW_RADIUS_ANGSTROM = 1.70
+# Molecular Nodes' van der Waals radii for the species of SPECIES_COLOUR (molecularnodes 4.5.13,
+# assets/data.py, `elements[symbol]["vdw_radii"]`, given there in picometres). Its BallAndStick
+# style reads sphere_radius as a factor on each atom's own radius, not as a length, so a
+# manifest's sphere_radius_angstrom is divided by carbon's: carbon is drawn at that length and
+# every other species at its own radius times the same factor (potassium 1.62 times carbon).
+VDW_RADIUS_ANGSTROM = {
+    "C": 1.70,
+    "H": 1.20,
+    "O": 1.52,
+    "N": 1.55,
+    "B": 1.92,
+    "S": 1.80,
+    "Mo": 2.39,
+    "Mg": 1.73,
+    "Li": 1.82,
+    "K": 2.75,
+    "Na": 2.27,
+    "Si": 2.10,
+    "Al": 1.84,
+}
 
 
 def srgb_hex_to_linear(hex_colour: str) -> tuple[float, float, float]:
     """sRGB hex ("#rrggbb") to linear RGB in 0-1, the space Blender's Solid material takes.
 
-    Under the Standard view transform a linear value renders back to the sRGB it came from,
-    so a token on the page and the same species in a PNG match.
+    The token becomes the material's base colour, which the Standard view transform leaves
+    un-tone-mapped: a flat patch of that material lit at unit irradiance would render back to
+    the token's sRGB. A lit sphere does not: its pixels are the base colour times the light
+    reaching each point (plus the specular), so it shades through many tones, and the token
+    is the species' colour, not any one pixel of it.
 
     Args:
         hex_colour: Six hex digits after a "#".

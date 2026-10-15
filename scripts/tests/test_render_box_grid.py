@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import json
+import os
 import subprocess
 import sys
 import types
@@ -172,8 +174,8 @@ def render_box_grid(render_box_grid_module, monkeypatch, scene_calls):
         lambda spec, work_dir: (work_dir / "subject.pdb", None, ["C"] * 7),
     )
 
-    def record_scene(spec, subject, cage, species, *, coloured, draft):
-        scene_calls.append({"coloured": coloured, "draft": draft})
+    def record_scene(spec, subject, cage, species, *, draft):
+        scene_calls.append({"draft": draft})
 
     monkeypatch.setattr(render_box_grid_module, "scene_for", record_scene)
     monkeypatch.setattr(render_box_grid_module, "tool_versions", lambda: "VERSIONS")
@@ -209,6 +211,7 @@ def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
     # the cell's mid-height keeps the three atoms at z = 5.0 of each image.
     spec = {
         "id": "box",
+        "kind": "box",
         "source": str(source),
         "density_g_cm3": 0.08,
         "tile": [2, 1, 1],
@@ -229,7 +232,7 @@ def test_prepare_writes_a_tiled_slab_of_carbon_with_one_species_per_atom(
 def test_prepare_writes_a_frame_of_two_species_with_its_bond(render_box_grid_module, tmp_path):
     source = tmp_path / "co.xyz"
     source.write_text("2\ncarbon monoxide\nC 0.0 0.0 0.0\nO 1.13 0.0 0.0\n")
-    spec = {"id": "co", "source": str(source), "cage_angstrom": None}
+    spec = {"id": "co", "kind": "box", "source": str(source), "cage_angstrom": None}
     subject, cage, species = render_box_grid_module.prepare(spec, tmp_path)
     lines = subject.read_text().splitlines()
     assert cage is None
@@ -244,7 +247,13 @@ def test_prepare_refuses_a_slab_that_leaves_no_atoms_naming_the_panel(
     # Two atoms 6 A apart in z: a 2 A slab about their mean z holds neither.
     source = tmp_path / "pair.xyz"
     source.write_text("2\ntwo carbons\nC 0.0 0.0 0.0\nC 0.0 0.0 6.0\n")
-    spec = {"id": "pair", "source": str(source), "slab_angstrom": 2.0, "cage_angstrom": None}
+    spec = {
+        "id": "pair",
+        "kind": "box",
+        "source": str(source),
+        "slab_angstrom": 2.0,
+        "cage_angstrom": None,
+    }
     with pytest.raises(ValueError, match=r"panel pair: no atoms to draw from .*pair\.xyz"):
         render_box_grid_module.prepare(spec, tmp_path)
     assert not (tmp_path / "pair.pdb").exists()
@@ -278,16 +287,17 @@ def _render_writing(
 
 
 def _render_panel(
-    module, monkeypatch, tmp_path: Path, spec: dict, ink_box, ink_rgb=(90, 90, 90)
+    module, monkeypatch, tmp_path: Path, spec: dict, ink_box, ink_rgb=(90, 90, 90), draft=False
 ) -> Path:
     """Run render_panel on `spec` with the stand-in renderer; return the output PNG."""
-    monkeypatch.setattr(
-        module, "render", _render_writing(tuple(spec["resolution"]), ink_box, ink_rgb)
-    )
+    frame_px = tuple(length_px // 2 if draft else length_px for length_px in spec["resolution"])
+    monkeypatch.setattr(module, "render", _render_writing(frame_px, ink_box, ink_rgb))
     work_dir = tmp_path / "work"
     work_dir.mkdir()
     module.render_panel(
-        {"id": "panel", "output_dir": str(tmp_path / "out"), **spec}, work_dir, draft=False
+        {"id": "panel", "kind": "box", "output_dir": str(tmp_path / "out"), **spec},
+        work_dir,
+        draft=draft,
     )
     return tmp_path / "out" / "panel.png"
 
@@ -300,6 +310,17 @@ def test_an_uncaged_non_square_panel_keeps_its_full_frame(
     output = _render_panel(render_box_grid, monkeypatch, tmp_path, spec, (54, 918, 10, 1718))
     assert Image.open(output).size == (1728, 972)
     assert "crop skipped (uncaged, but 1728 x 972 is not square)" in capsys.readouterr().out
+
+
+def test_a_draft_summary_gives_the_draft_frame_not_the_production_one(
+    render_box_grid, monkeypatch, tmp_path, capsys
+):
+    spec = {"resolution": [1728, 972], "cage_angstrom": None}
+    output = _render_panel(
+        render_box_grid, monkeypatch, tmp_path, spec, (27, 459, 5, 859), draft=True
+    )
+    assert Image.open(output).size == (864, 486)
+    assert "crop skipped (uncaged, but 864 x 486 is not square)" in capsys.readouterr().out
 
 
 def test_an_uncaged_square_panel_is_cropped_to_its_ink(
@@ -344,8 +365,7 @@ def test_the_species_count_decides_whether_a_panel_is_saved_grey_or_in_colour(
     saved = Image.open(output)
     assert saved.mode == mode
     assert saved.convert("RGB").getpixel((400, 400)) == ink_rgb
-    # The one decision reaches the scene as well as the PNG's colour mode.
-    assert scene_calls == [{"coloured": coloured, "draft": False}]
+    assert scene_calls == [{"draft": False}]
 
 
 def test_a_coloured_panel_with_ink_in_its_border_is_refused_and_leaves_nothing_behind(
@@ -366,6 +386,7 @@ def test_a_coloured_panel_with_ink_in_its_border_is_refused_and_leaves_nothing_b
 
 SCENE_SPEC = {
     "id": "water",
+    "kind": "box",
     "grey": 0.35,
     "sphere_radius_angstrom": 0.4,
     "bond_radius_angstrom": 0.2,
@@ -383,7 +404,6 @@ def _scene(module, tmp_path: Path, species: list[str], cage: bool = False, **spe
         subject,
         subject if cage else None,
         species,
-        coloured=len(set(species)) > 1,
         draft=False,
     )
     return scene, subject
@@ -493,23 +513,40 @@ def _fake_blender(tmp_path: Path, body: str) -> Path:
     ("blender_body", "molrender_installed", "expected"),
     [
         (
-            "printf 'Blender 9.9.9\\n\\tbuild date: 2026-01-01\\n'",
+            "printf 'TOOL_VERSIONS 9.9.9 4.5.13\\nBlender 9.9.9 (hash x)\\n\\nBlender quit\\n'",
+            True,
+            "Blender 9.9.9, Molecular Nodes 4.5.13, molrender 1.2.3",
+        ),
+        (
+            "printf 'TOOL_VERSIONS 9.9.9 unknown\\n'",
             True,
             "Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3",
         ),
         (
-            "printf 'Blender 9.9.9\\n'",
+            "printf 'TOOL_VERSIONS 9.9.9 4.5.13\\n'",
             False,
-            "Blender 9.9.9, Molecular Nodes unknown, molrender unknown",
+            "Blender 9.9.9, Molecular Nodes 4.5.13, molrender unknown",
         ),
         (
-            "echo 'Blender 9.9.9'; exit 1",
+            "echo 'TOOL_VERSIONS 9.9.9 4.5.13'; exit 1",
+            True,
+            "Blender unknown, Molecular Nodes unknown, molrender 1.2.3",
+        ),
+        (
+            "echo 'Blender 9.9.9 (hash x)'",  # the expression raised before it printed
             True,
             "Blender unknown, Molecular Nodes unknown, molrender 1.2.3",
         ),
         (None, True, "Blender unknown, Molecular Nodes unknown, molrender 1.2.3"),
     ],
-    ids=["all found", "molrender not installed", "blender exits non-zero", "blender not found"],
+    ids=[
+        "all found",
+        "no molecular nodes extension",
+        "molrender not installed",
+        "blender exits non-zero",
+        "no version line",
+        "blender not found",
+    ],
 )
 def test_tool_versions_reads_each_version_or_says_unknown(
     render_box_grid_module,
@@ -565,12 +602,12 @@ def test_tool_versions_names_the_checkout_commit_molrender_runs_from(
     monkeypatch.setattr(
         render_box_grid_module,
         "find_blender",
-        lambda: _fake_blender(tmp_path, "echo 'Blender 9.9.9'"),
+        lambda: _fake_blender(tmp_path, "echo 'TOOL_VERSIONS 9.9.9 4.5.13'"),
     )
     monkeypatch.setattr(render_box_grid_module, "version", lambda name: "1.2.3")
 
     assert tool_versions() == (
-        f"Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3 ({short_sha})"
+        f"Blender 9.9.9, Molecular Nodes 4.5.13, molrender 1.2.3 ({short_sha})"
     )
 
     # A tracked file edited after the commit marks the SHA dirty: that code did not render.
@@ -584,7 +621,7 @@ def test_tool_versions_names_the_checkout_commit_molrender_runs_from(
     tracked.write_text("b\n")
     tool_versions.cache_clear()
     assert tool_versions() == (
-        f"Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3 ({dirty_sha}-dirty)"
+        f"Blender 9.9.9, Molecular Nodes 4.5.13, molrender 1.2.3 ({dirty_sha}-dirty)"
     )
 
 
@@ -592,9 +629,11 @@ def test_tool_versions_names_the_checkout_commit_molrender_runs_from(
 # protein panels
 # ---------------------------------------------------------------------------
 
-# toy-protein.pdb keeps 10 atoms: chain A holds atoms 0-4 (alanine, glycine), zinc (7) and
-# magnesium (8); chain B holds atoms 5 and 6 and the ligand carbon (9). Zinc has no palette
-# colour, so a protein spec that draws it names one.
+# toy-protein.pdb keeps 10 atoms and `prepare` draws 9: chain A holds atoms 0-4 (alanine,
+# glycine) and zinc (7); chain B holds atoms 5 and 6 and the ligand carbon (8). Its magnesium
+# (serial 10) is a lone metal ion bonded to nothing, which `prepare` leaves out; the zinc has
+# no covalent radius, so no bond can be looked for, and is drawn. Zinc has no palette colour,
+# so a protein spec that draws it names one.
 PROTEIN_SPEC = {
     **SCENE_SPEC,
     "id": "toy",
@@ -612,7 +651,7 @@ def _protein_scene(module, work_dir: Path, **spec_overrides):
     spec = {**PROTEIN_SPEC, **spec_overrides}
     subject, cage, species = module.prepare(spec, work_dir)
     assert cage is None
-    scene = module.scene_for(spec, subject, cage, species, coloured=True, draft=False)
+    scene = module.scene_for(spec, subject, cage, species, draft=False)
     return scene, subject
 
 
@@ -622,14 +661,14 @@ def test_prepare_writes_a_protein_as_the_atoms_read_pdb_kept_in_the_files_order(
     subject, cage, species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
     lines = subject.read_text().splitlines()
     assert cage is None
-    assert species == ["N", "C", "C", "N", "C", "N", "C", "Zn", "Mg", "C"]
+    assert species == ["N", "C", "C", "N", "C", "N", "C", "Zn", "C"]
     assert [line[:5] for line in lines if not line.startswith(("ATOM", "HETATM"))] == [
         "HELIX",
         "SHEET",
         "END",
     ]
     atoms = [line for line in lines if line.startswith(("ATOM", "HETATM"))]
-    assert [int(line[6:11]) for line in atoms] == [1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
+    assert [int(line[6:11]) for line in atoms] == [1, 2, 4, 5, 6, 7, 8, 9, 11]
     # Atom 8 is in residue 7A: the insertion code reaches column 27 of the subject file.
     assert atoms[6][22:27] == "   7A"
 
@@ -653,37 +692,33 @@ def test_a_protein_is_a_cartoon_layer_per_cartoon_chain_and_species_layers_over_
 ):
     scene, subject = _protein_scene(render_box_grid_module, tmp_path)
     structure_id = StandInStructureId(
-        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=10
+        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=9
     )
     (structure,) = scene.entities  # no cage
     cartoon, sticks, *spheres = structure.layers
     assert not structure.remove_solvent
 
-    # Chain A is atoms 0-4 and the two ions; chain B is atoms 5, 6 and the ligand carbon.
+    # Chain A is atoms 0-4 and the zinc; chain B is atoms 5, 6 and the ligand carbon.
     assert cartoon == StandInLayer(
         style=StandInCartoon(),
         material=StandInSolid(rgb=srgb_hex_to_linear(CHAIN_COLOUR[0]), **MATTE),
-        select=StandInAtomMask(
-            mask=(True,) * 5 + (False,) * 2 + (True,) * 2 + (False,), of=structure_id
-        ),
+        select=StandInAtomMask(mask=(True,) * 5 + (False,) * 2 + (True, False), of=structure_id),
     )
     # The sticks and spheres cover the stick chain and every HETATM, and nothing else.
-    drawn = (False,) * 5 + (True,) * 5
+    drawn = (False,) * 5 + (True,) * 4
     assert sticks.select == StandInAtomMask(mask=drawn, of=structure_id)
-    # The sticks are the cartoon's carbon, not the darker magnesium, whose sphere then shows.
+    # The sticks are the palette's carbon, whatever darker species is drawn.
     assert sticks.material == StandInSolid(rgb=srgb_hex_to_linear(SPECIES_COLOUR["C"]), **MATTE)
     masks = {
-        symbol: layer.select.mask
-        for symbol, layer in zip(["C", "Mg", "N", "Zn"], spheres, strict=True)
+        symbol: layer.select.mask for symbol, layer in zip(["C", "N", "Zn"], spheres, strict=True)
     }
     assert [layer.material.rgb for layer in spheres] == [
         srgb_hex_to_linear(colour)
-        for colour in (SPECIES_COLOUR["C"], SPECIES_COLOUR["Mg"], SPECIES_COLOUR["N"], "#336699")
+        for colour in (SPECIES_COLOUR["C"], SPECIES_COLOUR["N"], "#336699")
     ]
-    assert masks["C"] == (False,) * 6 + (True,) + (False,) * 2 + (True,)
-    assert masks["N"] == (False,) * 5 + (True,) + (False,) * 4
-    assert masks["Zn"] == (False,) * 7 + (True,) + (False,) * 2
-    assert masks["Mg"] == (False,) * 8 + (True,) + (False,)
+    assert masks["C"] == (False,) * 6 + (True, False, True)
+    assert masks["N"] == (False,) * 5 + (True,) + (False,) * 3
+    assert masks["Zn"] == (False,) * 7 + (True, False)
     assert all(
         layer.style == StandInSpheres(radius=0.4 / 1.70, geometry="Instance") for layer in spheres
     )
@@ -726,19 +761,17 @@ def test_each_cartoon_chain_takes_the_chain_palette_in_order_unless_the_manifest
         chain_colour={"A": "#102030"},
     )
     structure_id = StandInStructureId(
-        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=10
+        sha256=hashlib.sha256(subject.read_bytes()).hexdigest(), n_atoms=9
     )
     chain_b, chain_a = scene.entities[0].layers[:2]
     # Chain B is first in the list, so it takes the palette's first colour.
     assert chain_b == StandInLayer(
         style=StandInCartoon(),
         material=StandInSolid(rgb=srgb_hex_to_linear(CHAIN_COLOUR[0]), **MATTE),
-        select=StandInAtomMask(
-            mask=(False,) * 5 + (True,) * 2 + (False,) * 2 + (True,), of=structure_id
-        ),
+        select=StandInAtomMask(mask=(False,) * 5 + (True,) * 2 + (False, True), of=structure_id),
     )
     assert chain_a.material.rgb == srgb_hex_to_linear("#102030")
-    assert chain_a.select.mask == (True,) * 5 + (False,) * 2 + (True,) * 2 + (False,)
+    assert chain_a.select.mask == (True,) * 5 + (False,) * 2 + (True, False)
 
 
 def test_a_cartoon_chain_beyond_the_palette_with_no_manifest_colour_is_refused(
@@ -764,7 +797,7 @@ def test_a_protein_panel_goes_from_pdb_to_a_saved_rgb_png(
     )
     saved = Image.open(output)
     assert saved.mode == "RGB" and saved.size == (1728, 972)
-    assert "panel: 10 atoms" in capsys.readouterr().out
+    assert "panel: 9 atoms" in capsys.readouterr().out
 
 
 def test_a_protein_panels_summary_line_counts_the_atom_records_read_pdb_dropped(
@@ -775,7 +808,7 @@ def test_a_protein_panels_summary_line_counts_the_atom_records_read_pdb_dropped(
     _render_panel(
         render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), (74, 74, 74)
     )
-    assert "panel: 10 atoms (dropped 1 altloc, 1 water), wall" in capsys.readouterr().out
+    assert "panel: 9 atoms (dropped 1 altloc, 1 water), wall" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize(
@@ -811,15 +844,13 @@ def test_a_protein_is_always_saved_in_colour(
     monkeypatch.setattr(
         render_box_grid_module,
         "scene_for",
-        lambda spec, subject, cage, species, *, coloured, draft: scene_calls.append(
-            {"coloured": coloured, "draft": draft}
-        ),
+        lambda spec, subject, cage, species, *, draft: scene_calls.append({"draft": draft}),
     )
     output = _render_panel(
         render_box_grid_module, monkeypatch, tmp_path, spec, (54, 918, 10, 1718), ink_rgb
     )
     assert Image.open(output).mode == mode
-    assert scene_calls == [{"coloured": coloured, "draft": False}]
+    assert scene_calls == [{"draft": False}]
 
 
 def test_a_cartoon_alone_protein_is_judged_on_its_border_not_its_whole_frame(
@@ -870,7 +901,8 @@ def test_prepare_writes_a_conect_record_for_each_bond_among_the_hetero_atoms_wit
 def test_a_protein_with_no_bonded_hetero_atoms_gets_no_conect_record(
     render_box_grid_module, tmp_path
 ):
-    # The toy's zinc has no covalent radius and its magnesium is 6 A from the ligand carbon.
+    # The toy's zinc has no covalent radius, and its magnesium, 6 A from the ligand carbon, is
+    # a lone ion that is not drawn at all.
     subject, _cage, _species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
     assert not any(line.startswith("CONECT") for line in subject.read_text().splitlines())
 
@@ -898,6 +930,9 @@ def test_the_fmo_hero_is_prepared_with_the_568_bonds_of_its_eight_bchl_and_no_ot
     spec = next(panel for panel in panel_checks.load_panels(FMO_MANIFEST) if panel["id"] == "hero")
     subject, cage, species = render_box_grid_module.prepare(spec, tmp_path)
     assert cage is None and len(species) == 3302
+    # The deposited file's lone Mg 3262 (occupancy 0.33, bonded only to waters) is not drawn.
+    assert "HETATM 3262 MG    MG A 374" in Path(spec["source"]).read_text()
+    assert "HETATM 3262" not in subject.read_text()
     lines = subject.read_text().splitlines()
     atoms = {
         int(line[6:11]): (line[17:20], line[22:26].strip(), line[12:16].strip(), line[21])
@@ -931,3 +966,119 @@ def test_the_fmo_hero_is_prepared_with_the_568_bonds_of_its_eight_bchl_and_no_ot
     assert len(magnesium) == 8
     for atom in magnesium:
         assert sorted(atoms[partner][2][0] for partner in partners[atom]) == ["N"] * 4
+
+
+PHOSPHATE_RECORDS = [
+    "HETATM   20  P   PO4 B 401      20.000   3.000   1.000  1.00 20.00           P",
+    "HETATM   21  O1  PO4 B 401      21.540   3.000   1.000  1.00 20.00           O",
+    "HETATM   22  O2  PO4 B 401      19.487   4.452   1.000  1.00 20.00           O",
+    "HETATM   23  O3  PO4 B 401      19.487   2.274   2.257  1.00 20.00           O",
+    "HETATM   24  O4  PO4 B 401      19.487   2.274  -0.257  1.00 20.00           O",
+]
+
+
+def test_a_ligand_atom_with_no_covalent_radius_is_refused_naming_it_and_its_residue(
+    render_box_grid_module, tmp_path
+):
+    # Phosphorus has no covalent radius, so the phosphate's P-O bonds could not be written and
+    # P would float free of its four oxygens; the run used to exit 0.
+    lines = TOY_PROTEIN.read_text().splitlines()
+    lines.insert(lines.index("ENDMDL"), "\n".join(PHOSPHATE_RECORDS))
+    source = tmp_path / "phosphate.pdb"
+    source.write_text("\n".join(lines) + "\n")
+    with pytest.raises(
+        ValueError, match=r"panel toy: .* no covalent radius for \['P in PO4 B 401'\]"
+    ):
+        render_box_grid_module.prepare({**PROTEIN_SPEC, "source": str(source)}, tmp_path)
+    assert not (tmp_path / "toy.pdb").exists()
+
+
+def test_a_lone_ion_with_no_covalent_radius_passes_and_is_drawn(render_box_grid_module, tmp_path):
+    # The toy's zinc is a one-atom residue, ZN A 101: there is no bond to write.
+    subject, _cage, species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
+    assert "Zn" in species
+    assert "HETATM    9 ZN    ZN A 101" in subject.read_text()
+
+
+def test_a_lone_metal_ion_bonded_to_nothing_is_left_out_and_a_bonded_one_is_kept(
+    render_box_grid_module, tmp_path
+):
+    # The toy's MG A 102 is 6 A from every other hetero atom. Moved 2.1 A from the ligand
+    # oxygen of LIGAND_RECORDS it is bonded (the Mg-O cutoff is 2.48 A) and drawn.
+    subject, _cage, species = render_box_grid_module.prepare(PROTEIN_SPEC, tmp_path)
+    assert "Mg" not in species and "HETATM   10" not in subject.read_text()
+    lines = TOY_PROTEIN.read_text().splitlines()
+    lines.insert(lines.index("ENDMDL"), "\n".join(LIGAND_RECORDS))
+    source = tmp_path / "bound.pdb"
+    source.write_text(
+        "\n".join(lines).replace(
+            "HETATM   10 MG    MG A 102       6.000   5.000   5.000",
+            "HETATM   10 MG    MG A 102      16.930   3.000   1.000",
+        )
+        + "\n"
+    )
+    subject, _cage, species = render_box_grid_module.prepare(
+        {**PROTEIN_SPEC, "id": "bound", "source": str(source)}, tmp_path
+    )
+    assert "Mg" in species
+    assert "CONECT   10   15" in subject.read_text().splitlines()
+
+
+def test_main_leaves_the_environment_as_it_found_it(render_box_grid, monkeypatch, tmp_path):
+    source = tmp_path / "c.xyz"
+    source.write_text("1\none carbon\nC 0.0 0.0 0.0\n")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "output_dir": str(tmp_path / "out"),
+                "direction": [0.0, 0.0, 1.0],
+                "resolution": [100, 100],
+                "sphere_radius_angstrom": 0.4,
+                "bond_radius_angstrom": 0.2,
+                "grey": 0.25,
+                "panels": [{"id": "a", "source": str(source)}, {"id": "b", "source": str(source)}],
+            }
+        )
+    )
+    monkeypatch.delenv("BLENDER_USER_SCRIPTS", raising=False)
+    before = dict(os.environ)
+    seen = []
+
+    def render_panel(spec, work_dir, draft):
+        seen.append(os.environ["BLENDER_USER_SCRIPTS"])
+        assert Path(seen[-1]).is_dir()  # a fresh directory Blender can write its template to
+        if spec["id"] == "b":
+            raise RuntimeError("panel b failed")
+
+    monkeypatch.setattr(render_box_grid, "render_panel", render_panel)
+    with pytest.raises(RuntimeError, match="panel b failed"):
+        render_box_grid.main(["--manifest", str(manifest)])
+    assert len(seen) == 2
+    assert dict(os.environ) == before
+    # A variable the caller set is the caller's: used, and left alone.
+    monkeypatch.setenv("BLENDER_USER_SCRIPTS", str(tmp_path))
+    seen.clear()
+    monkeypatch.setattr(
+        render_box_grid, "render_panel", lambda spec, work_dir, draft: seen.append(1)
+    )
+    assert render_box_grid.main(["--manifest", str(manifest)]) == 0
+    assert os.environ["BLENDER_USER_SCRIPTS"] == str(tmp_path)
+
+
+@dataclass(frozen=True)
+class MainBranchLight:
+    """molrender main's Light, before the opt-in sun fill and side light."""
+
+    key_power: float = 4.0
+    world: StandInWorld | None = None
+
+
+def test_a_molrender_whose_light_lacks_the_rigs_fields_is_refused_at_import(monkeypatch):
+    stand_in = types.ModuleType("molrender")
+    for name, stand_in_object in {**MOLRENDER_STAND_INS, "Light": MainBranchLight}.items():
+        setattr(stand_in, name, stand_in_object)
+    monkeypatch.setitem(sys.modules, "molrender", stand_in)
+    monkeypatch.delitem(sys.modules, "render_box_grid", raising=False)
+    with pytest.raises(ImportError, match=r"\['side_power', 'sun_strength'\].*081ded2"):
+        importlib.import_module("render_box_grid")

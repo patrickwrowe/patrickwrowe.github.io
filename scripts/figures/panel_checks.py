@@ -10,8 +10,9 @@ from the project's `.venv`. The checks that do not themselves need Blender live 
 instead, pure numpy and Pillow: manifest loading and validation (`load_panels`), the cage
 containment guard that keeps every panel of a plate at one shared scale
 (`assert_fits_cage`), and the rendered-PNG whiteness and chroma check
-(`check_and_flatten`). `render_box_grid.py` imports all three and keeps only the parts that
-need molrender: the PDB-writing half of `prepare`, `scene_for`, `render_panel` and `main`.
+(`check_and_flatten`), and the one rule that decides whether a panel is coloured or grey
+(`is_coloured`). `render_box_grid.py` imports them and keeps only the parts that need
+molrender: the PDB-writing half of `prepare`, `scene_for`, `render_panel` and `main`.
 
 Units: lengths in angstrom, pixel values 0-255.
 """
@@ -21,14 +22,24 @@ from __future__ import annotations
 import json
 import math
 import re
+from enum import StrEnum
 from pathlib import Path
 
 import numpy as np
+from constants import VDW_RADIUS_ANGSTROM
 from PIL import Image
 
 # A relative `source` or `output_dir` in a manifest is relative to the repository root,
 # whatever the current directory (pytest from scripts/tests, the renderer from anywhere).
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+class PanelKind(StrEnum):
+    """What a panel draws: a periodic box or free cluster from XYZ, or a PDB protein."""
+
+    BOX = "box"
+    PROTEIN = "protein"
+
 
 REQUIRED_KEYS = (
     "id",
@@ -38,8 +49,9 @@ REQUIRED_KEYS = (
     "resolution",
     "sphere_radius_angstrom",
     "bond_radius_angstrom",
-    "grey",
 )
+# Keys only a box panel must carry: a protein is always coloured, so it has no grey.
+BOX_KEYS = ("grey",)
 # Optional plate- or panel-level keys documented in render_box_grid.py's module
 # docstring, beyond REQUIRED_KEYS. Anything else in a panel's merged dict is a typo
 # (a plate-level key misspelled, e.g. "slab_angstorm" for "slab_angstrom") that would
@@ -58,7 +70,7 @@ OPTIONAL_KEYS = frozenset(
         "chain_colour",
     }
 )
-ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | OPTIONAL_KEYS
+ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | frozenset(BOX_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
 ELEMENT_SYMBOL = re.compile(r"[A-Z][a-z]?")
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
@@ -165,7 +177,7 @@ VALUE_RULES = {
         "three positive integers [nx, ny, nz]",
     ),
     "colour": (_is_colour_map, "a map of element symbol to sRGB hex"),
-    "kind": (lambda value: value in ("box", "protein"), 'either "box" or "protein"'),
+    "kind": (lambda value: value in tuple(PanelKind), 'either "box" or "protein"'),
     "cartoon_chains": (
         lambda value: _is_chain_list(value) and len(value) > 0,
         "a non-empty list of distinct one-character chain ids",
@@ -210,7 +222,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
     Returns:
         One dict per panel, each holding every plate-level key (lengths in angstrom,
         resolution in pixels) overridden by the panel's own keys, with a relative
-        `source` or `output_dir` resolved against REPO_ROOT.
+        `source` or `output_dir` resolved against REPO_ROOT, and its `kind` always set
+        (PanelKind.BOX when the manifest leaves it out), so no reader applies a default.
 
     Raises:
         ValueError: If the manifest has no "panels" list, a panel lacks a key in
@@ -227,7 +240,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
             share a chain, whose chain_colour (a map of chain id to "#rrggbb") names a chain
             not in cartoon_chains, a box panel that carries chain lists or chain_colour,
             an id does not match PANEL_ID (letters, digits, "_", "." and "-"), or two
-            panels share an id. Every message names the manifest, the panel and the key.
+            panels share an id, or a box panel lacks BOX_KEYS. Every message names the
+            manifest, the panel and the key.
     """
     manifest = json.loads(manifest_path.read_text())
     if not isinstance(manifest.get("panels"), list):
@@ -235,6 +249,7 @@ def load_panels(manifest_path: Path) -> list[dict]:
     plate = {key: value for key, value in manifest.items() if key != "panels"}
     panels = [{**plate, **panel} for panel in manifest["panels"]]
     for panel in panels:
+        panel.setdefault("kind", PanelKind.BOX)
         for key in ("source", "output_dir"):
             if isinstance(panel.get(key), str) and not Path(panel[key]).is_absolute():
                 panel[key] = str(REPO_ROOT / panel[key])
@@ -252,7 +267,7 @@ def load_panels(manifest_path: Path) -> list[dict]:
                 raise ValueError(
                     f"{manifest_path}: panel {name}: {key} is {panel[key]!r}, expected {expected}"
                 )
-        if panel.get("kind", "box") == "protein":
+        if panel["kind"] == PanelKind.PROTEIN:
             lacking = [key for key in PROTEIN_KEYS if key not in panel]
             if lacking:
                 raise ValueError(f"{manifest_path}: panel {name} is a protein and lacks {lacking}")
@@ -278,6 +293,8 @@ def load_panels(manifest_path: Path) -> list[dict]:
                 )
         elif any(key in panel for key in (*PROTEIN_KEYS, *PROTEIN_OPTIONAL_KEYS)):
             raise ValueError(f"{manifest_path}: panel {name} has chain keys but is not a protein")
+        elif lacking := [key for key in BOX_KEYS if key not in panel]:
+            raise ValueError(f"{manifest_path}: panel {name} lacks {lacking}")
         if not PANEL_ID.fullmatch(str(name)):
             raise ValueError(f"{manifest_path}: panel id {name!r} does not match [\\w.-]+")
         if name in seen_ids:
@@ -286,8 +303,26 @@ def load_panels(manifest_path: Path) -> list[dict]:
     return panels
 
 
+def is_coloured(spec: dict, species: list[str]) -> bool:
+    """Whether a panel is drawn in colour, the one rule both the scene and the saved PNG follow.
+
+    CLAUDE.md: a render of more than one species takes one colour per species, and a
+    protein's cartoon one colour per chain, so a protein is coloured whatever it draws by
+    species; a box of one species is grey.
+
+    Args:
+        spec: One panel from `load_panels`, whose `kind` is always set.
+        species: Element symbol of every atom the panel draws.
+
+    Returns:
+        True for a protein or a frame of more than one species.
+    """
+    return spec["kind"] == PanelKind.PROTEIN or len(set(species)) > 1
+
+
 def assert_fits_cage(
     positions_angstrom: np.ndarray,
+    species: list[str],
     centre_angstrom: np.ndarray,
     cage_angstrom: list[float] | tuple[float, float, float],
     sphere_radius_angstrom: float,
@@ -299,21 +334,34 @@ def assert_fits_cage(
     fits the camera to everything loaded, hidden or not); a subject too big for its
     cage would otherwise frame itself and quietly break that shared scale.
 
+    Each atom is allowed the radius the renderer draws it at: Molecular Nodes scales each
+    species' own van der Waals radius by `sphere_radius_angstrom` over carbon's
+    (constants.VDW_RADIUS_ANGSTROM), so carbon reaches `sphere_radius_angstrom` and
+    potassium 1.62 times as far.
+
     Args:
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
+        species: Element symbol per atom.
         centre_angstrom: The cage's centre, shape (3,), in angstrom.
         cage_angstrom: [x, y, z] full extents of the cage, in angstrom.
-        sphere_radius_angstrom: Drawn sphere radius, in angstrom.
+        sphere_radius_angstrom: Drawn radius of a carbon sphere, in angstrom.
         panel_id: Panel id, named in the error.
 
     Raises:
-        ValueError: If, on any axis, twice the farthest atom's distance from
-            `centre_angstrom` plus twice `sphere_radius_angstrom` exceeds the cage's
+        ValueError: If, on any axis, twice the largest reach of an atom's drawn sphere
+            from `centre_angstrom` (its distance plus its drawn radius) exceeds the cage's
             extent on that axis.
     """
     half_extent_angstrom = np.asarray(cage_angstrom, dtype=float) / 2.0
-    reach_angstrom = np.abs(positions_angstrom - centre_angstrom).max(axis=0)
-    needed_angstrom = 2.0 * (reach_angstrom + float(sphere_radius_angstrom))
+    drawn_radius_angstrom = (
+        float(sphere_radius_angstrom)
+        * np.array([VDW_RADIUS_ANGSTROM[symbol] for symbol in species])
+        / VDW_RADIUS_ANGSTROM["C"]
+    )
+    reach_angstrom = (
+        np.abs(positions_angstrom - centre_angstrom) + drawn_radius_angstrom[:, None]
+    ).max(axis=0)
+    needed_angstrom = 2.0 * reach_angstrom
     if (needed_angstrom > 2.0 * half_extent_angstrom).any():
         raise ValueError(
             f"panel {panel_id}: subject with spheres needs a cage of "

@@ -118,10 +118,13 @@ Do not break these without asking first.
   `RIG` light (the three-point key at half power, a sun fill, a side light) with the
   studio HDRI at `WORLD_STRENGTH`; view transform
   Standard, world pure white so `multiply` onto `--plate` shows no box, placed with
-  `<Image>` inside a `<Plate>`. A public PDB structure is drawn as deposited by a
-  `kind: "protein"` panel (model 1, one conformer, no water, CONECT records written for its
-  ligands) and credited by entry and depositors ("Structure: PDB 1SY6, Kjer-Nielsen et al.
-  (2004)"); PDB archive data are CC0. Either way the producing script is committed under
+  `<Image>` inside a `<Plate>`. A public PDB structure is committed verbatim and drawn as
+  deposited by a `kind: "protein"` panel (model 1, one conformer, no water, CONECT records
+  written for its ligands, no lone metal ion: a one-atom HETATM residue of a metal in
+  `constants.METALS` bonded to no other hetero atom, such as 3BSD's 0.33-occupancy Mg, is left
+  out by `render_box_grid.prepare`, and a ligand atom with no covalent radius is refused) and
+  credited by entry and depositors ("Structure: PDB 1SY6, Kjer-Nielsen et al. (2004)"); PDB
+  archive data are CC0. Either way the producing script is committed under
   `scripts/figures/` and its input structures under `scripts/figures/data/`, so every
   figure regenerates. Never a screenshot of a viewer.
 - **Panel grids are `Grid.astro` matrices** (spec §6.2 as amended 2026-10-02): column
