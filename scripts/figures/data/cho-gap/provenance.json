@@ -1,0 +1,39 @@
+{
+  "note": "Inputs of the carbon article's CHO-GAP plate, Fig. 14 (src/content/work/figures/cho-gap/combustion-series.svg and combustion-series-narrow.svg), one entry per file. md5 and size_bytes are of the committed file. Unpublished own work; the run is described by the docstring of scripts/figures/combustion_frames.py, the only record the site has of it.",
+  "run": "8 CH4 + 16 O2 (72 atoms: 8 C, 32 H, 32 O) in a 10 A periodic cube at 3000 K for 50 ps, driven by the CHO-GAP potential through LAMMPS' pair_style quip. LAMMPS types 1, 2 and 3 are C, H and O (pair_coeff * * <model>.xml \"\" 6 1 8 in in.cho_opt; the Masses block of combustion_chamber.data agrees). Timestep 0.0005 ps (metal units), a frame dumped every 20 steps, as scaled coordinates wrapped into the cell.",
+  "archive_path": null,
+  "archive_note": "The trajectory the frames were cut from is not staged, and neither the script nor the carbon dossier (section 2.6: 'archive input not read') names where it is kept.",
+  "command": "uv run scripts/figures/combustion_frames.py <combustion.lammpstrj> --out-dir scripts/figures/data/cho-gap --picoseconds 0,10,20,50",
+  "processing": "Each frame's atoms in id order; each molecule, a connected component of boxprep.find_bonds measured to the nearest periodic image, rebuilt whole and its centroid wrapped back into the cell; the comment line counts the molecules by formula. Committed 2026-08-07 (20534f2). A 40 ps frame extracted with them was used by no figure and was removed on 2026-10-15.",
+  "figure_command": "render_cluster.py's module docstring: the four frames with --labels \"0 ps,10 ps,20 ps,50 ps\" --columns 2 --radius-scale 2.2, and again with --narrow.",
+  "files": {
+    "combustion-0ps.xyz": {
+      "time_ps": 0,
+      "what": "The frame at 0 ps of the run, 72 atoms, every molecule whole.",
+      "comment_line": "t = 0 ps, 24 molecules: 16xO2, 8xCH4",
+      "md5": "5da26caa0acde3483758c90d350ff1e1",
+      "size_bytes": 2992
+    },
+    "combustion-10ps.xyz": {
+      "time_ps": 10,
+      "what": "The frame at 10 ps of the run, 72 atoms, every molecule whole.",
+      "comment_line": "t = 10 ps, 26 molecules: 12xH2O, 4xHO, 3xCO2, 3xH, 3xO2, 1xC5HO4",
+      "md5": "96acbd6d5b27e624e98c18c988ed0152",
+      "size_bytes": 3020
+    },
+    "combustion-20ps.xyz": {
+      "time_ps": 20,
+      "what": "The frame at 20 ps of the run, 72 atoms, every molecule whole.",
+      "comment_line": "t = 20 ps, 28 molecules: 13xH2O, 6xCO2, 4xH, 2xHO, 2xO2, 1xC2O",
+      "md5": "f3d8c27c14d5cca45a2577625ced582d",
+      "size_bytes": 3018
+    },
+    "combustion-50ps.xyz": {
+      "time_ps": 50,
+      "what": "The frame at 50 ps of the run, 72 atoms, every molecule whole.",
+      "comment_line": "t = 50 ps, 27 molecules: 12xH2O, 7xCO2, 3xH, 3xHO, 1xH2O2, 1xCO",
+      "md5": "044f4319dcaf8dd1530ea07df0f7f046",
+      "size_bytes": 3019
+    }
+  }
+}

@@ -1,4 +1,4 @@
-"""Capture every figure plate that holds a panel grid or an inline chart, at five
+r"""Capture every figure plate that holds a panel grid or an inline chart, at five
 viewport and pixel-density settings, with the layout numbers a design review needs.
 
     npm run dev -- --port 4321 &
@@ -61,7 +61,9 @@ def main(argv: list[str] | None = None) -> int:
         Process exit status: 1 if a shown grid's first thumbnail is under PHONE_FLOOR_PX
         at PHONE_SETTING, else 0.
     """
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument(
         "outdir", nargs="?", type=pathlib.Path, default=pathlib.Path("screenshots/plates")
     )

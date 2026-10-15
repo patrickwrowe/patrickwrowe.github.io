@@ -16,7 +16,11 @@ combustion chemistry it was never shown.
 
 Usage:
     uv run scripts/figures/combustion_frames.py <combustion.lammpstrj> \
-        --out-dir scripts/figures/data/cho-gap --picoseconds 0,10,20,40
+        --out-dir scripts/figures/data/cho-gap --picoseconds 0,10,20,50
+
+The four frames are the ones Fig. 14 of the carbon article draws (render_cluster.py's
+module docstring has that command); scripts/figures/data/cho-gap/provenance.json records
+them.
 """
 
 from __future__ import annotations
@@ -182,8 +186,8 @@ def main() -> None:
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument(
         "--picoseconds",
-        default="0,10,20,40",
-        help="Comma-separated times to extract, in ps.",
+        default="0,10,20,50",
+        help="Comma-separated times to extract, in ps (default: the four frames Fig. 14 draws).",
     )
     args = parser.parse_args()
 

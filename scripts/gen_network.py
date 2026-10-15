@@ -15,11 +15,16 @@ Method
 
 The output therefore has honest ring statistics: hexagon-dominated with 5- and
 7-membered rings as paired defects.
+
+Usage:
+    uv run python scripts/gen_network.py [--output network.json]
 """
 
+import argparse
 import json
 import math
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 
@@ -202,7 +207,23 @@ def order_ring(pos, ring):
 
 
 # --------------------------------------------------------------------------- #
-def main():
+def main(argv: list[str] | None = None) -> None:
+    """Build, relax and write the network, then print its ring statistics.
+
+    Args:
+        argv: Command-line arguments; None reads `sys.argv`.
+    """
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("network.json"),
+        help="Where the network JSON goes (default: network.json in the current directory).",
+    )
+    args = parser.parse_args(argv)
+
     pos, bonds = honeycomb()
     bonds, adj, n_done = stone_wales(pos, bonds, N_SWITCHES)
     pos = relax(pos, bonds, adj)
@@ -256,8 +277,7 @@ def main():
             "bond_len_sd_pct": round(100 * np.std(blen) / np.mean(blen), 2),
         },
     }
-    with open("network.json", "w") as f:
-        json.dump(out, f)
+    args.output.write_text(json.dumps(out))
     print(json.dumps(out["stats"], indent=2))
 
 

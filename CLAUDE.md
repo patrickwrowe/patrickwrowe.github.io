@@ -154,11 +154,10 @@ npm run preview          # verify the built output, not just dev
 
 npm test                                  # node --test: src/lib helpers
 uv run scripts/check_links.py             # after npm run build: anchors, hrefs, redirects, return links, Fig. n
-uv run pytest scripts/tests               # the Python tests (link check, geometry, census, figures)
+uv run pytest scripts/tests               # the Python tests (link check, geometry, census, figures); PAPERS_DIR=<dir of the papers> also runs the checks against the papers, skipped without it
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...] [--base-url URL]
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
-$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv; it must hold molrender at commit 081ded2 or later on branch `fix-masked-layer-collision` (an opt-in `Light.sun_strength`/`side_power` and a camera fitted after a view-layer update), else the script raises `TypeError`
-$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/antibodies/manifest.json   # protein panels: a PDB entry as one cartoon per chain, in chain colours, with its ligands in species colour (about 2 minutes a panel; same molrender requirement)
+for m in scripts/figures/data/*/manifest.json scripts/figures/data/*/*/manifest.json; do $MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest "$m"; done   # every Blender panel (the graphitisation grids, the 48 sphere panels, the antibodies and excited-states protein plates); an existing PNG is skipped and --force re-renders; a protein panel takes about 2 minutes. MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv; it must hold molrender at commit 081ded2 or later on branch `fix-masked-layer-collision` (an opt-in `Light.sun_strength`/`side_power` and a camera fitted after a view-layer update), else the import raises `ImportError` naming that commit
 FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh   # Fig. 10's clip; FFMPEG is required, ffmpeg is not system-wide
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)
