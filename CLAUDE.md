@@ -17,6 +17,7 @@ code — they contain decisions with reasons, and re-deriving them wastes a sess
 | New post, new project entry, schemas, notebooks, bibliography, CV | `docs/001-initial-spec-docs/02-content-and-publishing.md` |
 | Anything interactive, ONNX, WASM, RDKit, a hosted endpoint | `docs/001-initial-spec-docs/03-interactive-demos.md` |
 | Any content change, the publications record, theme articles, the copy pipeline | `docs/superpowers/specs/2026-09-26-content-restructure-and-rewrite-design.md` (§3 structure, §4 voice, §5 pipeline) |
+| What the last plan left open: parked minors, questions for the owner, the go-live order, rulings by number | the newest `docs/superpowers/reviews/<date>-plan-NN-handoff.md` and the rulings file beside it (plan 03: `2026-10-09-plan-03-handoff.md`); the spec's amendment sections (§15–§17) say what each plan changed |
 
 The three original specs and `docs/002-authoring-guide.md` predate the restructure. Where
 they disagree with the restructure spec, the restructure spec wins; it notes each
