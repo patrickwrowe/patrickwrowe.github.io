@@ -27,13 +27,12 @@ from pathlib import Path
 
 import boxprep
 import numpy as np
-from constants import BOND_TOLERANCE, COVALENT_RADIUS_ANGSTROM
 
 # `pair_coeff * * <model>.xml "" 6 1 8` in in.cho_opt maps LAMMPS types 1, 2, 3
 # onto Z = 6, 1, 8. The Masses block of combustion_chamber.data agrees.
 TYPE_TO_SPECIES = {1: "C", 2: "H", 3: "O"}
 
-# The bond rule (Cordero covalent radii, tolerance) is constants.py's, the one
+# The bond rule is boxprep.find_bonds, measured to the nearest periodic image, the one
 # render_cluster.py draws with, so the bonds counted here are the bonds drawn there.
 
 # LAMMPS `timestep 0.0005` (metal units, ps) with `dump ... 20`.
@@ -94,20 +93,6 @@ def read_frames(
     if missing:
         raise ValueError(f"{path}: timesteps {sorted(missing)} not in the trajectory")
     return found
-
-
-def minimum_image_bonds(
-    positions_angstrom: np.ndarray, species: list[str], box: float
-) -> list[tuple[int, int]]:
-    """Bonded pairs under the minimum-image convention."""
-    deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
-    distances = np.linalg.norm(boxprep.minimum_image(deltas, box), axis=-1)
-
-    radii = np.array([COVALENT_RADIUS_ANGSTROM[s] for s in species])
-    cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
-    upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
-    rows, cols = np.where(upper & (distances < cutoffs))
-    return list(zip(rows.tolist(), cols.tolist(), strict=True))
 
 
 def molecules(n_atoms: int, bonds: list[tuple[int, int]]) -> list[list[int]]:
@@ -212,7 +197,7 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     for time_ps in times_ps:
         species, positions_angstrom, box = frames[step_of[time_ps]]
-        bonds = minimum_image_bonds(positions_angstrom, species, box)
+        bonds = boxprep.find_bonds(positions_angstrom, species, box)
         groups = molecules(len(species), bonds)
         rebuilt = unwrap(positions_angstrom, bonds, groups, box)
 
@@ -237,7 +222,7 @@ def _self_check() -> None:
     # the low side. Wrapped separations are ~9 A; minimum image makes them ~1 A.
     species = ["O", "H", "H"]
     wrapped = np.array([[9.9, 5.0, 5.0], [0.86, 5.0, 5.0], [9.66, 5.93, 5.0]])
-    bonds = minimum_image_bonds(wrapped, species, box)
+    bonds = boxprep.find_bonds(wrapped, species, box)
     assert len(bonds) == 2, bonds
 
     groups = molecules(3, bonds)
@@ -254,7 +239,7 @@ def _self_check() -> None:
 
     # Two atoms far apart are two molecules, not one.
     far = np.array([[1.0, 1.0, 1.0], [5.0, 5.0, 5.0]])
-    assert len(molecules(2, minimum_image_bonds(far, ["C", "O"], box))) == 2
+    assert len(molecules(2, boxprep.find_bonds(far, ["C", "O"], box))) == 2
 
     print("self-check ok")
 

@@ -257,7 +257,9 @@ def read_xyz(path: Path, frame: int = -1) -> Structure:
 
 
 def find_bonds(
-    positions_angstrom: np.ndarray, species: list[str] | None = None
+    positions_angstrom: np.ndarray,
+    species: list[str] | None = None,
+    edge_angstrom: float | None = None,
 ) -> list[tuple[int, int]]:
     """All atom pairs closer than BOND_TOLERANCE times their summed covalent radii.
 
@@ -274,6 +276,8 @@ def find_bonds(
         positions_angstrom: Atom positions, shape (n_atoms, 3), in angstrom.
         species: Element symbol per atom, or None for all-carbon, which keeps the
             cutoff at the flat 1.82 A the carbon-only figures were drawn with.
+        edge_angstrom: Cubic cell edge, in angstrom, to measure every pair to its nearest
+            periodic image (`minimum_image`), or None for a free structure.
 
     Returns:
         Zero-based (first, second) atom index pairs with first < second, in row-major
@@ -285,6 +289,8 @@ def find_bonds(
     cutoffs = BOND_TOLERANCE * (radii[:, None] + radii[None, :])
 
     deltas = positions_angstrom[:, None, :] - positions_angstrom[None, :, :]
+    if edge_angstrom is not None:
+        deltas = minimum_image(deltas, edge_angstrom)
     distances = np.linalg.norm(deltas, axis=-1)
     upper = np.triu(np.ones_like(distances, dtype=bool), k=1)
     is_ion = np.isin(species, list(BARE_IONS))

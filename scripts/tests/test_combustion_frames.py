@@ -19,7 +19,7 @@ def test_unwrapping_a_rewrapped_committed_frame_gives_the_committed_frame_back(t
     # molecules the committed file holds, on a real frame where they straddle the faces.
     frame = boxprep.read_xyz(CHO_DATA / f"combustion-{time_ps}ps.xyz")
     dumped_angstrom = frame.positions_angstrom % BOX_ANGSTROM
-    bonds = combustion_frames.minimum_image_bonds(dumped_angstrom, frame.species, BOX_ANGSTROM)
+    bonds = boxprep.find_bonds(dumped_angstrom, frame.species, BOX_ANGSTROM)
     groups = combustion_frames.molecules(len(frame), bonds)
     rebuilt_angstrom = combustion_frames.unwrap(dumped_angstrom, bonds, groups, BOX_ANGSTROM)
     np.testing.assert_allclose(rebuilt_angstrom, frame.positions_angstrom, atol=1e-5)

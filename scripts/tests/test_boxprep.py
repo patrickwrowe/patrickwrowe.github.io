@@ -145,6 +145,24 @@ def test_an_hbn_hexagon_has_six_bonds_and_none_between_second_neighbours(tmp_pat
     assert bonds == [(0, 1), (0, 5), (1, 2), (2, 3), (3, 4), (4, 5)]
 
 
+@pytest.mark.parametrize(
+    ("species", "bonded"),
+    [
+        (["K", "O"], False),  # inside the K-O cutoff of 3.23 A, but K is a bare ion
+        (["C", "O"], False),  # beyond the C-O cutoff of 1.70 A
+        (["Mo", "S"], True),  # inside the Mo-S cutoff of 3.11 A, and Mo bonds its anions
+    ],
+)
+def test_a_pair_2_8_angstrom_apart_across_a_periodic_face_follows_the_one_bond_rule(
+    species, bonded
+):
+    # 1.4 and 8.6 A along x in a 10 A cube: 7.2 A apart in the cell, 2.8 A by the minimum image.
+    positions_angstrom = np.array([[1.4, 5.0, 5.0], [8.6, 5.0, 5.0]])
+    assert boxprep.find_bonds(positions_angstrom, species) == []
+    expected = [(0, 1)] if bonded else []
+    assert boxprep.find_bonds(positions_angstrom, species, edge_angstrom=10.0) == expected
+
+
 def _bonds_at(species: list[str], distance_angstrom: float) -> list[tuple[int, int]]:
     """`find_bonds` on two atoms `distance_angstrom` apart along x."""
     positions_angstrom = np.array([[0.0, 0.0, 0.0], [distance_angstrom, 0.0, 0.0]])
