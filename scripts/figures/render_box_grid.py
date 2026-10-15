@@ -15,10 +15,14 @@ are real text in the site's mono face rather than pixels (restructure spec secti
 This module imports `molrender` at the top, which lives only in the environment named
 below, not the project `.venv` — there is no PEP 723 header to run it with `uv run`,
 because molrender is not on PyPI and `uv` would fetch an unrelated package of that name.
-The command below, with the molrender Python, is the only way to run this script. The
-checks that do not need molrender (manifest loading, the cage containment guard, the
-rendered-PNG whiteness check) live in `panel_checks.py` instead, so they can still be
-imported and tested from `.venv`.
+The command below, with the molrender Python, is the only way to run this script. It needs
+molrender at commit 081ded2 or later on the branch `fix-masked-layer-collision` of the local
+checkout (an opt-in `Light.sun_strength` and `side_power`, and a camera fitted after a
+view-layer update); against molrender `main` the script raises `TypeError`. A summary line
+names the commit molrender ran from when it is a git checkout (`tool_versions`). The checks
+that do not need molrender (manifest loading, the cage containment guard, the rendered-PNG
+whiteness check) live in `panel_checks.py` instead, so they can still be imported and tested
+from `.venv`.
 
     # MOLRENDER_PYTHON (required): the python of the environment that has molrender
     $MOLRENDER_PYTHON scripts/figures/render_box_grid.py \
@@ -70,10 +74,11 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
                            beats constants.SPECIES_COLOUR for that species on every panel of the
                            plate (a panel's own map replaces the plate's whole map). A frame of
                            more than one species draws a Sticks layer over every atom in the
-                           palette's carbon (a protein's cartoon colour) and one Spheres
-                           layer per species in its own colour, each converted to linear RGB
-                           with constants.srgb_hex_to_linear; a species with no colour in
-                           either place is refused by name before Blender starts.
+                           palette's carbon (a protein's cartoons take `chain_colour`
+                           instead) and one Spheres layer per species in its own colour, each
+                           converted to linear RGB with constants.srgb_hex_to_linear; a
+                           species with no colour in either place is refused by name before
+                           Blender starts.
     panels[].id, .source   an XYZ file readable by boxprep.read_xyz; for a protein panel, a PDB file
     panels[].kind          "box" (the default: periodic boxes and free clusters, as above) or
                            "protein": a PDB file drawn as it is, never moved, tiled, caged or
@@ -169,6 +174,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import boxprep
+import molrender
 import numpy as np
 import panel_checks
 from constants import (
@@ -216,6 +222,9 @@ def tool_versions() -> str:
     records neither where Molecular Nodes is installed nor its version (the add-on is
     imported only inside Blender, and its version sits in a `blender_manifest.toml` whose
     location molrender never stores), so that one reads "unknown" until molrender exposes it.
+    molrender's version alone cannot tell a release from the unmerged branch the renders need,
+    so when the package's file lives in a git checkout the version carries that checkout's
+    short SHA, as "0.1.0 (081ded2)"; a failed `git` call leaves the plain version.
     Cached: Blender starts once per run, not once per panel.
 
     Returns:
@@ -237,6 +246,16 @@ def tool_versions() -> str:
         molrender_version = version("molrender")
     except PackageNotFoundError:
         molrender_version = "unknown"
+    try:
+        checkout_sha = subprocess.run(
+            ["git", "-C", str(Path(molrender.__file__).parent), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        molrender_version += f" ({checkout_sha})"
+    except (OSError, subprocess.CalledProcessError):  # no git, or not a checkout: plain version
+        pass
     return f"Blender {blender_version}, Molecular Nodes unknown, molrender {molrender_version}"
 
 
@@ -394,8 +413,9 @@ def scene_for(
     2026-10-09, of 6TRO's peptide. The one-material grey layer keeps Point. The sticks were
     once the darkest colour present, which with magnesium drawn was magnesium's own dark green,
     so the sphere at the centre of each bacteriochlorophyll could not be told from its bonds
-    (the excited-states hero, 2026-10-09); in carbon, the colour of most bonds and of the
-    cartoon, a sphere of any other species stands out from the sticks it sits on.
+    (the excited-states hero, 2026-10-09); in carbon, the colour of most bonds, a sphere of any
+    other species stands out from the sticks it sits on. Cartoons take `CHAIN_COLOUR` per
+    chain, never the carbon.
 
     A protein panel (`kind` "protein") is always coloured: one `Cartoon` layer per chain of
     `cartoon_chains`, selected by an `AtomMask` over that chain and coloured from the

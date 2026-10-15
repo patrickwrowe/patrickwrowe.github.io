@@ -157,8 +157,10 @@
         "altloc": 0,
         "water": 178
       },
-      "wall_time_s": 176,
-      "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 176 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 234])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
+      "margin": 1.06,
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\".",
+      "wall_time_s": 63,
+      "summary_line": "hero: 3302 atoms (dropped 0 altloc, 178 water), wall 63 s, blender exit 0, src/content/work/figures/excited-states/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 234])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0"
     }
   }
 }

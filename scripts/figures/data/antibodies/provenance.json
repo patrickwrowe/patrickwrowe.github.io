@@ -81,7 +81,7 @@
         0.82,
         0.0
       ],
-      "why": "Re-chosen at the design review, 2026-10-09, to fill the frame. molrender fits its orthographic camera to the projected corners of the complex's axis-aligned bounding box about the box's centre (molrender blender/view.py, place_camera), not to the atoms, so a view with any z component also frames the box's top face, and on a tall complex that costs scale: the first choice, [-0.86, -0.24, 0.45], drew 1SY6 at 7.0 px per angstrom with its ink 0.26 of the frame's width and 0.77 of its height. A level view frames the box's height alone. Of the level views whose two partners overlap by at most 0.05 and which are at least 0.95 side-on, this one is 0.99 side-on and its production render measures 9.05 px per angstrom with the ink 0.40 of the width and 0.94 of the height (0.37 of the area, against 0.20): CD3 top left, held at the tip of the Fv, and the constant domains bottom right, the long axis leaning about 29 degrees from vertical.",
+      "why": "Re-chosen at the design review, 2026-10-09, to fill the frame. molrender fits its orthographic camera to the projected corners of the complex's axis-aligned bounding box about the box's centre (molrender blender/view.py, place_camera), not to the atoms, so a view with any z component also frames the box's top face, and on a tall complex that costs scale: the first choice, [-0.86, -0.24, 0.45], drew 1SY6 at 7.0 px per angstrom with its ink 0.26 of the frame's width and 0.77 of its height. A level view frames the box's height alone. Of the level views whose two partners overlap by at most 0.05 and which are at least 0.95 side-on, this one is 0.99 side-on and its production render (re-measured 2026-10-15 on the margin 1.06 render after the camera fix: the ink 694 x 918 px of 1728 x 972) measures 9.12 px per angstrom, the ink's height over the atoms' 100.6 angstrom extent in z, with the ink 0.40 of the width and 0.94 of the height (0.38 of the area, against 0.20): CD3 top left, held at the tip of the Fv, and the constant domains bottom right, the long axis leaning about 29 degrees from vertical.",
       "method": "Scored with a framing model that reproduces molrender's fit (bounding box of the atoms plus 1 angstrom, its corners about its centre, margin 1.02, 1728 x 972); on the first choice it predicts 7.04 px per angstrom and an ink box of 0.28 x 0.77 of the frame, against 6.7 to 7.0 and 0.26 x 0.77 measured on that render. 2850 directions on a Fibonacci sphere (|z| at most 0.95); overlap from Calpha discs of 3 angstrom on a 1 angstrom grid, as a fraction of the smaller partner; side-on against the axis between the Fab's and CD3's centroids. Three level candidates were draft-rendered (864 x 486) and the choice made by eye on those and on crops of the contact. The scratch scripts are not committed; the scale of the earlier candidates below is this model's, not the atoms-only projection's 8.78 to 9.48.",
       "candidates": [
         {
@@ -129,7 +129,11 @@
           "verdict": "Chosen."
         }
       ],
-      "limits": "1SY6 stands along world z with CD3 on top and the renderer has no roll, so every side-on view is a portrait object in the 16:9 frame: a level view fills its height, and the steepest lean a side-on view allows, about 30 degrees, takes it to about 0.4 of the width. The non-square hero is never cropped (spec 6.2)."
+      "limits": "1SY6 stands along world z with CD3 on top and the renderer has no roll, so every side-on view is a portrait object in the 16:9 frame: a level view fills its height, and the steepest lean a side-on view allows, about 30 degrees, takes it to about 0.4 of the width. The non-square hero is never cropped (spec 6.2).",
+      "margin": 1.06,
+      "wall_time_s": 35,
+      "summary_line": "hero: 4651 atoms (dropped 0 altloc, 0 water), wall 35 s, blender exit 0, src/content/work/figures/antibodies/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [233, 255, 232])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0",
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (L #3f6e5b, H #664634, A #7c5e63), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\"."
     },
     "mage-a4-pmhc-tcr": {
       "source": "6TRO.pdb",
@@ -179,7 +183,11 @@
         "sphere_radius_angstrom": 0.6,
         "bond_radius_angstrom": 0.3,
         "why": "The panel overrides the plate's 0.4 and 0.22 (the carbon plates' values). The peptide is about 28 angstrom long in a frame about 127 angstrom wide, and at 0.4 and 0.22 its sticks and spheres were thin; both settings were rendered at the production tier and compared, and 0.6 and 0.3 read clearly. To restore the plate's values, delete the two panel keys and re-render with --force (about 2.5 minutes)."
-      }
+      },
+      "margin": 1.02,
+      "wall_time_s": 56,
+      "summary_line": "mage-a4-pmhc-tcr: 6572 atoms (dropped 0 altloc, 23 water), wall 56 s, blender exit 0, src/content/work/figures/antibodies/mage-a4-pmhc-tcr.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 233])], versions: Blender 5.1.2, Molecular Nodes unknown, molrender 0.1.0",
+      "rig": "Rendered 2026-10-15, lit by molrender's three-point key at 2 W, the studio HDRI at 0.8, a sun fill of 1.5 W/m² and a side light of 12 W, on the matte material (roughness 0.9, specular 0.15, no coat, no subsurface), cartoons coloured by chain from CHAIN_COLOUR in cartoon_chains order (A #3f6e5b, B #664634, D #7c5e63, E #1c707a; the peptide, chain C, is sticks and spheres in species colours), with molrender at commit 081ded2 (branch fix-masked-layer-collision), whose summary lines at the time still read \"molrender 0.1.0\"."
     }
   }
 }

@@ -3,7 +3,7 @@
   "kind": "protein",
   "cage_angstrom": null,
   "slab_angstrom": null,
-  "margin": 1.06,
+  "margin": 1.02,
   "resolution": [1728, 972],
   "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
@@ -12,6 +12,7 @@
     {
       "id": "hero",
       "source": "scripts/figures/data/antibodies/1SY6.pdb",
+      "margin": 1.06,
       "direction": [0.58, 0.82, 0.0],
       "cartoon_chains": ["L", "H", "A"],
       "stick_chains": []

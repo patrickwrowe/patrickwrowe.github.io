@@ -1,9 +1,9 @@
-"""The carbon article's inlined charts against the SVG files they inline.
+"""The theme articles' inlined charts against the SVG files they inline.
 
-Every `?raw` SVG import in `src/content/work/carbon.mdx` is inlined by a chart wrapper
-whose `--chart-em` sets its width at the page's label size (Plate.astro). That number must
-be the chart's own: its viewBox width in labels, which each figure script writes on the
-`<svg>` root as `data-chart-em`. This test reads both from the files, and recomputes the
+Every chart wrapper in `src/content/work/*.mdx` inlines a `?raw` SVG at a `--chart-em` that
+sets its width at the page's label size (Plate.astro). That number must be the chart's own:
+its viewBox width in labels, which each figure script writes on the `<svg>` root as
+`data-chart-em`. This test reads both from the files, and recomputes the
 attribute from the SVG's viewBox and its smallest text, so a re-run with a new width that
 nobody copied into the MDX fails here rather than shrinking labels under 11 px.
 """
@@ -22,6 +22,7 @@ from constants import SIZES, TEMPERATURES_KELVIN
 from figure_style import NARROW_CHART_EM
 
 REPO = Path(__file__).resolve().parents[2]
+ARTICLES = sorted((REPO / "src" / "content" / "work").glob("*.mdx"))
 ARTICLE = REPO / "src" / "content" / "work" / "carbon.mdx"
 MDX = ARTICLE.read_text()
 GRID_CSS = (REPO / "src" / "styles" / "grid.css").read_text()
@@ -37,12 +38,15 @@ WEIGHTED_GRIDS = [
     )
     for weights, panels in re.findall(r"weights=\{\[([^\]]+)\]\}\s*panels=\{\[([^\]]+)\]\}", MDX)
 ]
-RAW_IMPORTS = dict(re.findall(r'^import (\w+) from "(\./[^"]+\.svg)\?raw";$', MDX, re.M))
-WRAPPERS = re.findall(
+RAW_IMPORT = re.compile(r'^import (\w+) from "(\./[^"]+\.svg)\?raw";$', re.M)
+WRAPPER = re.compile(
     r'<div class="(chart(?: chart--narrow)?)" style="--chart-em: ([\d.]+)"[^>]*>\s*'
-    r"<Fragment set:html=\{(\w+)\} />",
-    MDX,
+    r"<Fragment set:html=\{(\w+)\} />"
 )
+RAW_IMPORTS = dict(RAW_IMPORT.findall(MDX))
+WRAPPERS = [
+    (article, *wrapper) for article in ARTICLES for wrapper in WRAPPER.findall(article.read_text())
+]
 
 
 def chart_em_of(svg: str) -> tuple[float, float]:
@@ -64,12 +68,27 @@ def chart_em_of(svg: str) -> tuple[float, float]:
 
 def test_every_raw_svg_import_is_inlined_by_one_chart_wrapper():
     assert RAW_IMPORTS, "no ?raw SVG imports found in carbon.mdx"
-    assert sorted(name for _, _, name in WRAPPERS) == sorted(RAW_IMPORTS)
+    assert sorted(name for article, _, _, name in WRAPPERS if article == ARTICLE) == sorted(
+        RAW_IMPORTS
+    )
 
 
-@pytest.mark.parametrize(("wrapper_class", "mdx_chart_em", "name"), WRAPPERS)
-def test_the_wrapper_chart_em_is_the_charts_own(wrapper_class, mdx_chart_em, name):
-    svg = (ARTICLE.parent / RAW_IMPORTS[name]).read_text()
+@pytest.mark.parametrize("article", ARTICLES, ids=lambda article: article.stem)
+def test_every_chart_em_in_an_article_is_in_a_wrapper_the_pattern_reads(article):
+    # A wrapper written in a form WRAPPER misses would be skipped by the test below, silently.
+    assert article.read_text().count("--chart-em") == sum(
+        1 for found, *_ in WRAPPERS if found == article
+    )
+
+
+@pytest.mark.parametrize(
+    ("article", "wrapper_class", "mdx_chart_em", "name"),
+    WRAPPERS,
+    ids=[f"{article.stem}-{name}" for article, _, _, name in WRAPPERS],
+)
+def test_the_wrapper_chart_em_is_the_charts_own(article, wrapper_class, mdx_chart_em, name):
+    raw_imports = dict(RAW_IMPORT.findall(article.read_text()))
+    svg = (article.parent / raw_imports[name]).read_text()
     attribute, measured = chart_em_of(svg)
     assert float(mdx_chart_em) == attribute, f"{name}: MDX {mdx_chart_em}, SVG {attribute}"
     assert attribute == pytest.approx(measured, abs=0.05), f"{name}: drawn at {measured:.2f} em"

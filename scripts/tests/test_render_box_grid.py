@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
+import subprocess
 import sys
 import types
 from dataclasses import dataclass
@@ -180,8 +181,18 @@ def render_box_grid(render_box_grid_module, monkeypatch, scene_calls):
 
 
 @pytest.fixture
-def tool_versions(render_box_grid_module):
-    """The real `tool_versions`, with its once-per-run cache emptied before and after."""
+def tool_versions(render_box_grid_module, monkeypatch, tmp_path):
+    """The real `tool_versions`, with its once-per-run cache emptied before and after.
+
+    The stand-in molrender sits in `tmp_path`, which is no git checkout, so the version
+    carries no commit unless a test makes one.
+    """
+    monkeypatch.setattr(
+        render_box_grid_module.molrender,
+        "__file__",
+        str(tmp_path / "molrender" / "__init__.py"),
+        raising=False,
+    )
     render_box_grid_module.tool_versions.cache_clear()
     yield render_box_grid_module.tool_versions
     render_box_grid_module.tool_versions.cache_clear()
@@ -523,6 +534,44 @@ def test_tool_versions_reads_each_version_or_says_unknown(
     monkeypatch.setattr(render_box_grid_module, "version", installed_version)
 
     assert tool_versions() == expected
+
+
+def test_tool_versions_names_the_checkout_commit_molrender_runs_from(
+    render_box_grid_module, tool_versions, monkeypatch, tmp_path
+):
+    checkout = tmp_path / "checkout"
+    package_dir = checkout / "src" / "molrender"
+    package_dir.mkdir(parents=True)
+    git = [
+        "git",
+        "-C",
+        str(checkout),
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@t",
+        "-c",
+        "commit.gpgsign=false",
+    ]
+    subprocess.run([*git, "init", "-q"], check=True)
+    subprocess.run([*git, "commit", "-q", "--allow-empty", "-m", "x"], check=True)
+    short_sha = subprocess.run(
+        [*git, "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+    monkeypatch.setattr(
+        render_box_grid_module.molrender, "__file__", str(package_dir / "__init__.py")
+    )
+    monkeypatch.setattr(
+        render_box_grid_module,
+        "find_blender",
+        lambda: _fake_blender(tmp_path, "echo 'Blender 9.9.9'"),
+    )
+    monkeypatch.setattr(render_box_grid_module, "version", lambda name: "1.2.3")
+
+    assert tool_versions() == (
+        f"Blender 9.9.9, Molecular Nodes unknown, molrender 1.2.3 ({short_sha})"
+    )
 
 
 # ---------------------------------------------------------------------------

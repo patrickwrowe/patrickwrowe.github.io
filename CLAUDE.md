@@ -105,8 +105,9 @@ Do not break these without asking first.
   statistics and diagrams, not hand-drawn, never a screenshot of a plot. Strip white
   backgrounds so `--plate` shows through. Molecular renderings follow the next bullet.
 - **Two renderers, each with a job** (restructure spec §6.2). Single structures and small
-  slabs are monochrome SVG from `scripts/figures/render_cluster.py`: every stroke resolves
-  to `var(--ink)`, depth is opacity, inline it with `?raw` and
+  slabs are SVG from `scripts/figures/render_cluster.py`: a single-species structure is
+  monochrome (every stroke `var(--ink)`, depth as opacity); a multi-species one takes
+  `var(--species-*)` per species. Inline it with `?raw` and
   `<Fragment set:html={...}>`, never `<Image>`. Grids of large boxes and one hero render
   per theme article are PNG from Blender via `molrender`: a single-species render is
   greyscale (one grey per species, no hue); a render of more than one species (a protein
@@ -153,8 +154,8 @@ uv run scripts/check_links.py             # after npm run build: anchors, hrefs,
 uv run pytest scripts/tests               # the Python tests (link check, geometry, census, figures)
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot.py [outdir] [route ...] [--base-url URL]
 PLAYWRIGHT_BROWSERS_PATH=./.playwright uv run python scripts/shoot_plates.py [outdir] [route] [--base-url URL]   # every grid/chart plate at five widths and densities, with layout numbers; exits 1 if a phone thumbnail is under 100 px
-$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv
-$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/antibodies/manifest.json   # protein panels: a PDB entry as one cartoon per chain, in chain colours, with its ligands in species colour (about 2 minutes a panel)
+$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/graphitisation/manifest.json   # Blender panels; MOLRENDER_PYTHON is required, the python of the env that has molrender, not the venv; it must hold molrender at commit 081ded2 or later on branch `fix-masked-layer-collision` (an opt-in `Light.sun_strength`/`side_power` and a camera fitted after a view-layer update), else the script raises `TypeError`
+$MOLRENDER_PYTHON scripts/figures/render_box_grid.py --manifest scripts/figures/data/antibodies/manifest.json   # protein panels: a PDB entry as one cartoon per chain, in chain colours, with its ligands in species colour (about 2 minutes a panel; same molrender requirement)
 FFMPEG=/path/to/ffmpeg scripts/figures/cut_graphitisation_clip.sh   # Fig. 10's clip; FFMPEG is required, ffmpeg is not system-wide
 uv run scripts/notebook_to_post.py ...    # notebook -> writing entry (not yet written)
 uv run scripts/export_onnx.py             # checkpoint -> public/demos/<slug>/ (not yet written)

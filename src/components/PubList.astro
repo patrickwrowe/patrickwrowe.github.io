@@ -58,7 +58,7 @@ const rows = entries.map((pub, index) => {
               <em>{pub.data.title}</em>.{pub.data.venue && ` ${pub.data.venue}.`}
               {marker && <span class="label pub__kind">{marker}</span>}
             </p>
-            {blurbs && pub.data.blurb && <p class="pub__blurb">{pub.data.blurb}</p>}
+            {blurbs && pub.data.blurb && isPublished(theme) && <p class="pub__blurb">{pub.data.blurb}</p>}
             <p class="pub__links">
               {section ? (
                 <a href={`#${section.slug}`}>
