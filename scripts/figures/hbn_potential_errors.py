@@ -73,6 +73,8 @@ POTENTIAL_FIELDS = (
     "formation_energy_rmse_mev_per_atom",
     "formation_energy_is_lower_bound",
 )
+# A potential's `kind`: hBN-GAP is drawn filled, a classical potential open.
+POTENTIAL_KINDS = ("classical", "gap")
 
 # The two panels, left to right or top to bottom. `key` is the quantity's field in the data;
 # `axis` is its (minimum, maximum) and `ticks` its labelled values, in the quantity's unit;
@@ -126,18 +128,25 @@ def build(data_dir: Path, narrow: bool = False) -> str:
         The SVG document as a string.
 
     Raises:
-        ValueError: If the data lack a field, hold a value that is not a positive finite
-            number, or hold one outside its axis, which would draw a dot off its panel.
+        ValueError: If the data lack a field, hold a `kind` not in POTENTIAL_KINDS, hold a
+            value that is not a positive finite number (a JSON `true` included), or hold one
+            outside its axis, which would draw a dot off its panel.
     """
     path = data_dir / DATA_FILE
     potentials = json.loads(path.read_text())["potentials"]
     for potential in potentials:
         if missing := set(POTENTIAL_FIELDS) - set(potential):
             raise ValueError(f"{path}: {potential.get('name')} lacks {sorted(missing)}")
+        if potential["kind"] not in POTENTIAL_KINDS:
+            raise ValueError(
+                f"{path}: {potential['name']} kind is {potential['kind']!r}, "
+                f"not one of {list(POTENTIAL_KINDS)}"
+            )
         for spec in QUANTITIES.values():
             value = potential[spec["key"]]
             low, high = spec["axis"]
-            if not (isinstance(value, int | float) and math.isfinite(value) and 0 < value):
+            is_number = isinstance(value, int | float) and not isinstance(value, bool)
+            if not (is_number and math.isfinite(value) and 0 < value):
                 raise ValueError(f"{path}: {potential['name']} {spec['key']} is {value!r}")
             if not low <= value <= high:
                 raise ValueError(f"{path}: {potential['name']} {spec['key']} leaves its axis")

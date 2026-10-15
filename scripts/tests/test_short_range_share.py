@@ -501,6 +501,7 @@ def test_every_axis_title_carries_its_unit():
         (lambda row: row.update(system="XYZ"), "no marker: 'XYZ'"),
         (lambda row: row.update(j_short_share_percent=float("nan")), "is nan"),
         (lambda row: row.update(j_short_share_percent="28"), "is '28'"),
+        (lambda row: row.update(j_short_share_percent=True), "is True"),
         (lambda row: row.update(j_short_share_percent=80.0), "leaves its axis"),
         (lambda row: row.update(j_short_share_percent=0), "leaves its axis"),
         (lambda row: row.update(min_distance_angstrom=9.0), "leaves its axis"),

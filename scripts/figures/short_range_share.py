@@ -121,7 +121,8 @@ def build(data_dir: Path, narrow: bool = False) -> str:
 
     Raises:
         ValueError: If a row lacks a field or names a system the chart has no marker for, if a
-            system has no row, or if a distance or share is not a finite number or leaves its
+            system has no row, or if a distance or share is not a finite number (a JSON `true`
+            included) or leaves its
             axis, which would draw a marker off the plot.
     """
     path = data_dir / DATA_FILE
@@ -140,7 +141,8 @@ def build(data_dir: Path, narrow: bool = False) -> str:
             ("j_short_share_percent", share_low, share_high),
         ):
             value = row[key]
-            if not (isinstance(value, int | float) and math.isfinite(value)):
+            is_number = isinstance(value, int | float) and not isinstance(value, bool)
+            if not (is_number and math.isfinite(value)):
                 raise ValueError(f"{path}: {name} {key} is {value!r}")
             if not low < value <= high:
                 raise ValueError(f"{path}: {name} {key} leaves its axis")

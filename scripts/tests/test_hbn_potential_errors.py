@@ -232,6 +232,11 @@ def test_the_data_are_what_pages_7_and_8_of_the_paper_say_including_the_lower_bo
         (lambda potential: potential.update(force_rmse_ev_per_angstrom=-1.0), "is -1.0"),
         (lambda potential: potential.update(force_rmse_ev_per_angstrom=float("nan")), "is nan"),
         (lambda potential: potential.update(force_rmse_ev_per_angstrom="6.17"), "is '6.17'"),
+        (lambda potential: potential.update(force_rmse_ev_per_angstrom=True), "is True"),
+        (
+            lambda potential: potential.update(kind="GAP"),
+            r"kind is 'GAP', not one of \['classical', 'gap'\]",
+        ),
         (lambda potential: potential.update(force_rmse_ev_per_angstrom=60.0), "leaves its axis"),
         (lambda potential: potential.update(formation_energy_rmse_mev_per_atom=0.0), "is 0.0"),
     ],
