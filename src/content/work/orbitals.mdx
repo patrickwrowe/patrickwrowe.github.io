@@ -2,11 +2,11 @@
 title: Atomic orbitals, computed and drawn properly
 year: "2025"
 order: 6
-summary: Every textbook picture of a d orbital is someone's artistic impression. This computes
+summary: Almost every textbook picture of a d orbital is someone's artistic impression. This computes
   the wavefunction and draws the isosurface that actually follows from it.
-method: Vectorised evaluation of hydrogenic wavefunctions on an xarray grid, marching cubes for isosurfaces
+method: One-electron wavefunctions vectorised on an xarray grid, marching cubes for isosurfaces
 system: One-electron atomic orbitals at arbitrary n, l and m
-result: Coarse evaluation, interpolation, then a smooth isosurface. Pure Python, no viewer
+result: Coarse evaluation, interpolation, then a smooth isosurface, in pure Python with no viewer
 tags: [quantum-chemistry, visualisation, python]
 links:
   - { label: Code, url: "https://github.com/patrickwrowe/orbitals" }
@@ -18,27 +18,27 @@ import Interpolation from "./figures/orbitals/interpolation.png";
 import Isosurfaces from "./figures/orbitals/isosurfaces.png";
 
 Almost every orbital picture you have seen is a drawing. Someone looked at the analytic form,
-decided roughly what shape it implied, and drew that. Which is why the four lobes of a d
+decided roughly what shape it implied, and drew that. That is why the 4 lobes of a d
 orbital are so often identical, so often symmetric, and so often subtly wrong about where the
 density actually goes.
 
-The wavefunctions are known in closed form. There is no reason to draw them by hand.
+The wavefunctions are known in closed form; there is no reason to draw them by hand.
 
 ## What it does
 
-Give it three quantum numbers and it evaluates the one-electron wavefunction on a
+Give it 3 quantum numbers (n, l and m) and it evaluates the one-electron wavefunction on a
 three-dimensional grid, then renders the probability density either as a point cloud or as a
 marching-cubes isosurface. Cartesian and spherical implementations sit behind the same
 interface, so you can pick whichever is natural for what comes next: Cartesian for plotting,
 spherical if the result is feeding a calculation with physical meaning.
 
 The grid is an `xarray` object and every evaluation is vectorised, which matters more than it
-sounds like: a naive triple loop over a 100³ grid is unusably slow in Python, and the whole
-point of the exercise was that generating a new orbital should take seconds, not minutes.
+sounds: a naive triple loop over a 100³ grid is unusably slow in Python, and the point of
+the exercise was that generating a new orbital should take seconds, not minutes.
 
 The one deliberate trick is decoupling accuracy from appearance. Isosurfaces need a fine grid
-to look smooth, but a fine grid is expensive and the extra points buy nothing physically. So
-the wavefunction is evaluated on a coarse grid and interpolated up before rendering. Anything
+to look smooth, but a fine grid is expensive and the extra points buy nothing physically. The
+wavefunction is therefore evaluated on a coarse grid and interpolated up before rendering. Anything
 quantitative uses the coarse values; only the picture uses the interpolated ones. Mixing those
 up would be an easy way to publish a very smooth lie, so the two paths stay separate and the
 docs say which is which.
@@ -48,7 +48,7 @@ docs say which is which.
   <Fragment slot="caption">
     The 2p orbital evaluated on a 20³ grid (left) and the same values interpolated up to 50³
     (right), both drawn as point clouds coloured by probability density. The left panel is what
-    was actually computed and the only one anything quantitative should use. The right panel is
+    was computed and the only one anything quantitative should use. The right panel is
     the picture. Nothing was added between them except interpolation, which is exactly why the
     two have to stay labelled.
     <span class="credit">Own work, from the project's own examples.</span>
@@ -74,4 +74,5 @@ this is the smallest possible version of a problem that shows up constantly in c
 chemistry. You have an expensive function on a grid, you need it accurate somewhere and
 merely pretty somewhere else, and confusing the two is how wrong pictures end up in papers.
 
-It also has tests, which is unusual for a plotting side project and was the point.
+It also has tests, which is unusual for a plotting side project and was the point: a picture
+nobody can check is a drawing.

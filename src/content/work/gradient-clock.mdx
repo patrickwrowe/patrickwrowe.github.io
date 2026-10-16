@@ -4,9 +4,9 @@ year: "2025"
 order: 8
 summary: A clock whose hands are the whole screen. Design by Yoni and Harish Persad, code by
   me; running live here.
-method: Vanilla HTML, CSS and JavaScript; conic gradients, no framework, no build step
+method: Plain HTML, CSS and JavaScript with conic gradients, no framework, no build step
 system: A wall clock, if the hands were the size of the wall
-result: Live and self-hosted here; also running at harishpersad.com
+result: Live and self-hosted here, and running at harishpersad.com
 demo: gradient-clock
 tags: [interfaces, demos]
 links:
@@ -19,10 +19,10 @@ import { Image } from "astro:assets";
 import ClockStill from "./figures/gradient-clock/still.png";
 import ClockControls from "./figures/gradient-clock/controls.png";
 
-Not science. A collaboration with the designers [Harish Persad](http://harishpersad.com/) and
+This one is not science. It is a collaboration with the designers [Harish Persad](http://harishpersad.com/) and
 Yoni, who had an idea for a clock and needed someone to make it run.
 
-The idea: stop drawing the hands as objects on a face, and make them the entire display. Each
+The idea was to stop drawing the hands as objects on a face and make them the entire display. Each
 hand is a conic gradient sweeping out from the centre, so the screen is divided into wedges
 that rotate through the day. There is no dial, no numerals and no tick marks. You read the
 time from where the boundaries fall, the same way you read a wall clock without ever looking
@@ -42,14 +42,14 @@ at the numbers.
 
 ## Building it
 
-Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. The whole thing
-is five files and it loads instantly. Time comes from the client, so there is no server
+Plain HTML, CSS and JavaScript, with no framework, no build step and no dependencies. The whole thing
+is 5 files and it loads instantly. Time comes from the client, so there is no server
 involved at any point.
 
 The interesting problem was colour rather than time. Two hands, each with its own two-colour
 gradient, overlapping and rotating past one another: what happens where they cross decides
-whether the thing looks deliberate or muddy. Rather than pick one answer, the controls expose
-CSS's blend modes directly, fourteen of them from `multiply` through to `luminosity`, and you
+whether the thing looks deliberate or muddy. Instead of one answer, the controls expose
+CSS's blend modes directly, 14 of them from `multiply` through to `luminosity`, and you
 can watch the same clock go from soft to harsh by changing one setting.
 
 The rest was the ordinary work of making a design real: matching the gradient extents to what
