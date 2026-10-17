@@ -13,9 +13,12 @@ the writing index. Figures that no live page uses moved with the work pages, und
 | `work/graphene-corrugation.mdx` | `/work/carbon/#defect-corrugation` | 2026-10-03 |
 | `work/carbon-clusters.mdx` | `/work/carbon/#cluster-benchmark` | 2026-10-03 |
 | `work/cho-gap.mdx` | `/work/carbon/#cho-gap` | 2026-10-03 |
+| `work/excitonic-interactions.mdx` | `/work/excited-states/#excitonic-interactions` | 2026-10-17 |
+| `work/multichromophore-dynamics.mdx` | `/work/excited-states/#multichromophore-dynamics` | 2026-10-17 |
 
-The carbon article went live on 2026-10-03, when its five pages were retired. Each later
-theme retires its own pages on the day it goes live.
+The carbon article went live on 2026-10-03, when its five pages were retired. The
+excited-states article went live on 2026-10-17 and retired its two paper pages, which had no
+figures of their own. Each later theme retires its own pages on the day it goes live.
 
 ## Writing outlines, retired 2026-10-06
 
