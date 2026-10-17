@@ -14,7 +14,7 @@
   doi: 10.1103/PhysRevB.97.054303
   theme: carbon
   anchor: graphene-potential
-  blurb: "A Gaussian approximation potential for graphene with an in-plane force error of 0.028 eV Å⁻¹ against DFT. That is twenty times below the best empirical potential, and the paper named the catch itself: the model knew one form of carbon and could not describe diamond. First author."
+  blurb: "A Gaussian approximation potential for graphene with an in-plane force error of 0.028 eV Å⁻¹ against DFT. That is twenty times below the best empirical potential, and the paper named the catch itself: the model knew one form of carbon and could not describe diamond."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/1710.04187" }
     - { label: Code, url: "https://github.com/libAtoms/QUIP" }
@@ -28,7 +28,7 @@
   doi: 10.1063/5.0005084
   theme: carbon
   anchor: gap-20
-  blurb: "One potential for diamond, graphite, graphene, nanotubes, fullerenes, the liquid and amorphous carbon, with lattice parameters within 0.2% of DFT on average. Covering all of it from a database of about 17,000 DFT configurations cost a factor of four in graphene phonon accuracy, 4 meV against the graphene-only model's 1, and a 1,000-structure random search said the price was right. First author."
+  blurb: "One potential for diamond, graphite, graphene, nanotubes, fullerenes, the liquid and amorphous carbon, with lattice parameters within 0.2% of DFT on average. Covering all of it from a database of about 17,000 DFT configurations cost a factor of four in graphene phonon accuracy, 4 meV against the graphene-only model's 1, and a 1,000-structure random search said the price was right."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2006.13655" }
     - { label: Data, url: "https://doi.org/10.17863/CAM.54529" }
@@ -44,7 +44,7 @@
   doi: 10.1021/acs.nanolett.1c02585
   theme: carbon
   anchor: defect-corrugation
-  blurb: "Point defects corrugate free-standing graphene even at a concentration of 0.2%, and the type matters. At 3% divacancies make the sheet almost five times as corrugated as pristine graphene and Stone–Wales defects almost three, and only the machine-learned potential found the divacancy reconstruction unprompted; the two classical potentials tested had to be told. Second author."
+  blurb: "Point defects corrugate free-standing graphene even at a concentration of 0.2%, and the type matters. At 3% divacancies make the sheet almost five times as corrugated as pristine graphene and Stone–Wales defects almost three, and only the machine-learned potential found the divacancy reconstruction unprompted; the two classical potentials tested had to be told."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2107.01128" }
 
@@ -57,7 +57,7 @@
   doi: 10.1016/j.carbon.2022.01.031
   theme: carbon
   anchor: cluster-benchmark
-  blurb: "GAP-20 matched the DFT minima, energies, rings and coordination of random-structure-searched carbon clusters better than every classical potential in a seven-way test. It over-bound C₆₀ by 0.10 eV per atom where the classical potentials under-bound it by 0.30 to 0.91, and then carried the search beyond DFT's reach, to 720 atoms. Third author."
+  blurb: "GAP-20 matched the DFT minima, energies, rings and coordination of random-structure-searched carbon clusters better than every classical potential in a seven-way test. It over-bound C₆₀ by 0.10 eV per atom where the classical potentials under-bound it by 0.30 to 0.91, and then carried the search beyond DFT's reach, to 720 atoms."
   links:
     - { label: Preprint, url: "https://hal.science/hal-03832937v1" }
     - { label: Data, url: "https://github.com/bkarasulu/Carbon-PP-Benchmark-Paper-SI" }
@@ -71,7 +71,7 @@
   doi: 10.1038/s41467-020-14854-4
   theme: two-dimensional-and-confined
   anchor: vermiculite-membranes
-  blurb: "Exchanging the cation between vermiculite's layers moves its water contact angle from 15° for lithium to 101° for tin, and lithium alone is far more hydrophilic than the trend allows. The AIMD says why: potassium has 1 adsorption site and orders the contact layer; lithium has 2, and lets it relax to bulk-like water bound at −0.89 eV per molecule. Second author."
+  blurb: "Exchanging the cation between vermiculite's layers moves its water contact angle from 15° for lithium to 101° for tin, and lithium alone is far more hydrophilic than the trend allows. The AIMD says why: potassium has 1 adsorption site and orders the contact layer; lithium has 2, and lets it relax to bulk-like water bound at −0.89 eV per molecule."
 
 - id: hbn-rippling
   kind: paper
@@ -82,7 +82,7 @@
   doi: 10.1021/acs.jpcc.0c05831
   theme: two-dimensional-and-confined
   anchor: boron-nitride-rippling
-  blurb: "A Gaussian approximation potential for hexagonal boron nitride with a force error of 0.09 eV Å⁻¹, an order of magnitude below Tersoff, ExTeP and ReaxFF. Let loose on 7,200-atom sheets, it gives hBN the same anomalous rippling exponent as graphene, 0.82 against 0.87, a bending rigidity of 1.09 eV and a crossing to soliton-like ripples between −0.25% and −0.5% strain. Second author."
+  blurb: "A Gaussian approximation potential for hexagonal boron nitride with a force error of 0.09 eV Å⁻¹, an order of magnitude below Tersoff, ExTeP and ReaxFF. Let loose on 7,200-atom sheets, it gives hBN the same anomalous rippling exponent as graphene, 0.82 against 0.87, a bending rigidity of 1.09 eV and a crossing to soliton-like ripples between −0.25% and −0.5% strain."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2007.11448" }
     - { label: Data, url: "https://doi.org/10.17863/CAM.66112" }
@@ -97,7 +97,7 @@
   doi: 10.1073/pnas.2110077118
   theme: two-dimensional-and-confined
   anchor: aqueous-potentials
-  blurb: "Committee neural network potentials for 6 systems, water at ions, in nanotubes and on MoS₂ and TiO₂, each built from a single short AIMD run and converged at roughly 300 training structures. They cost 4 to 5 orders of magnitude less than the DFT they came from, and the TiO₂ model ran 1,728 atoms for 5 ns where its AIMD had 30 ps. Third author."
+  blurb: "Committee neural network potentials for 6 systems, water at ions, in nanotubes and on MoS₂ and TiO₂, each built from a single short AIMD run and converged at roughly 300 training structures. They cost 4 to 5 orders of magnitude less than the DFT they came from, and the TiO₂ model ran 1,728 atoms for 5 ns where its AIMD had 30 ps."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2106.00048" }
     - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
@@ -112,7 +112,7 @@
   doi: 10.1021/acsnano.2c02784
   theme: two-dimensional-and-confined
   anchor: nanotube-water-flow
-  blurb: "Water's friction on hexagonal boron nitride is about 4–5 times that on carbon at every curvature, from 16 nanotubes and 2 sheets run for over 40 ns on committee neural network potentials trained to revPBE-D3. The radius dependence is oxygen's and the material dependence is hydrogen's, which docks on nitrogen and hops: oxygen makes water slip, hydrogen makes it stick. Third author."
+  blurb: "Water's friction on hexagonal boron nitride is about 4–5 times that on carbon at every curvature, from 16 nanotubes and 2 sheets run for over 40 ns on committee neural network potentials trained to revPBE-D3. The radius dependence is oxygen's and the material dependence is hydrogen's, which docks on nitrogen and hops: oxygen makes water slip, hydrogen makes it stick."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2202.04955" }
     - { label: Code, url: "https://github.com/MarsalekGroup/aml" }
@@ -126,7 +126,7 @@
   doi: 10.1038/s41586-023-05849-4
   theme: two-dimensional-and-confined
   anchor: molybdenum-disulfide-membranes
-  blurb: "A restacked MoS₂ membrane shuts to water below about pH 4 and opens above about pH 11, remembers which, and collapses from 11.4 to 6.4 Å once its surface sulfur is protonated. AIMD at 2 lithium loadings found the same water bilayer and no substantial difference in diffusion, so lithium alone does not set the permeation; classical MD showed it sets the entry. Third author."
+  blurb: "A restacked MoS₂ membrane shuts to water below about pH 4 and opens above about pH 11, remembers which, and collapses from 11.4 to 6.4 Å once its surface sulfur is protonated. AIMD at 2 lithium loadings found the same water bilayer and no substantial difference in diffusion, so lithium alone does not set the permeation; classical MD showed it sets the entry."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/2301.10195" }
 
@@ -139,7 +139,7 @@
   doi: 10.1021/acs.jctc.7b00328
   theme: excited-states
   anchor: excitonic-interactions
-  blurb: "Two chromophores in van der Waals contact have a short-range coupling the Coulombic formulas discard: up to 28% of the total in FMO and 66% in a stacked zinc phthalocyanine column. Beyond 7 Å the Coulombic coupling is the coupling to about 10%, the licence every cheap transport model runs on; the point-dipole formula misses 67% of it at 6 Å. Second author."
+  blurb: "Two chromophores in van der Waals contact have a short-range coupling the Coulombic formulas discard: up to 28% of the total in FMO and 66% in a stacked zinc phthalocyanine column. Beyond 7 Å the Coulombic coupling is the coupling to about 10%, the licence every cheap transport model runs on; the point-dipole formula misses 67% of it at 6 Å."
   links:
     - { label: Preprint, url: "http://wrap.warwick.ac.uk/98549" }
 
@@ -152,7 +152,7 @@
   doi: 10.1021/acs.jpclett.7b00829
   theme: excited-states
   anchor: multichromophore-dynamics
-  blurb: "Nature's arrangement of FMO's 8 bacteriochlorophylls ranks 466th of 50,000 physically plausible rearrangements for exciton transport at 4 ps, of the order of 20 percentage points above the ensemble. Compact structures with a pigment between source and drain do best; perturbing the Hamiltonian element by element, the earlier method, ranks nature's as generic because it builds no alternative. Second author."
+  blurb: "Nature's arrangement of FMO's 8 bacteriochlorophylls ranks 466th of 50,000 physically plausible rearrangements for exciton transport at 4 ps, of the order of 20 percentage points above the ensemble. Compact structures with a pigment between source and drain do best; perturbing the Hamiltonian element by element, the earlier method, ranks nature's as generic because it builds no alternative."
   links:
     - { label: Preprint, url: "https://arxiv.org/abs/1704.01795" }
     - { label: Data, url: "https://doi.org/10.6084/m9.figshare.c.3784874.v1" }
@@ -166,7 +166,7 @@
   doi: 10.1136/jitc-2023-SITC2023.1367
   theme: antibodies
   anchor: cd3-binder-selection
-  blurb: "Binding kinetics alone do not predict what a T-cell engager does, and clustering a CD3-binder portfolio on killing and cytokine profiles instead resolves it into 19 functional clusters. Selecting across those clusters rather than inside a favourite one carried two programmes, against PSMA and MAGE-A4, from more than 380 bispecifics to lead panels of 9 and 12. Second author."
+  blurb: "Binding kinetics alone do not predict what a T-cell engager does, and clustering a CD3-binder portfolio on killing and cytokine profiles instead resolves it into 19 functional clusters. Selecting across those clusters rather than inside a favourite one carried two programmes, against PSMA and MAGE-A4, from more than 380 bispecifics to lead panels of 9 and 12."
 
 - id: tce-pmhc
   kind: poster
