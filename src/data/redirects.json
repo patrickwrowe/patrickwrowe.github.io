@@ -8,5 +8,8 @@
   "/writing/smiles-is-a-strange-language/": "/writing/",
   "/writing/what-a-potential-learns/": "/writing/",
   "/work/excitonic-interactions/": "/work/excited-states/#excitonic-interactions",
-  "/work/multichromophore-dynamics/": "/work/excited-states/#multichromophore-dynamics"
+  "/work/multichromophore-dynamics/": "/work/excited-states/#multichromophore-dynamics",
+  "/work/cd3-binder-selection/": "/work/antibodies/#cd3-binder-selection",
+  "/work/tce-pmhc/": "/work/antibodies/#mage-a4-engagers",
+  "/work/antibody-selection/": "/work/antibodies/#selection-platform"
 }

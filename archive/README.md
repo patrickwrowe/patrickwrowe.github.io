@@ -15,10 +15,17 @@ the writing index. Figures that no live page uses moved with the work pages, und
 | `work/cho-gap.mdx` | `/work/carbon/#cho-gap` | 2026-10-03 |
 | `work/excitonic-interactions.mdx` | `/work/excited-states/#excitonic-interactions` | 2026-10-17 |
 | `work/multichromophore-dynamics.mdx` | `/work/excited-states/#multichromophore-dynamics` | 2026-10-17 |
+| `work/cd3-binder-selection.mdx` | `/work/antibodies/#cd3-binder-selection` | 2026-10-17 |
+| `work/tce-pmhc.mdx` | `/work/antibodies/#mage-a4-engagers` | 2026-10-17 |
+| `work/antibody-selection.mdx` | `/work/antibodies/#selection-platform` | 2026-10-17 |
 
 The carbon article went live on 2026-10-03, when its five pages were retired. The
 excited-states article went live on 2026-10-17 and retired its two paper pages, which had no
-figures of their own. Each later theme retires its own pages on the day it goes live.
+figures of their own. The antibodies article went live the same day and retired its three
+pages; `work/figures/tce-pmhc/` came with them, while
+`src/content/work/figures/cd3-binder-selection/poster-sitc-2023-cd3-selection.png` stays where
+it is because the live article's Fig. 6 imports it. Each later theme retires its own pages on
+the day it goes live.
 
 ## Writing outlines, retired 2026-10-06
 
