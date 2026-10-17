@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   surname,
   citationAuthors,
-  ordinal,
   listAuthors,
   kindMarker,
   externalLink,
@@ -36,26 +35,18 @@ test("citationAuthors gives up to five surnames in full and et al. beyond", () =
   assert.equal(citationAuthors(["P. Rowe"]), "Rowe");
 });
 
-test("ordinal handles the teens and the twenties", () => {
-  const cases = [
-    [1, "1st"], [2, "2nd"], [3, "3rd"], [4, "4th"], [11, "11th"], [12, "12th"], [13, "13th"],
-    [21, "21st"], [22, "22nd"], [23, "23rd"], [25, "25th"], [101, "101st"], [111, "111th"],
-  ] as const;
-  for (const [number, expected] of cases) assert.equal(ordinal(number), expected);
-});
-
 test("listAuthors keeps up to ten authors in full and marks Patrick", () => {
   const parts = listAuthors(["P. Rowe", "G. Csányi", "D. Alfè", "A. Michaelides"]);
   assert.deepEqual(parts.map((part) => part.text), ["P. Rowe", "G. Csányi", "D. Alfè", "A. Michaelides"]);
   assert.deepEqual(parts.map((part) => part.me), [true, false, false, false]);
 });
 
-test("listAuthors shortens a long list around Patrick's position", () => {
+test("listAuthors shortens a long list around Patrick, with no numbered position", () => {
   const authors = Array.from({ length: 31 }, (_, index) => `A${index + 1}. Surname${index + 1}`);
   authors[24] = "P. Rowe";
   const parts = listAuthors(authors);
   assert.deepEqual(parts.map((part) => part.text), [
-    "A1. Surname1", "A2. Surname2", "A3. Surname3", "…", "P. Rowe (25th of 31)", "…", "A31. Surname31",
+    "A1. Surname1", "A2. Surname2", "A3. Surname3", "…", "P. Rowe", "…", "A31. Surname31",
   ]);
   assert.equal(parts.filter((part) => part.me).length, 1);
 });
@@ -70,7 +61,7 @@ test("listAuthors puts no ellipsis between Patrick and a neighbouring shown auth
   const authors = Array.from({ length: 12 }, (_, index) => `A${index + 1}. S${index + 1}`);
   authors[3] = "P. Rowe";
   assert.deepEqual(listAuthors(authors).map((part) => part.text), [
-    "A1. S1", "A2. S2", "A3. S3", "P. Rowe (4th of 12)", "…", "A12. S12",
+    "A1. S1", "A2. S2", "A3. S3", "P. Rowe", "…", "A12. S12",
   ]);
 });
 

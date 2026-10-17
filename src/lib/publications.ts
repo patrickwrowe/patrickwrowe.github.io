@@ -35,18 +35,11 @@ export function citationAuthors(authors: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "101st". */
-export function ordinal(n: number): string {
-  const lastTwo = n % 100;
-  if (lastTwo >= 11 && lastTwo <= 13) return `${n}th`;
-  const suffixes: Record<number, string> = { 1: "st", 2: "nd", 3: "rd" };
-  return `${n}${suffixes[n % 10] ?? "th"}`;
-}
-
 /**
  * Author list for the Publications band. Up to ten authors in full. Beyond that: the
- * first three, an ellipsis, Patrick with his position if he is not already shown, and
- * the last author. The component joins the parts with ", " and bolds `me`.
+ * first three, an ellipsis, Patrick if he is not already shown, and the last author.
+ * Never his numbered position (Patrick, 2026-10-17). The component joins the parts
+ * with ", " and bolds `me`.
  */
 export function listAuthors(authors: string[], me: string = ME): AuthorPart[] {
   const part = (text: string): AuthorPart => ({ text, me: text === me });
@@ -57,7 +50,7 @@ export function listAuthors(authors: string[], me: string = ME): AuthorPart[] {
   const parts = authors.slice(0, 3).map(part);
   if (position > 2 && position < last) {
     if (position > 3) parts.push(ELLIPSIS);
-    parts.push({ text: `${me} (${ordinal(position + 1)} of ${authors.length})`, me: true });
+    parts.push({ text: me, me: true });
     if (position < last - 1) parts.push(ELLIPSIS);
   } else {
     parts.push(ELLIPSIS);
