@@ -100,6 +100,10 @@ class StandInView:
 class StandInQuality:
     view_transform: str
     look: str | None = None
+    diffuse_bounces: int | None = None
+    glossy_bounces: int | None = None
+    ao_bounces_render: int | None = None
+    fast_gi_method: str | None = None
 
 
 @dataclass(frozen=True)
@@ -113,6 +117,7 @@ class StandInLight:
     world: StandInWorld | None = None
     sun_strength: float = 0.0
     side_power: float = 0.0
+    under_power: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -468,7 +473,7 @@ def test_more_than_one_species_is_a_stick_layer_and_a_masked_sphere_layer_per_sp
 def test_the_sticks_are_the_palettes_carbon_even_beside_a_darker_species(
     render_box_grid_module, tmp_path
 ):
-    # Magnesium is darker than carbon; the sticks stay carbon, so its sphere stands out.
+    # Whatever magnesium's colour (dark green until 2026-10-17), the sticks stay carbon.
     scene, _ = _scene(render_box_grid_module, tmp_path, ["O", "Mg", "C", "C"])
     sticks, *spheres = scene.entities[0].layers
     assert sticks.material.rgb == srgb_hex_to_linear(SPECIES_COLOUR["C"])
@@ -492,6 +497,33 @@ def test_the_manifest_colour_map_beats_the_palette_and_can_add_a_species(
     assert rgb_by_mask[(False, False, True)] == srgb_hex_to_linear("#aabbcc")
     # The sticks follow the carbon the map leaves alone, not the darker oxygen it sets.
     assert sticks.material.rgb == srgb_hex_to_linear(SPECIES_COLOUR["C"])
+
+
+def test_a_sphere_scale_enlarges_one_species_and_light_and_quality_override_the_tier(
+    render_box_grid_module, tmp_path
+):
+    scene, _ = _scene(
+        render_box_grid_module,
+        tmp_path,
+        ["O", "Mg", "C", "C"],
+        sphere_scale={"Mg": 4},
+        light={"under_power": 8.0},
+        quality={"diffuse_bounces": 5, "fast_gi_method": "ADD"},
+    )
+    _, *spheres = scene.entities[0].layers
+    radius = {layer.select.mask: layer.style.radius for layer in spheres}
+    assert radius[(False, True, False, False)] == pytest.approx(
+        4 * radius[(True, False, False, False)]
+    )
+    assert scene.light.under_power == 8.0 and scene.light.side_power == RIG["side_power"]
+    assert (scene.quality.diffuse_bounces, scene.quality.fast_gi_method) == (5, "ADD")
+
+
+def test_a_light_key_the_installed_molrender_lacks_is_refused_naming_the_commit(
+    render_box_grid_module, tmp_path
+):
+    with pytest.raises(RuntimeError, match=r"\['shadow_power'\].*4b26311"):
+        _scene(render_box_grid_module, tmp_path, ["O", "C"], light={"shadow_power": 1.0})
 
 
 def test_a_species_in_neither_the_colour_map_nor_the_palette_is_refused_naming_it(

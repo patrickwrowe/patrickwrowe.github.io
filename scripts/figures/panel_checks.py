@@ -68,7 +68,16 @@ OPTIONAL_KEYS = frozenset(
         "cartoon_chains",
         "stick_chains",
         "chain_colour",
+        "sphere_scale",
+        "light",
+        "quality",
     }
+)
+# What a manifest's "light" may override in constants.RIG, and its "quality" in molrender's
+# PRODUCTION or DRAFT tier (Patrick, 2026-10-17: the excited-states hero's render settings).
+LIGHT_OVERRIDE_KEYS = frozenset({"key_power", "sun_strength", "side_power", "under_power"})
+QUALITY_OVERRIDE_KEYS = frozenset(
+    {"diffuse_bounces", "glossy_bounces", "ao_bounces_render", "fast_gi_method"}
 )
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | frozenset(BOX_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
@@ -133,6 +142,40 @@ def _is_colour_map(value: object) -> bool:
     )
 
 
+def _is_scale_map(value: object) -> bool:
+    """A dict of element symbol ("Mg") to a positive factor on sphere_radius_angstrom."""
+    return isinstance(value, dict) and all(
+        isinstance(symbol, str)
+        and ELEMENT_SYMBOL.fullmatch(symbol)
+        and _is_number(factor)
+        and factor > 0
+        for symbol, factor in value.items()
+    )
+
+
+def _is_light_override(value: object) -> bool:
+    """A dict of LIGHT_OVERRIDE_KEYS to non-negative powers, merged over constants.RIG."""
+    return (
+        isinstance(value, dict)
+        and set(value) <= LIGHT_OVERRIDE_KEYS
+        and all(_is_number(power) and power >= 0 for power in value.values())
+    )
+
+
+def _is_quality_override(value: object) -> bool:
+    """A dict of QUALITY_OVERRIDE_KEYS: bounce counts of at least 1, a Fast GI method by name."""
+    return (
+        isinstance(value, dict)
+        and set(value) <= QUALITY_OVERRIDE_KEYS
+        and all(
+            setting in ("REPLACE", "ADD")
+            if key == "fast_gi_method"
+            else isinstance(setting, int) and not isinstance(setting, bool) and setting >= 1
+            for key, setting in value.items()
+        )
+    )
+
+
 def _is_chain_colour_map(value: object) -> bool:
     """A dict of one-character chain id ("A") to sRGB hex ("#rrggbb"), possibly empty."""
     return (
@@ -184,6 +227,16 @@ VALUE_RULES = {
     ),
     "stick_chains": (_is_chain_list, "a list of distinct one-character chain ids"),
     "chain_colour": (_is_chain_colour_map, "a map of one-character chain id to sRGB hex"),
+    "sphere_scale": (_is_scale_map, "a map of element symbol to a positive factor"),
+    "light": (
+        _is_light_override,
+        f"a map of {sorted(LIGHT_OVERRIDE_KEYS)} to non-negative powers",
+    ),
+    "quality": (
+        _is_quality_override,
+        f"a map of {sorted(QUALITY_OVERRIDE_KEYS)}: bounces of at least 1, "
+        'fast_gi_method "REPLACE" or "ADD"',
+    ),
     "source": (
         lambda value: isinstance(value, str) and Path(value).is_file(),
         "the path of an existing XYZ file (a PDB file for a protein panel)",

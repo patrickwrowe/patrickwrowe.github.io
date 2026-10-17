@@ -4,15 +4,36 @@
   "cage_angstrom": null,
   "slab_angstrom": null,
   "margin": 1.06,
-  "resolution": [1728, 972],
+  "resolution": [
+    1728,
+    972
+  ],
   "sphere_radius_angstrom": 0.4,
   "bond_radius_angstrom": 0.22,
+  "sphere_scale": {
+    "Mg": 4
+  },
+  "light": {
+    "under_power": 8.0
+  },
+  "quality": {
+    "diffuse_bounces": 5,
+    "glossy_bounces": 5,
+    "ao_bounces_render": 5,
+    "fast_gi_method": "REPLACE"
+  },
   "panels": [
     {
       "id": "hero",
       "source": "scripts/figures/data/excited-states/3BSD.pdb",
-      "direction": [-0.7, 0.71, 0.0],
-      "cartoon_chains": ["A"],
+      "direction": [
+        -0.7,
+        0.71,
+        0.0
+      ],
+      "cartoon_chains": [
+        "A"
+      ],
       "stick_chains": []
     }
   ]

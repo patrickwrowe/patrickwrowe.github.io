@@ -205,6 +205,37 @@ def test_load_panels_accepts_a_species_colour_map_and_a_panel_map_replaces_the_p
     assert panels[1]["colour"] == {}
 
 
+def test_load_panels_accepts_a_sphere_scale_and_light_and_quality_overrides(tmp_path):
+    manifest_path = _manifest(
+        tmp_path,
+        [{"id": "a", "source": "a.xyz"}],
+        sphere_scale={"Mg": 4},
+        light={"under_power": 8.0},
+        quality={"diffuse_bounces": 5, "fast_gi_method": "ADD"},
+    )
+    panel = panel_checks.load_panels(manifest_path)[0]
+    assert panel["sphere_scale"] == {"Mg": 4} and panel["light"] == {"under_power": 8.0}
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("sphere_scale", {"Mg": 0}),
+        ("sphere_scale", {"mg": 4}),
+        ("light", {"under_power": -1}),
+        ("light", {"shadow_power": 1}),
+        ("quality", {"diffuse_bounces": 0}),
+        ("quality", {"diffuse_bounces": True}),
+        ("quality", {"fast_gi_method": "MULTIPLY"}),
+        ("quality", {"samples": 64}),
+    ],
+)
+def test_load_panels_refuses_a_bad_override_naming_its_key(tmp_path, key, value):
+    manifest_path = _manifest(tmp_path, [{"id": "a", "source": "a.xyz", key: value}])
+    with pytest.raises(ValueError, match=key):
+        panel_checks.load_panels(manifest_path)
+
+
 def test_load_panels_accepts_null_cage_and_a_tile(tmp_path):
     manifest_path = _manifest(
         tmp_path,

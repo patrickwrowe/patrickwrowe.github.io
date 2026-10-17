@@ -106,6 +106,14 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     panels[].stick_chains  protein only, required: a list of auth chain ids drawn
                            species-coloured as sticks and spheres; [] for none, disjoint from
                            cartoon_chains
+    sphere_scale           optional {"Mg": 4}: a factor on sphere_radius_angstrom for one
+                           species' spheres in a coloured panel (the excited-states hero draws
+                           magnesium at 4 times the radius, Patrick, 2026-10-17)
+    light                  optional {"under_power": 8.0, ...}: values merged over constants.RIG
+                           for this manifest's panels (panel_checks.LIGHT_OVERRIDE_KEYS)
+    quality                optional {"diffuse_bounces": 5, ...}: Cycles settings replaced in
+                           molrender's tier (panel_checks.QUALITY_OVERRIDE_KEYS); light and
+                           quality need molrender at commit 4b26311 or later
     chain_colour           protein only, optional {"A": "#rrggbb", ...}: sRGB hex per chain
                            of cartoon_chains, which beats constants.CHAIN_COLOUR for that
                            chain; a protein of more cartoon chains than CHAIN_COLOUR holds
@@ -602,9 +610,12 @@ def scene_for(
                     else AtomMask(mask=tuple(drawn.tolist()), of=subject_id),
                 )
             )
+        scale = spec.get("sphere_scale", {})
         layers.extend(
             Layer(
-                style=Spheres(radius=sphere_radius, geometry="Instance"),
+                style=Spheres(
+                    radius=sphere_radius * float(scale.get(symbol, 1)), geometry="Instance"
+                ),
                 material=Solid(rgb=rgb[symbol], **MATTE),
                 select=AtomMask(
                     mask=tuple((drawn & (atom_symbols == symbol)).tolist()), of=subject_id
@@ -621,11 +632,21 @@ def scene_for(
             Structure(path=cage, name="cage", layers=(grey_layer,), remove_solvent=False, hide=True)
         )
     tier = DRAFT if draft else PRODUCTION
+    light, quality = spec.get("light", {}), spec.get("quality", {})
+    absent = sorted(
+        (set(light) - {field.name for field in fields(Light)})
+        | (set(quality) - {field.name for field in fields(type(tier))})
+    )
+    if absent:
+        raise RuntimeError(
+            f"panel {spec['id']}: molrender has no {absent}: this manifest needs molrender at "
+            "commit 4b26311 or later on the branch fix-masked-layer-collision"
+        )
     return Scene(
         entities=tuple(entities),
         view=View(direction=tuple(spec["direction"]), margin=float(spec.get("margin", 1.02))),
-        light=Light(**RIG, world=World(strength=WORLD_STRENGTH)),
-        quality=replace(tier, view_transform="Standard", look=None),
+        light=Light(**{**RIG, **light}, world=World(strength=WORLD_STRENGTH)),
+        quality=replace(tier, view_transform="Standard", look=None, **quality),
         resolution=tuple(spec["resolution"]),
         transparent=False,
         shadow_catcher=False,
