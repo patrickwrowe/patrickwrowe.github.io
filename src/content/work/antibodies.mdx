@@ -19,12 +19,15 @@ heroCredit: "Structure: PDB 1SY6, Kjer-Nielsen et al. (2004). Rendered with scri
 
 import Cite from "@/components/Cite.astro";
 import Plate from "@/components/Plate.astro";
+import Poster from "@/components/Poster.astro";
 import { Image } from "astro:assets";
 import ClusteringPanel from "./figures/antibodies/poster-1367-fig3-functional-clustering.png";
 import MageA4Structure from "./figures/antibodies/mage-a4-pmhc-tcr.png";
 import SpecificityPanel from "./figures/antibodies/poster-2373-fig3-specificity.png";
 import DesignStrategies from "./figures/antibodies/poster-1291-fig1-tce-design-strategies.png";
 import PosterCd3 from "./figures/cd3-binder-selection/poster-sitc-2023-cd3-selection.png";
+import PosterSitc from "./figures/tce-pmhc/poster-sitc-2023-mage-pmhc.png";
+import PosterAacr from "./figures/tce-pmhc/poster-aacr-2024-mage-a4.png";
 
 A T-cell engager (TCE) is an antibody with a job on each end. One arm grips an antigen on a tumour cell, the other grips CD3 on a T cell, and holding the two together makes the T cell kill something it would otherwise walk past. The discovery effort goes into the tumour arm, because that is the part that changes between programmes, and the CD3 arm is treated as a fixed component: find one with reasonable affinity, reuse it everywhere. Most TCEs in clinical development descend from a small number of CD3-binding antibodies, SP34-2 among them; it was described in 1985. The molecule that comes out of this has to maximise tumour-cell killing while fine-tuning cytokine release, two readings taken side by side in every functional assay on this page, and the field's own account of where it stands is that "the full extent to which CD3-binding parameters impact TCE function is not well understood".
 
@@ -112,18 +115,38 @@ The other three levers each come with a panel behind them, and each is the same 
 
 What that poster does not do is finish. The γδ1 communities, the CD28 avidities and the γδ developability results are all marked "data not shown"; the CD28 and 4-1BB binders still have to be moved into monovalent formats and tested there; and the programmes still need their in vitro and in vivo efficacy work. The avidities that are quoted for the CD28 binders, 870 pM to 6.40 µM against the extracellular domain, come without the panel behind them.
 
-I am not going to describe the internal platform beyond that, or name targets or partners. The posters are the part that has been cleared for the outside world; what follows is one of them entire, linked at the size it was printed.
-
 <Plate n={6}>
   <a href="/posters/abcellera-sitc-2023-tce-platform.pdf">
     <Image src={PosterCd3} alt="The SITC 2023 poster on selecting CD3-binding antibodies for T-cell engager development, whole: a wide landscape sheet of panels running left to right, from binding kinetics against engager function, through the functional clustering of the binder panel, to the two programme funnels and the lead panels benchmarked against clinical molecules. Opens the poster as a PDF." widths={[640, 1180, 1536]} sizes="(max-width: 1000px) 100vw, 864px" loading="lazy" />
   </a>
   <Fragment slot="caption">
-    Poster 1367 as it was presented, linked here as a PDF at full size. The panels run left to right: the kinetics of the CD3 binders against engager function, the clustering of the panel into 19 functional clusters, the selection of functionally diverse binders, and the PSMA and MAGE-A4 lead panels set beside the clinical molecules. It closes the section because the posters are what is public of this work, and a reader who wants the primary record rather than my account of it should have it in one click.
+    Poster 1367 as it was presented, linked here as a PDF at full size. The panels run left to right: the kinetics of the CD3 binders against engager function, the clustering of the panel into 19 functional clusters, the selection of functionally diverse binders, and the PSMA and MAGE-A4 lead panels set beside the clinical molecules. It is here because the posters are what is public of this work, and a reader who wants the primary record rather than my account of it should have it in one click.
     <span class="credit">Poster 1367, SITC 2023. © AbCellera Biologics Inc., reproduced in full from the copy published at abcellera.com.</span>
   </Fragment>
 </Plate>
 
-Read against the earlier pages here, this looks like a change of field, and it is less of one than it appears. Profile a large panel on what its members do, find the axes that actually organise it, then select along those axes instead of picking favourites: that is the move in [the carbon potentials article →](/work/carbon/), where the panel was a training set and the axes were structural, and it is the move here, where the panel is a portfolio of antibodies and the axes are killing and cytokine release. The units change and the failure modes do not. A cheap score that is confidently wrong somewhere nobody has looked costs the same in either field, except that here the thing you did not look at is a peptide on a healthy cell.
+<Poster
+  src={PosterSitc}
+  alt="The SITC 2023 poster on the discovery and development of T-cell engagers against a
+    MAGE-A4 peptide–MHC, whole: a landscape sheet of panels covering the single-cell discovery
+    campaign, the counter-screen against closely related non-MAGE peptide–MHCs, the pairing of
+    six tumour arms with 19 CD3 arms into more than 200 bispecifics, and the functional profiles
+    of the twelve selected leads."
+  href="/posters/abcellera-sitc-2023-mage-pmhc.pdf"
+  credit="Poster 1395, SITC 2023: discovery and the selection of twelve candidates.
+    © AbCellera Biologics Inc."
+/>
+
+<Poster
+  src={PosterAacr}
+  alt="The AACR 2024 poster on the characterisation of the lead MAGE-A4 engager, whole: a
+    landscape sheet of panels covering killing and cytokine release against MAGE-A4-positive,
+    -negative and knockout lines, binding across a library of more than 180 non-MAGE peptides,
+    cryo-electron microscopy of the antibody on peptide–MHC, and a positional scan across the
+    ten peptide positions."
+  href="/posters/abcellera-aacr-2024-mage-a4.pdf"
+  credit="Poster 2373, AACR 2024: the deep characterisation of the lead.
+    © AbCellera Biologics Inc."
+/>
 
 [Contents ↑](#contents)

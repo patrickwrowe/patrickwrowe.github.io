@@ -22,9 +22,8 @@ the writing index. Figures that no live page uses moved with the work pages, und
 The carbon article went live on 2026-10-03, when its five pages were retired. The
 excited-states article went live on 2026-10-17 and retired its two paper pages, which had no
 figures of their own. The antibodies article went live the same day and retired its three
-pages; `work/figures/tce-pmhc/` came with them, while
-`src/content/work/figures/cd3-binder-selection/poster-sitc-2023-cd3-selection.png` stays where
-it is because the live article's Fig. 6 imports it. Each later theme retires its own pages on
+pages, but none of their figures: the live article links all three poster PDFs, so
+`figures/cd3-binder-selection/` and `figures/tce-pmhc/` both stay under `src/`. Each later theme retires its own pages on
 the day it goes live.
 
 ## Writing outlines, retired 2026-10-06
