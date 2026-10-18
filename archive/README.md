@@ -18,6 +18,11 @@ the writing index. Figures that no live page uses moved with the work pages, und
 | `work/cd3-binder-selection.mdx` | `/work/antibodies/#cd3-binder-selection` | 2026-10-17 |
 | `work/tce-pmhc.mdx` | `/work/antibodies/#mage-a4-engagers` | 2026-10-17 |
 | `work/antibody-selection.mdx` | `/work/antibodies/#selection-platform` | 2026-10-17 |
+| `work/vermiculite-membranes.mdx` | `/work/two-dimensional-and-confined/#vermiculite-membranes` | 2026-10-18 |
+| `work/hbn-rippling.mdx` | `/work/two-dimensional-and-confined/#boron-nitride-rippling` | 2026-10-18 |
+| `work/aqueous-potentials.mdx` | `/work/two-dimensional-and-confined/#aqueous-potentials` | 2026-10-18 |
+| `work/nanotube-water-flow.mdx` | `/work/two-dimensional-and-confined/#nanotube-water-flow` | 2026-10-18 |
+| `work/mos2-membranes.mdx` | `/work/two-dimensional-and-confined/#molybdenum-disulfide-membranes` | 2026-10-18 |
 
 The carbon article went live on 2026-10-03, when its five pages were retired. The
 excited-states article went live on 2026-10-17 and retired its two paper pages, which had no

@@ -11,5 +11,10 @@
   "/work/multichromophore-dynamics/": "/work/excited-states/#multichromophore-dynamics",
   "/work/cd3-binder-selection/": "/work/antibodies/#cd3-binder-selection",
   "/work/tce-pmhc/": "/work/antibodies/#mage-a4-engagers",
-  "/work/antibody-selection/": "/work/antibodies/#selection-platform"
+  "/work/antibody-selection/": "/work/antibodies/#selection-platform",
+  "/work/vermiculite-membranes/": "/work/two-dimensional-and-confined/#vermiculite-membranes",
+  "/work/hbn-rippling/": "/work/two-dimensional-and-confined/#boron-nitride-rippling",
+  "/work/aqueous-potentials/": "/work/two-dimensional-and-confined/#aqueous-potentials",
+  "/work/nanotube-water-flow/": "/work/two-dimensional-and-confined/#nanotube-water-flow",
+  "/work/mos2-membranes/": "/work/two-dimensional-and-confined/#molybdenum-disulfide-membranes"
 }
