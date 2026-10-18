@@ -37,6 +37,7 @@ def test_every_manifest_is_found():
         "excited-states",
         "graphitisation",
         "spheres",
+        "two-dimensional-and-confined",
     }
 
 

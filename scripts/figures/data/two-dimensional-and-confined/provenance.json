@@ -66,6 +66,58 @@
       },
       "extraction": "Typed from the printed text of pages 7 and 8. Page 8 says Tersoff and ExTeP yield an RMSE 'of more than 54 and 67 meV/atom', so the file flags those two as lower bounds. scripts/tests/test_hbn_potential_errors.py asserts every number against pdftotext of those pages where the paper and pdftotext are present",
       "md5": "476458b19fb0663146310a27f19c7f54"
+    },
+    "vermiculite-li-last-frame-3x1.xyz": {
+      "what": "The last frame of the Li-vermiculite AIMD trajectory (CP2K, NVT at 300 K, 0.5 fs step): one 2 x 1 cell of 208 atoms, a single 2:1 layer (12 Si, 4 Al, 12 Mg, 48 O, 8 hydroxyl H), 4 Li and 40 D2O whose deuterium the source labels H (so 88 H and 88 O in all), cell a = 10.62, b = 9.20, c = 40.777 A, beta = 103.13 deg. All four Li and all 40 waters sit on the upper face of the layer. Written as three periodic images along a, 624 atoms.",
+      "source_path": "/media/patrick/PR_Backup/Linux_Workstation_Research_Backup/Vermiculite_Water_Structure/CP2K/AIMD/17_Keyed_Surface_Analysis/Li/Li_AIMD_Total.pdb",
+      "source_md5": "93a4218e538f07fb10599d7f3aedebe6",
+      "source_size_bytes": 1007055722,
+      "frame": "60846 of 60846 (the last; frames counted by REMARK line), CP2K 'Step 29501, time = 14750.500' fs",
+      "runs": "The file concatenates two runs of the same composition and in-plane cell: frames 1-31038 are the run started 2018-10-08 03:35 (c = 40.477 A, the same header as 2_Down/Vermiculite_Water-pos-1.pdb beside it) and frames 31039-60846 the run started 08:39 the same day (c = 40.777 A, 4_Down's). The last frame is the second run's. frame_dump.POSCAR beside the trajectory, the frame the 2020 analysis script (Analyse_CP2K_Vermiculite_2.dump_frame) wrote from the last frame it analysed, has c = 40.477 A, so which run or runs the published Fig. 4 analysis read is not settled by these files.",
+      "article_check": "Agrees with the article's system: 2 x 1 supercell, 10.62 x 9.20 A in plane, 40 D2O. Vacuum: c perpendicular to the layer is 39.71 A and the layer's oxygens span z = 4.70-11.74 A, so the bare layer has 32.7 A of vacuum between its basal oxygen planes (the article's '30 A vacuum'); the film reaches z = 24.43 A, leaving 20.0 A of empty space above the water.",
+      "extraction": "scripts/figures/two_dimensional_frames.py --vermiculite <source_path>: the file is streamed once (md5, frame count, last frame); CP2K wrote unwrapped positions, so each hydrogen is placed beside the oxygen nearest it in space at that oxygen's in-plane minimum image, then every other atom is wrapped to x mod a, y mod b (a along x and b along y, alpha = gamma = 90), hydrogens moving with their oxygen; the vacuum direction is untouched (no atom crosses it). The wrapped cell is tiled 3 x 1 in plane (VERMICULITE_REPEATS), periodic images of the one simulated cell, as Patrick's own 3 x 3 snapshot snapframe.POSCAR beside the trajectory was; coordinates written to 6 decimals. scripts/tests/test_two_dimensional_data_provenance.py checks the composition, the 10.62 A image spacing, one O per H and 40 waters.",
+      "licence": "own data (Patrick Rowe's simulation, unpublished as coordinates)",
+      "md5": "7fa0fc9a9eab5f0dd98598ed7da4e0be",
+      "size_bytes": 26349
+    },
+    "hbn-nanotube-6-6-frame-347.xyz": {
+      "what": "Frame 347 (zero-based) of the hBN-GAP training set, config_type AIMD: a (6,6) armchair boron nitride nanotube of 144 atoms (72 B, 72 N), six 2.51 A repeats along its axis (z) in a 23.29 x 23.29 x 15.04 A periodic cell, so infinitely long in the calculation; mean radius 4.22 A, radial standard deviation 0.15 A, a thermal snapshot. The training set holds zigzag (4,0), (6,0), (9,0), (10,0) and (15,0) and armchair (4,4) and (6,6) tubes (identified here from atom count, cell and radius; the file labels them only AIMD); (6,6) is the armchair tube the dossier named. Of its 24 frames this is the third smoothest: the two smoother (radial spread 0.065 and 0.091 A) read as near-relaxed, this one as a thermal snapshot that is still clearly a tube.",
+      "source_path": "hBN_GAP_Training.xyz in hBN_GAP.tar.gz (94,543,151 bytes, md5 e413fe4d08e89db4d6081f7af469dd36), the deposit doi:10.17863/CAM.66112 at the University of Cambridge repository",
+      "source_md5": "6f94aaa743175a662536b63206bddf96",
+      "frame": "347 (zero-based), starting at line 59645 of the source",
+      "edit": "7 atom lines changed, their z field only: the tube's end ring sat with 7 atoms at z = 0.02-0.05 A and 5 at 14.96-15.04 A, and drew one boron on a single bond above the tube in the first draft; the 7 moved up by c = 15.039224 A (written in the source's own column layout). Every other line is the source's.",
+      "deposit": "Thiemann, Rowe, Müller, Michaelides, 'Gaussian Approximation Potential for Hexagonal Boron Nitride (hBN-GAP)', University of Cambridge repository, doi:10.17863/CAM.66112; the data of Thiemann, Rowe, Müller and Michaelides, J. Phys. Chem. C 2020, doi 10.1021/acs.jpcc.0c05831",
+      "licence": "CC BY 4.0 (the deposit's dc.rights 'Attribution 4.0 International (CC BY 4.0)', read from its landing page 2026-10-17)",
+      "extraction": "Downloaded 2026-10-17 from https://api.repository.cam.ac.uk/server/api/core/bitstreams/c45ba2c1-21ca-43a8-9a4f-b849b3d3e0ef/content to a scratch directory, never into the repository; hBN_GAP/hBN_GAP_Training.xyz (20,308,195 bytes, 1,555 frames) extracted and this frame's lines copied, count line, extended-XYZ comment line (lattice, DFT energy, virial, sigmas) and atom lines with their DFT forces, by scripts/figures/two_dimensional_frames.py --hbn-training (HBN_FRAMES). The cell is cut along z at the widest gap between atoms (widest_gap_shift) and the atoms below the cut move up by c, a lattice translation, so no ring is split across the boundary; boxprep.read_xyz reads the first four fields of each atom line and ignores the forces.",
+      "md5": "197307e41a051aa9790362867ba971f0",
+      "size_bytes": 15539
+    },
+    "hbn-bilayer-frame-218.xyz": {
+      "what": "Frame 218 (zero-based) of the hBN-GAP training set, config_type AIMD: an hBN bilayer of 196 atoms (98 B, 98 N; two 7 x 7 sheets) in a hexagonal cell of a = 17.584 A in plane and 24 A along z, so a periodic sheet pair with 20 A of vacuum; interlayer spacing 3.39 A (mean z of the upper sheet minus the lower), out-of-plane standard deviation 0.16 and 0.12 A per sheet, a thermal snapshot with a small visible ripple. Chosen from the 216 frames of that cell as one near the equilibrium spacing with visible but small thermal ripple.",
+      "source_path": "hBN_GAP_Training.xyz in hBN_GAP.tar.gz (94,543,151 bytes, md5 e413fe4d08e89db4d6081f7af469dd36), the deposit doi:10.17863/CAM.66112 at the University of Cambridge repository",
+      "source_md5": "6f94aaa743175a662536b63206bddf96",
+      "frame": "218 (zero-based), starting at line 38091 of the source",
+      "edit": "none; the frame's 198 lines verbatim (the widest gap along z is the vacuum, so nothing moved).",
+      "deposit": "Thiemann, Rowe, Müller, Michaelides, 'Gaussian Approximation Potential for Hexagonal Boron Nitride (hBN-GAP)', University of Cambridge repository, doi:10.17863/CAM.66112; the data of Thiemann, Rowe, Müller and Michaelides, J. Phys. Chem. C 2020, doi 10.1021/acs.jpcc.0c05831",
+      "licence": "CC BY 4.0 (the deposit's dc.rights 'Attribution 4.0 International (CC BY 4.0)', read from its landing page 2026-10-17)",
+      "extraction": "Downloaded 2026-10-17 from https://api.repository.cam.ac.uk/server/api/core/bitstreams/c45ba2c1-21ca-43a8-9a4f-b849b3d3e0ef/content to a scratch directory, never into the repository; hBN_GAP/hBN_GAP_Training.xyz (20,308,195 bytes, 1,555 frames) extracted and this frame's lines copied, count line, extended-XYZ comment line (lattice, DFT energy, virial, sigmas) and atom lines with their DFT forces, by scripts/figures/two_dimensional_frames.py --hbn-training (HBN_FRAMES). The cell is cut along z at the widest gap between atoms (widest_gap_shift) and the atoms below the cut move up by c, a lattice translation, so no ring is split across the boundary; boxprep.read_xyz reads the first four fields of each atom line and ignores the forces.",
+      "md5": "070d19d568f7454ec0677c04d4aecc32",
+      "size_bytes": 20997
+    },
+    "mos2-li-0.3-last-frame-two-sheets.xyz": {
+      "what": "The last frame of the Li/Mo = 0.3 1T' MoS2 AIMD production run (CP2K 5.0, 1 fs step): one orthorhombic cell, 22.545 x 22.314 x 11.500 A, of 484 atoms: one 1T' MoS2 sheet (56 Mo, 112 S), 16 Li and 100 H2O (100 O, 200 H). The cell is periodic along z, so the next sheet is this sheet's image 11.5 A up. Written as the cell (wrapped, every water whole) followed by that image (56 Mo, 112 S), 652 atoms: the water and lithium between two sheets.",
+      "source_path": "/media/patrick/PR_Backup/Linux_Workstation_Research_Backup/Molybdenum_Disulfide_Water_Flow/AIMD_2019_New_Study/4_Multi_Li_CP2K_AIMD/2_400_K_Production_Run/4_5_nm_Li_Sep/MoS2_Water-pos-1.pdb",
+      "source_md5": "e6bf16462bf0e17de788d93a7fd975fa",
+      "source_size_bytes": 1129139766,
+      "frame": "29439 of 29439 (the last; frames counted by REMARK line, and restarts repeat some steps), CP2K 'Step 28886, time = 28886.000' fs",
+      "composition_check": "Li/Mo = 16/56 = 0.286, the article's 0.3. Waters: 100. The paper's SI gives 103-108 waters for these cells; recorded here, not reconciled (for Patrick).",
+      "geometry": "Mo planes 11.50 A apart (the cell's c, fixed in this NVT run), sulfur 1.61 A either side of each Mo plane, so 8.29 A between the two inner sulfur planes; neither is the 1.0 nm the brief named. The 100 oxygens form two layers of 50, at 4.58 and 6.85 A above the lower Mo plane (spread 0.25 and 0.29 A; the closest oxygens of the two layers 1.04 A apart in z), a water bilayer; the 16 Li sit between the layers, 4.66-6.74 A above the lower Mo plane (the midplane is 5.75 A).",
+      "history": "Patrick confirmed on 2026-10-17 that this run is the paper's Li/Mo = 0.3 system, after the frame first named for the hero, analysed_traj.xyz in the directory above, proved to hold no lithium (56 Mo, 112 S, 109 O, 218 H, the composition of the 1_No_Li run beside it).",
+      "extraction": "scripts/figures/two_dimensional_frames.py --mos2 <source_path> (stage_mos2): the trajectory streamed once (md5, frame count, last frame); wrapped on all three axes, each H placed beside the O nearest it at that O's minimum image and moved with it; cut along z at the widest gap between heavy atoms (2.08 A, between the top of the water and the sheet's lower sulfur), so the sheet lies wholly below the water; then the sheet's Mo and S copied one c = 11.5 A up. Coordinates to 6 decimals. scripts/tests/test_two_dimensional_data_provenance.py checks the composition, the copy's 11.5 A offset, whole waters and the two water layers.",
+      "input_note": "MoS2_CP2K_AIMD.inp in the run directory says TEMPERATURE 500 K and STEPS 1000, which reads as the annealing input copied rather than the production one; the directory name says 400 K. Not resolved here.",
+      "licence": "own data (Patrick Rowe's simulation, unpublished as coordinates)",
+      "md5": "72480c04a62e0b9e38bde138cde96804",
+      "size_bytes": 27551
     }
   },
   "rejected": {
@@ -80,6 +132,402 @@
       "archive_path": "/data/pr_archive/source_drives/sdb2_Patrick_4Tb_BU/Happy_Electron_Backup/UCL/Papers/Vermiculite/Data/Vermiculite_Ion_Data/data_Li.dat",
       "md5": "afcdb9a1132f9348ed1dfbbf03cd7bbd",
       "why": "As data_K.dat, against Fig.4b: ion heights 4.0-11.4 A against -0.7-2.4 A in the sheet."
+    }
+  },
+  "renders": {
+    "note": "Why each committed render looks as it does; free-form, read by people. The values in manifest.json are the record; scripts/tests/test_two_dimensional_data_provenance.py checks that these agree with them. summary_line is render_box_grid.py's own line with the repository prefix stripped from the output path.",
+    "method": "World +z is the image's up and render_box_grid.py does not rotate a structure, so each direction was chosen from orthographic previews (a scratch matplotlib projection of the spheres, not committed; for vermiculite it also counted the Li whose centre no nearer sphere covers) and then Blender drafts (--draft: EEVEE at half resolution, 97-202 s each on the CPU), the choice made by eye on the drafts, then rendered at the production tier. 2026-10-17; the hero and the depth-cue strengths were compared on production renders (each takes 35-200 s on the CPU). Round 3 (2026-10-17): after the molrender change, the depth-cue strengths and the two hBN views were compared on production renders again.",
+    "hero": {
+      "manifest": "scripts/figures/data/two-dimensional-and-confined/manifest.json",
+      "source": "mos2-li-0.3-last-frame-two-sheets.xyz",
+      "direction": [
+        0.0,
+        -1.0,
+        0.0
+      ],
+      "resolution": [
+        1728,
+        972
+      ],
+      "margin": 1.1,
+      "why": "Edge-on, looking along b ([0, -1, 0], no tilt): the sheets' atoms line up in columns, so each sheet reads as one crisp band of Mo between two sulfur planes, and the 0.83 nm between the inner sulfur planes is an open slot holding the water and lithium. Seen level, the two water layers show as an upper and a lower row of molecules with the green lithium between them, most clearly at the left. Lithium is drawn at 2.5 times the common sphere radius (manifest sphere_scale, 1.07 A), as on the vermiculite plate, so the bare ions read as ions. 1728 x 972, the hero size, never cropped. Margin 1.1 rather than the plate's 1.06: at 1.06 the sulfur spheres came within 18 px of the top and bottom edges.",
+      "limits": "One periodic cell (22.5 x 22.3 A) of an infinite stack: the upper sheet is the lower sheet's periodic image, the same atoms one c up, so its thermal displacements copy the lower sheet's exactly. Viewed along b the cell is 22.3 A deep, so the water band is many molecules deep in projection, and the two layers separate by eye only where the band is thin; the bilayer is the frame's measured fact (provenance files entry), not something every part of the picture shows. About 10 of the 16 Li can be told apart; some sit behind others. A few waters at the cell's in-plane edge stand out past the sheets' ends, because each water was wrapped by its oxygen and its hydrogens follow it. The one non-white border pixel, at the top right, is Molecular Nodes' known compositor stray.",
+      "alt": "Two molybdenum disulfide sheets seen edge-on, one above the other, with two layers of water between them and lithium ions sitting in the middle of the water, between its two layers.",
+      "candidates": [
+        {
+          "direction": [
+            0.26,
+            -0.96,
+            0.1
+          ],
+          "previewed": "scratch projection (8 of 16 Li unobstructed), then production (169 s)",
+          "verdict": "Tilted 6 degrees and turned 15: the sheets' rows do not line up and read as dense slabs. Rejected."
+        },
+        {
+          "direction": [
+            0.0,
+            -1.0,
+            0.1
+          ],
+          "previewed": "projection (4 of 16), then production (163 s)",
+          "verdict": "Columns line up, but the 6 degree tilt shows the sheets' faces and blurs the water layers. Rejected."
+        },
+        {
+          "direction": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "previewed": "production (171 s), then the committed render",
+          "verdict": "Chosen. Crisp sheets, an open slot, the water in two rows with lithium between."
+        },
+        {
+          "direction": [
+            0.26,
+            -0.96,
+            0.0
+          ],
+          "previewed": "production (202 s)",
+          "verdict": "Level but turned 15 degrees: more Li separate, but the sheets go back to dense slabs. Rejected."
+        },
+        {
+          "direction": [
+            0.0,
+            -0.97,
+            0.26
+          ],
+          "previewed": "scratch projection only (3 of 16)",
+          "verdict": "15 degrees up: the upper sheet's face covers the water. Rejected."
+        },
+        {
+          "direction": [
+            0.5,
+            -0.85,
+            0.17
+          ],
+          "previewed": "scratch projection only (7 of 16)",
+          "verdict": "Turned 30 degrees: sheets lose their columns. Rejected."
+        }
+      ],
+      "radii": {
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.22,
+        "sphere_scale": {
+          "Li": 2.5
+        },
+        "why": "The plate's values (0.4 and 0.22 A); Li at 2.5 times, as on the vermiculite plate."
+      },
+      "rig": "Cycles, molrender's PRODUCTION tier with the excited-states hero's settings (manifest light and quality, Patrick 2026-10-17): diffuse and glossy bounces 5, Fast GI kept on but taking over only at bounce 5 (ao_bounces_render 5, fast_gi_method REPLACE); the RIG lights (three-point key at 2 W, sun fill 1.5 W/m2, side light 12 W) plus the light from below at 8 W (under_power), studio HDRI at 0.8; every material molrender's Principled BSDF Solid at the matte settings (roughness 0.9, specular 0.15). Species colours from constants.SPECIES_COLOUR, no manifest override; sticks in the palette's carbon. molrender at commit 4b26311 on fix-masked-layer-collision ('-dirty' is an uncommitted docs edit in molrender that is not this work's). Rendered inside the session sandbox, where no GPU is visible (no /dev/nvidia*), so Cycles ran on the CPU.",
+      "wall_time_s": 160,
+      "summary_line": "hero: 652 atoms, wall 160 s, blender exit 0, src/content/work/figures/two-dimensional-and-confined/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [235, 255, 236])], versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (4b26311-dirty)",
+      "png": {
+        "path": "src/content/work/figures/two-dimensional-and-confined/hero.png",
+        "size_px": [
+          1728,
+          972
+        ],
+        "mode": "RGB"
+      }
+    },
+    "vermiculite-li-film": {
+      "manifest": "scripts/figures/data/two-dimensional-and-confined/manifest.json",
+      "source": "vermiculite-li-last-frame-3x1.xyz",
+      "direction": [
+        0.26,
+        -0.93,
+        0.26
+      ],
+      "resolution": [
+        1728,
+        972
+      ],
+      "margin": 1.06,
+      "why": "A side view of three periodic images of the one simulated 2 x 1 cell (624 atoms), the camera 15 degrees above the layer's plane and turned 15.6 degrees off the a axis so the three images do not stack into one repeating column. From this height the clay layer reads as a slab, the lithium ions sit at its upper surface among the first water molecules and the film rises above them, thinning to scattered molecules at its top. Lithium is drawn at 2.5 times the common sphere radius (manifest sphere_scale): at the common radius a bare Li+ is a 0.43 A dot that the waters hide. The frame is 16:9 like the site's heroes, so the plate can run full width; uncaged and non-square, it is never cropped (spec 6.2).",
+      "limits": "Three images along a and one along b: the slab is cut at the front and back faces (y = 0 and 9.2 A), so a few lattice oxygens and silicons at those faces show fewer bonds than in the crystal, and one lattice oxygen there has none. The repetition of the three images along x is real (they are copies) and is visible to a careful eye. Of the 12 Li, about half are clear of any nearer sphere in this view (the scratch preview's count, 6 of 12); the rest are partly behind waters. The deuterium is drawn as hydrogen (it is labelled H in the trajectory). Lithium takes the palette's #2f9e5e green and magnesium #a64bf4 purple (Patrick, 2026-10-17: 'Mg in purple, lithium in green'; constants.SPECIES_COLOUR and --species-li changed that day); the first render of 2026-10-17 drew lithium in the palette's earlier #72598d, a second purple beside magnesium's, and this one replaces it. The one non-white border pixel, at the top right, is Molecular Nodes' known compositor stray (render_box_grid.py's docstring) and passes the border check.",
+      "alt": "Side view of a lithium vermiculite layer carrying a film of heavy water: the lithium ions sit at the layer's surface among the first water molecules, and the water above them thins to scattered molecules at the top of the film.",
+      "candidates": [
+        {
+          "direction": [
+            0.0,
+            -0.96,
+            0.28
+          ],
+          "previewed": "scratch projection only",
+          "li_unobstructed": "3 of 12",
+          "verdict": "Face-on along b: the three images line up into an obviously repeating pattern and half as many Li show. Rejected."
+        },
+        {
+          "direction": [
+            0.26,
+            -0.93,
+            0.26
+          ],
+          "previewed": "projection, then Blender draft (202 s) and production",
+          "li_unobstructed": "6 of 12",
+          "verdict": "Chosen. The layer reads as a slab, the Li as a row of ions at its surface and the film as water above them."
+        },
+        {
+          "direction": [
+            0.0,
+            -0.87,
+            0.5
+          ],
+          "previewed": "scratch projection only",
+          "li_unobstructed": "6 of 12",
+          "verdict": "30 degrees up shows more of the film's top but stacks the images and flattens the slab. Rejected."
+        },
+        {
+          "direction": [
+            0.0,
+            -1.0,
+            0.12
+          ],
+          "previewed": "scratch projection only",
+          "li_unobstructed": "6 of 12",
+          "verdict": "Nearly edge-on: the film becomes a band with no depth. Rejected."
+        }
+      ],
+      "radii": {
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.22,
+        "why": "The plate's values, the carbon and excited-states plates' own (0.4 and 0.22 A), so each species is drawn at 0.4/1.70 of its Molecular Nodes van der Waals radius; Li alone at 2.5 times that (1.07 A), so the ions read as ions.",
+        "sphere_scale": {
+          "Li": 2.5
+        }
+      },
+      "rig": "Cycles, molrender's PRODUCTION tier with the excited-states hero's settings (manifest light and quality, Patrick 2026-10-17): diffuse and glossy bounces 5, Fast GI kept on but taking over only at bounce 5 (ao_bounces_render 5, fast_gi_method REPLACE); the RIG lights (three-point key at 2 W, sun fill 1.5 W/m2, side light 12 W) plus the light from below at 8 W (under_power), studio HDRI at 0.8; every material molrender's Principled BSDF Solid at the matte settings (roughness 0.9, specular 0.15). Species colours from constants.SPECIES_COLOUR, no manifest override; sticks in the palette's carbon. molrender at commit 4b26311 on fix-masked-layer-collision ('-dirty' is an uncommitted docs edit in molrender that is not this work's). Rendered inside the session sandbox, where no GPU is visible (no /dev/nvidia*), so Cycles ran on the CPU.",
+      "wall_time_s": 99,
+      "summary_line": "vermiculite-li-film: 624 atoms, wall 99 s, blender exit 0, src/content/work/figures/two-dimensional-and-confined/vermiculite-li-film.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [234, 255, 233])], versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (4b26311-dirty)",
+      "png": {
+        "path": "src/content/work/figures/two-dimensional-and-confined/vermiculite-li-film.png",
+        "size_px": [
+          1728,
+          972
+        ],
+        "mode": "RGB"
+      }
+    },
+    "hbn-nanotube": {
+      "manifest": "scripts/figures/data/two-dimensional-and-confined/manifest.json",
+      "source": "hbn-nanotube-6-6-frame-347.xyz",
+      "direction": [
+        0.7,
+        -0.7,
+        0.14
+      ],
+      "resolution": [
+        1200,
+        1200
+      ],
+      "margin": 1.15,
+      "why": "The tube's axis is world z, so it stands upright in the frame. Seen from 8 degrees above (direction [0.7, -0.7, 0.14]) the depth across the tube is almost all front to back: under the atom-span depth cue the whole near wall keeps its colour, from rim to rim, and the far wall, seen through the hexagons, recedes. The round-2 view from 32 degrees above showed the top rim as an ellipse, but there the near wall's lower half is as far from the camera as the far wall's top (15 A of height times sin 32 against the 8.4 A diameter), so it faded with the far wall. The 15 A segment is the periodic cell itself, one training configuration as the potential saw it. Square and uncaged, cropped to its ink plus 3% (1081 px). Depth cue {'strength': 0.35} (Patrick, 2026-10-17): molrender's DepthRamp toward the backdrop's white on every subject material, now spanning the atoms: no mix at the nearest atom's camera depth, the full strength at the farthest's (molrender at 4b26311 on fix-masked-layer-collision plus an uncommitted change (2026-10-17, Patrick: 'Patch molrender, re-render'; under review, to be committed by the coordinator), 8 files, 314 insertions, 62 deletions in src/ and tests/: the deferred depth ramp spans the rendered atoms instead of the bounding sphere. view.depth_points (each visible object's vertices, i.e. its atoms; bounding-box corners for a vertex-less volume; hidden objects skipped) and view.depth_span (nearest and farthest camera depth along the camera's view axis) give near and far; session._apply_pending_ramps reads the view axis from the camera's world matrix after a view-layer update; materials.apply_depth_falloff keys the Map Range on Camera Data 'View Z Depth' instead of 'View Distance'. No API or serialised-scene change, so no serde.SCHEMA_VERSION bump; the old bounding-sphere span is replaced, not kept selectable. molrender's suite: 308 passed, 4 skipped (302 before). The summary line's '4b26311-dirty' covers this change and the unrelated docs edit. render_box_grid.scene_for refuses a depth_cue on a molrender without view.depth_span.) The mix is in linear light, so a strength lightens far atoms by much more than that fraction in the sRGB picture.",
+      "limits": "A periodic cell drawn as a finite segment: both rims are cut ends of an infinite tube, not real tube ends; from 8 degrees the top rim reads as a nearly flat edge rather than an opening. The staged frame cuts the cell between rings (two_dimensional_frames.widest_gap_shift, 7 atoms moved by c), so the rims are clean armchair edges. Self-framed: its scale is not the bilayer's, so the plate must not compare their sizes.",
+      "alt": "A short segment of a (6,6) boron nitride nanotube standing upright, its wall a hexagonal network of alternating boron and nitrogen atoms, slightly roughened by thermal motion.",
+      "candidates": [
+        {
+          "direction": [
+            0.7,
+            -0.7,
+            0.14
+          ],
+          "previewed": "production with the atom-span cue (77 s), then the committed render",
+          "verdict": "Chosen. The near wall at full colour along its length, the far wall receding."
+        },
+        {
+          "direction": [
+            0.68,
+            -0.68,
+            0.27
+          ],
+          "previewed": "production with the atom-span cue (66 s)",
+          "verdict": "16 degrees up: the near wall's bottom rings start to fade. Rejected."
+        },
+        {
+          "direction": [
+            0.6,
+            -0.6,
+            0.53
+          ],
+          "previewed": "drafts and production in rounds 1-2, and production with the atom-span cue at 0.3, 0.45 and 0.6",
+          "verdict": "The round-1 and round-2 choice. Rejected under the depth cue: from 32 degrees the near wall's lower half fades with the far wall."
+        },
+        {
+          "direction": [
+            0.4,
+            -0.8,
+            0.45
+          ],
+          "previewed": "scratch projection only",
+          "verdict": "Much the same picture as the 32-degree view. Rejected."
+        }
+      ],
+      "radii": {
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.22,
+        "why": "The plate's values (0.4 and 0.22 A); boron and nitrogen at 0.4/1.70 of their Molecular Nodes van der Waals radii (0.45 and 0.36 A)."
+      },
+      "rig": "Cycles, molrender's PRODUCTION tier with the excited-states hero's settings (manifest light and quality, Patrick 2026-10-17): diffuse and glossy bounces 5, Fast GI kept on but taking over only at bounce 5 (ao_bounces_render 5, fast_gi_method REPLACE); the RIG lights (three-point key at 2 W, sun fill 1.5 W/m2, side light 12 W) plus the light from below at 8 W (under_power), studio HDRI at 0.8; every material molrender's Principled BSDF Solid at the matte settings (roughness 0.9, specular 0.15). Species colours from constants.SPECIES_COLOUR, no manifest override, ramped toward white by the depth cue; sticks in the palette's carbon. molrender at 4b26311 with the uncommitted atom-span depth ramp (see molrender). Rendered inside the session sandbox, where no GPU is visible (no /dev/nvidia*), so Cycles ran on the CPU.",
+      "wall_time_s": 76,
+      "summary_line": "hbn-nanotube: 144 atoms, wall 76 s, blender exit 0, src/content/work/figures/two-dimensional-and-confined/hbn-nanotube.png, crop 1081 px, border strays (row, column, rgb): none, versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (4b26311-dirty)",
+      "png": {
+        "path": "src/content/work/figures/two-dimensional-and-confined/hbn-nanotube.png",
+        "size_px": [
+          1081,
+          1081
+        ],
+        "mode": "RGB"
+      },
+      "depth_cue_trials": [
+        {
+          "ramp": "atom span",
+          "strength": 0.6,
+          "verdict": "The far wall and the bilayer's back corner wash almost to white. Rejected."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.45,
+          "verdict": "The bilayer's back tip goes nearly white. Rejected."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.35,
+          "verdict": "Chosen for both panels. The near wall and the bilayer's front corner keep their colour, the far wall and the back corner recede and stay readable."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.3,
+          "verdict": "Much the same as 0.35, the far side a touch less distinct. Rejected for 0.35, one value for the plate."
+        },
+        {
+          "ramp": "bounding sphere (round 2)",
+          "strength": "0.15, 0.25 (chosen then), 0.35, 0.5, 0.7, 0.9",
+          "verdict": "Superseded: with the sphere span the near wall was mixed by about a third of the strength and the far side never reached it."
+        }
+      ],
+      "depth_cue": {
+        "strength": 0.35
+      },
+      "molrender": "molrender at 4b26311 on fix-masked-layer-collision plus an uncommitted change (2026-10-17, Patrick: 'Patch molrender, re-render'; under review, to be committed by the coordinator), 8 files, 314 insertions, 62 deletions in src/ and tests/: the deferred depth ramp spans the rendered atoms instead of the bounding sphere. view.depth_points (each visible object's vertices, i.e. its atoms; bounding-box corners for a vertex-less volume; hidden objects skipped) and view.depth_span (nearest and farthest camera depth along the camera's view axis) give near and far; session._apply_pending_ramps reads the view axis from the camera's world matrix after a view-layer update; materials.apply_depth_falloff keys the Map Range on Camera Data 'View Z Depth' instead of 'View Distance'. No API or serialised-scene change, so no serde.SCHEMA_VERSION bump; the old bounding-sphere span is replaced, not kept selectable. molrender's suite: 308 passed, 4 skipped (302 before). The summary line's '4b26311-dirty' covers this change and the unrelated docs edit. render_box_grid.scene_for refuses a depth_cue on a molrender without view.depth_span."
+    },
+    "hbn-bilayer": {
+      "manifest": "scripts/figures/data/two-dimensional-and-confined/manifest.json",
+      "source": "hbn-bilayer-frame-218.xyz",
+      "direction": [
+        -0.847,
+        -0.489,
+        0.208
+      ],
+      "resolution": [
+        1200,
+        1200
+      ],
+      "margin": 1.15,
+      "why": "Looked at along the long diagonal of the 60-degree rhombic cell from 12 degrees above the sheets: low enough that the two sheets, stacked boron over nitrogen, separate in the picture with a visible gap, and along the diagonal so the cell projects about as wide as it is deep. Square and uncaged, the render is cropped to its ink plus 3% (785 px); the ink is about twice as wide as it is tall, so the square keeps white bands above and below. Depth cue {'strength': 0.35} (Patrick, 2026-10-17): molrender's DepthRamp toward the backdrop's white on every subject material, now spanning the atoms: no mix at the nearest atom's camera depth, the full strength at the farthest's (molrender at 4b26311 on fix-masked-layer-collision plus an uncommitted change (2026-10-17, Patrick: 'Patch molrender, re-render'; under review, to be committed by the coordinator), 8 files, 314 insertions, 62 deletions in src/ and tests/: the deferred depth ramp spans the rendered atoms instead of the bounding sphere. view.depth_points (each visible object's vertices, i.e. its atoms; bounding-box corners for a vertex-less volume; hidden objects skipped) and view.depth_span (nearest and farthest camera depth along the camera's view axis) give near and far; session._apply_pending_ramps reads the view axis from the camera's world matrix after a view-layer update; materials.apply_depth_falloff keys the Map Range on Camera Data 'View Z Depth' instead of 'View Distance'. No API or serialised-scene change, so no serde.SCHEMA_VERSION bump; the old bounding-sphere span is replaced, not kept selectable. molrender's suite: 308 passed, 4 skipped (302 before). The summary line's '4b26311-dirty' covers this change and the unrelated docs edit. render_box_grid.scene_for refuses a depth_cue on a molrender without view.depth_span.) The mix is in linear light, so a strength lightens far atoms by much more than that fraction in the sRGB picture.",
+      "limits": "The cell's edges are cuts through a periodic sheet, so the rhombus has ragged edges with some atoms on one or two bonds (25 on one bond), most visible as a short B-N-B chain at the far corner. The thermal ripple (0.12-0.16 A per sheet) is too small to see at this scale. Self-framed: its scale is not the tube's. Depth cue: the cue fades the cell's back corner and keeps the front corner at full colour, so the pair reads with depth; it does not make the lower sheet recede behind the upper one. In this 12-degree view the two sheets are 0.7 A apart in camera depth against about 30 A of depth across the cell, so they differ by about 2% of the ramp. Two other views were rendered with the atom-span cue at 0.45: from 20 degrees the lower sheet shows only at the front edge, and from 60 degrees the lower sheet's atoms show through the upper sheet's hexagons, a little paler, but the pair reads as one dense lattice (boron sits over nitrogen). So the view is kept.",
+      "alt": "Two stacked sheets of hexagonal boron nitride seen at a low angle, about 3.4 angstrom apart, each a honeycomb of alternating boron and nitrogen atoms.",
+      "candidates": [
+        {
+          "direction": [
+            -0.75,
+            -0.43,
+            0.5
+          ],
+          "previewed": "Blender draft (110 s)",
+          "verdict": "30 degrees up: the upper sheet covers the lower, and the pair reads as one thick lattice. Rejected."
+        },
+        {
+          "direction": [
+            -0.847,
+            -0.489,
+            0.208
+          ],
+          "previewed": "Blender draft (110 s) and production",
+          "verdict": "Chosen. Two sheets with a gap between them, each a honeycomb."
+        },
+        {
+          "direction": [
+            -0.814,
+            -0.47,
+            0.342
+          ],
+          "previewed": "Blender draft (110 s); production with the atom-span cue at 0.45 (39 s)",
+          "verdict": "20 degrees up: the lower sheet shows only at the front edge. Rejected. Round 3: 20 degrees up, the lower sheet shows only at the front edge. Rejected."
+        },
+        {
+          "direction": [
+            -0.6,
+            -0.35,
+            0.72
+          ],
+          "previewed": "Blender draft (109 s)",
+          "verdict": "46 degrees up: a rhombus of hexagons, the second sheet invisible behind the first (B sits over N). Rejected."
+        },
+        {
+          "direction": [
+            0.3,
+            -0.8,
+            0.5
+          ],
+          "previewed": "scratch projection only",
+          "verdict": "Across the cell: ink 26.7 x 10.5 A, too wide for a square panel. Rejected."
+        },
+        {
+          "direction": [
+            -0.43,
+            -0.25,
+            0.87
+          ],
+          "previewed": "production with the atom-span cue at 0.45 (45 s)",
+          "verdict": "Round 3: 60 degrees up, the lower sheet's atoms show through the hexagons but the pair reads as one lattice. Rejected."
+        }
+      ],
+      "radii": {
+        "sphere_radius_angstrom": 0.4,
+        "bond_radius_angstrom": 0.22,
+        "why": "The plate's values (0.4 and 0.22 A), as the nanotube."
+      },
+      "rig": "Cycles, molrender's PRODUCTION tier with the excited-states hero's settings (manifest light and quality, Patrick 2026-10-17): diffuse and glossy bounces 5, Fast GI kept on but taking over only at bounce 5 (ao_bounces_render 5, fast_gi_method REPLACE); the RIG lights (three-point key at 2 W, sun fill 1.5 W/m2, side light 12 W) plus the light from below at 8 W (under_power), studio HDRI at 0.8; every material molrender's Principled BSDF Solid at the matte settings (roughness 0.9, specular 0.15). Species colours from constants.SPECIES_COLOUR, no manifest override, ramped toward white by the depth cue; sticks in the palette's carbon. molrender at 4b26311 with the uncommitted atom-span depth ramp (see molrender). Rendered inside the session sandbox, where no GPU is visible (no /dev/nvidia*), so Cycles ran on the CPU.",
+      "wall_time_s": 36,
+      "summary_line": "hbn-bilayer: 196 atoms, wall 36 s, blender exit 0, src/content/work/figures/two-dimensional-and-confined/hbn-bilayer.png, crop 785 px, border strays (row, column, rgb): none, versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (4b26311-dirty)",
+      "png": {
+        "path": "src/content/work/figures/two-dimensional-and-confined/hbn-bilayer.png",
+        "size_px": [
+          785,
+          785
+        ],
+        "mode": "RGB"
+      },
+      "depth_cue_trials": [
+        {
+          "ramp": "atom span",
+          "strength": 0.6,
+          "verdict": "The far wall and the bilayer's back corner wash almost to white. Rejected."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.45,
+          "verdict": "The bilayer's back tip goes nearly white. Rejected."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.35,
+          "verdict": "Chosen for both panels. The near wall and the bilayer's front corner keep their colour, the far wall and the back corner recede and stay readable."
+        },
+        {
+          "ramp": "atom span",
+          "strength": 0.3,
+          "verdict": "Much the same as 0.35, the far side a touch less distinct. Rejected for 0.35, one value for the plate."
+        },
+        {
+          "ramp": "bounding sphere (round 2)",
+          "strength": "0.15, 0.25 (chosen then), 0.35, 0.5, 0.7, 0.9",
+          "verdict": "Superseded: with the sphere span the near wall was mixed by about a third of the strength and the far side never reached it."
+        }
+      ],
+      "depth_cue": {
+        "strength": 0.35
+      },
+      "molrender": "molrender at 4b26311 on fix-masked-layer-collision plus an uncommitted change (2026-10-17, Patrick: 'Patch molrender, re-render'; under review, to be committed by the coordinator), 8 files, 314 insertions, 62 deletions in src/ and tests/: the deferred depth ramp spans the rendered atoms instead of the bounding sphere. view.depth_points (each visible object's vertices, i.e. its atoms; bounding-box corners for a vertex-less volume; hidden objects skipped) and view.depth_span (nearest and farthest camera depth along the camera's view axis) give near and far; session._apply_pending_ramps reads the view axis from the camera's world matrix after a view-layer update; materials.apply_depth_falloff keys the Map Range on Camera Data 'View Z Depth' instead of 'View Distance'. No API or serialised-scene change, so no serde.SCHEMA_VERSION bump; the old bounding-sphere span is replaced, not kept selectable. molrender's suite: 308 passed, 4 skipped (302 before). The summary line's '4b26311-dirty' covers this change and the unrelated docs edit. render_box_grid.scene_for refuses a depth_cue on a molrender without view.depth_span."
     }
   }
 }

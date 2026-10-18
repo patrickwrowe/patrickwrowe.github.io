@@ -71,6 +71,7 @@ OPTIONAL_KEYS = frozenset(
         "sphere_scale",
         "light",
         "quality",
+        "depth_cue",
     }
 )
 # What a manifest's "light" may override in constants.RIG, and its "quality" in molrender's
@@ -79,6 +80,9 @@ LIGHT_OVERRIDE_KEYS = frozenset({"key_power", "sun_strength", "side_power", "und
 QUALITY_OVERRIDE_KEYS = frozenset(
     {"diffuse_bounces", "glossy_bounces", "ao_bounces_render", "fast_gi_method"}
 )
+# What a manifest's "depth_cue" holds: how far the farthest atoms fade toward the backdrop's
+# white (molrender DepthRamp; Patrick, 2026-10-17: the hBN nanotube and bilayer).
+DEPTH_CUE_KEYS = frozenset({"strength"})
 ALLOWED_KEYS = frozenset(REQUIRED_KEYS) | frozenset(BOX_KEYS) | OPTIONAL_KEYS
 PANEL_ID = re.compile(r"[\w.-]+")
 ELEMENT_SYMBOL = re.compile(r"[A-Z][a-z]?")
@@ -176,6 +180,16 @@ def _is_quality_override(value: object) -> bool:
     )
 
 
+def _is_depth_cue(value: object) -> bool:
+    """{"strength": s}, 0 < s <= 1: the mix toward the backdrop at the far side of the subject."""
+    return (
+        isinstance(value, dict)
+        and set(value) == DEPTH_CUE_KEYS
+        and _is_number(value["strength"])
+        and 0 < value["strength"] <= 1
+    )
+
+
 def _is_chain_colour_map(value: object) -> bool:
     """A dict of one-character chain id ("A") to sRGB hex ("#rrggbb"), possibly empty."""
     return (
@@ -237,6 +251,7 @@ VALUE_RULES = {
         f"a map of {sorted(QUALITY_OVERRIDE_KEYS)}: bounces of at least 1, "
         'fast_gi_method "REPLACE" or "ADD"',
     ),
+    "depth_cue": (_is_depth_cue, 'a map {"strength": s} with 0 < s <= 1'),
     "source": (
         lambda value: isinstance(value, str) and Path(value).is_file(),
         "the path of an existing XYZ file (a PDB file for a protein panel)",

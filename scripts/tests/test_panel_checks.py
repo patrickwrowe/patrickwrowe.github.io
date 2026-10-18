@@ -217,6 +217,19 @@ def test_load_panels_accepts_a_sphere_scale_and_light_and_quality_overrides(tmp_
     assert panel["sphere_scale"] == {"Mg": 4} and panel["light"] == {"under_power": 8.0}
 
 
+def test_load_panels_takes_a_plate_depth_cue_and_a_panel_one_overrides_it(tmp_path):
+    manifest_path = _manifest(
+        tmp_path,
+        [
+            {"id": "a", "source": "a.xyz"},
+            {"id": "b", "source": "b.xyz", "depth_cue": {"strength": 1}},
+        ],
+        depth_cue={"strength": 0.4},
+    )
+    first, second = panel_checks.load_panels(manifest_path)
+    assert first["depth_cue"] == {"strength": 0.4} and second["depth_cue"] == {"strength": 1}
+
+
 @pytest.mark.parametrize(
     ("key", "value"),
     [
@@ -228,6 +241,12 @@ def test_load_panels_accepts_a_sphere_scale_and_light_and_quality_overrides(tmp_
         ("quality", {"diffuse_bounces": True}),
         ("quality", {"fast_gi_method": "MULTIPLY"}),
         ("quality", {"samples": 64}),
+        ("depth_cue", {"strength": 0}),
+        ("depth_cue", {"strength": 1.5}),
+        ("depth_cue", {"strength": True}),
+        ("depth_cue", {"strength": 0.5, "toward": "#ffffff"}),
+        ("depth_cue", {}),
+        ("depth_cue", 0.5),
     ],
 )
 def test_load_panels_refuses_a_bad_override_naming_its_key(tmp_path, key, value):

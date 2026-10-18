@@ -114,6 +114,15 @@ Manifest (JSON; plate-level keys are defaults every panel may override):
     quality                optional {"diffuse_bounces": 5, ...}: Cycles settings replaced in
                            molrender's tier (panel_checks.QUALITY_OVERRIDE_KEYS); light and
                            quality need molrender at commit 4b26311 or later
+    depth_cue              optional {"strength": s}, 0 < s <= 1: every material of the subject
+                           mixes its colour toward the backdrop's white (molrender
+                           Material.ramped, a DepthRamp) by camera depth, from none at the
+                           nearest rendered atom to s at the farthest, so far atoms recede
+                           into the plate (the hBN nanotube and bilayer, Patrick,
+                           2026-10-17); the hidden cage is not ramped. Needs molrender's
+                           atom-span ramp (molrender.blender.view.depth_span, commit 9ed1235
+                           or later on fix-masked-layer-collision); `scene_for` refuses an
+                           older one, whose ramp spans the bounding sphere instead
     chain_colour           protein only, optional {"A": "#rrggbb", ...}: sRGB hex per chain
                            of cartoon_chains, which beats constants.CHAIN_COLOUR for that
                            chain; a protein of more cartoon chains than CHAIN_COLOUR holds
@@ -176,6 +185,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import os
 import shutil
 import subprocess
@@ -523,6 +533,10 @@ def scene_for(
     atoms (the hero) it is the Cartoon layers alone. The masks are measured on `subject`,
     the file `prepare` wrote, by `boxprep.read_pdb`.
 
+    With a manifest `depth_cue`, every subject layer's material is
+    `material.ramped(World.background, strength)`: molrender mixes its colour toward the
+    white backdrop by camera depth, from the nearest rendered atom to the farthest.
+
     One layer per chain needs a molrender whose camera fit evaluates the scene after its
     last layer: one that does not fits the frame to every layer but the last, which cut the
     hero's last chain off at the top edge (2026-10-09), and the border check refused it.
@@ -543,6 +557,9 @@ def scene_for(
         ValueError: If a drawn species has a colour neither in the panel's `colour` map nor
             in `constants.SPECIES_COLOUR`, or a cartoon chain has none in `chain_colour` and
             lies beyond the length of `constants.CHAIN_COLOUR`.
+        RuntimeError: If a `light` or `quality` key is one the installed molrender lacks
+            (it needs 4b26311), or the panel has a `depth_cue` and the installed molrender
+            has no atom-span depth ramp (`molrender.blender.view.depth_span`).
     """
     sphere_radius = float(spec["sphere_radius_angstrom"]) / VDW_RADIUS_ANGSTROM["C"]
     protein = boxprep.read_pdb(subject) if spec["kind"] == PanelKind.PROTEIN else None
@@ -624,6 +641,28 @@ def scene_for(
             for symbol in symbols
         )
         subject_layers = tuple(layers)
+    world = World(strength=WORLD_STRENGTH)
+    if cue := spec.get("depth_cue"):
+        # The strengths in the manifests are tuned to molrender's atom-span ramp (nearest atom
+        # unmixed, farthest at the strength); an older molrender spreads the same strength over
+        # the bounding sphere and draws a different picture with no error, so refuse it.
+        # Imported here, not at the top: the tests stand a single-module fake in for molrender.
+        try:
+            atom_span = hasattr(importlib.import_module("molrender.blender.view"), "depth_span")
+        except ImportError:
+            atom_span = False
+        if not atom_span:
+            raise RuntimeError(
+                f"panel {spec['id']}: depth_cue needs molrender's atom-span depth ramp "
+                "(molrender.blender.view.depth_span, commit 9ed1235 or later on the branch "
+                "fix-masked-layer-collision); this molrender ramps over the bounding sphere"
+            )
+        # Every subject material fades with camera depth toward the backdrop's white, so the
+        # far side recedes into the plate; the hidden cage is not drawn and not ramped.
+        subject_layers = tuple(
+            replace(layer, material=layer.material.ramped(world.background, cue["strength"]))
+            for layer in subject_layers
+        )
     entities = [
         Structure(path=subject, name="subject", layers=subject_layers, remove_solvent=False)
     ]
@@ -645,7 +684,7 @@ def scene_for(
     return Scene(
         entities=tuple(entities),
         view=View(direction=tuple(spec["direction"]), margin=float(spec.get("margin", 1.02))),
-        light=Light(**{**RIG, **light}, world=World(strength=WORLD_STRENGTH)),
+        light=Light(**{**RIG, **light}, world=world),
         quality=replace(tier, view_transform="Standard", look=None, **quality),
         resolution=tuple(spec["resolution"]),
         transparent=False,

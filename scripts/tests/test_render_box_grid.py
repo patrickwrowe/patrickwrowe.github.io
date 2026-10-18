@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 import types
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +36,10 @@ class StandInSolid:
     coat: float = 0.20
     subsurface: float = 0.20
     specular: float = 0.5
+    ramp: tuple[tuple[float, float, float], float] | None = None
+
+    def ramped(self, toward, strength):
+        return replace(self, ramp=(toward, strength))
 
 
 @dataclass(frozen=True)
@@ -109,6 +113,7 @@ class StandInQuality:
 @dataclass(frozen=True)
 class StandInWorld:
     strength: float = 1.0
+    background: tuple[float, float, float] = (1.0, 1.0, 1.0)
 
 
 @dataclass(frozen=True)
@@ -517,6 +522,53 @@ def test_a_sphere_scale_enlarges_one_species_and_light_and_quality_override_the_
     )
     assert scene.light.under_power == 8.0 and scene.light.side_power == RIG["side_power"]
     assert (scene.quality.diffuse_bounces, scene.quality.fast_gi_method) == (5, "ADD")
+
+
+def _atom_span_ramp(monkeypatch, present: bool = True) -> None:
+    """A stand-in `molrender.blender.view`, with or without the atom-span `depth_span`."""
+    view = types.ModuleType("molrender.blender.view")
+    if present:
+        view.depth_span = lambda points, origin, forward: (0.0, 1.0)
+    monkeypatch.setitem(sys.modules, "molrender.blender.view", view)
+
+
+def test_a_depth_cue_ramps_every_subject_material_toward_the_backdrop_and_not_the_cage(
+    render_box_grid_module, tmp_path, monkeypatch
+):
+    _atom_span_ramp(monkeypatch)
+    plain, _ = _scene(render_box_grid_module, tmp_path, ["B", "N", "B", "N"], cage=True)
+    assert {layer.material.ramp for layer in plain.entities[0].layers} == {None}
+    scene, _ = _scene(
+        render_box_grid_module,
+        tmp_path,
+        ["B", "N", "B", "N"],
+        cage=True,
+        depth_cue={"strength": 0.5},
+    )
+    subject, cage = scene.entities
+    assert len(subject.layers) == 3  # the sticks and one sphere layer per species
+    assert {layer.material.ramp for layer in subject.layers} == {((1.0, 1.0, 1.0), 0.5)}
+    assert cage.layers[0].material.ramp is None
+    # Nothing else about the layers changes: the ramp is the only difference.
+    assert [replace(layer.material, ramp=None) for layer in subject.layers] == [
+        layer.material for layer in plain.entities[0].layers
+    ]
+    one_species, _ = _scene(
+        render_box_grid_module, tmp_path, ["C"] * 4, depth_cue={"strength": 0.3}
+    )
+    assert one_species.entities[0].layers[0].material.ramp == ((1.0, 1.0, 1.0), 0.3)
+
+
+def test_a_depth_cue_on_a_molrender_without_the_atom_span_ramp_is_refused(
+    render_box_grid_module, tmp_path, monkeypatch
+):
+    # The strengths are tuned to the atom span; an older molrender would ramp over the
+    # bounding sphere and draw a paler near side with no error.
+    _atom_span_ramp(monkeypatch, present=False)
+    with pytest.raises(RuntimeError, match=r"panel .*depth_span.*9ed1235"):
+        _scene(render_box_grid_module, tmp_path, ["B", "N"], depth_cue={"strength": 0.3})
+    # Without a depth cue nothing is asked of molrender.blender.view.
+    _scene(render_box_grid_module, tmp_path, ["B", "N"])
 
 
 def test_a_light_key_the_installed_molrender_lacks_is_refused_naming_the_commit(
@@ -998,6 +1050,46 @@ def test_the_fmo_hero_is_prepared_with_the_568_bonds_of_its_eight_bchl_and_no_ot
     assert len(magnesium) == 8
     for atom in magnesium:
         assert sorted(atoms[partner][2][0] for partner in partners[atom]) == ["N"] * 4
+
+
+TWO_D_MANIFEST = REPO / "scripts/figures/data/two-dimensional-and-confined/manifest.json"
+
+
+def test_the_vermiculite_film_is_prepared_with_bare_lithium_drawn_large_and_whole_waters(
+    render_box_grid_module, tmp_path
+):
+    # The real staged frame through the real `prepare` and `scene_for`: lithium is a bare
+    # ion at 2.5 times the sphere radius, and every hydrogen is bonded to one oxygen.
+    spec = next(
+        panel
+        for panel in panel_checks.load_panels(TWO_D_MANIFEST)
+        if panel["id"] == "vermiculite-li-film"
+    )
+    subject, cage, species = render_box_grid_module.prepare(spec, tmp_path)
+    assert cage is None
+    assert {symbol: species.count(symbol) for symbol in set(species)} == {
+        "Al": 12, "H": 264, "Li": 12, "Mg": 36, "O": 264, "Si": 36,
+    }  # fmt: skip
+    partners = {
+        int(line[6:11]): [int(line[start : start + 5]) for start in range(11, len(line), 5)]
+        for line in subject.read_text().splitlines()
+        if line.startswith("CONECT")
+    }
+    for serial, symbol in enumerate(species, start=1):
+        if symbol == "Li":
+            assert serial not in partners
+        if symbol == "H":
+            assert [species[partner - 1] for partner in partners[serial]] == ["O"]
+    scene = render_box_grid_module.scene_for(spec, subject, None, species, draft=False)
+    _, *spheres = scene.entities[0].layers
+    radius = {
+        species[mask.index(True)]: layer.style.radius
+        for layer in spheres
+        for mask in [list(layer.select.mask)]
+    }
+    assert radius["Li"] == pytest.approx(2.5 * radius["O"]) and radius["O"] == radius["Si"]
+    assert scene.light.under_power == 8.0
+    assert (scene.quality.ao_bounces_render, scene.quality.fast_gi_method) == (5, "REPLACE")
 
 
 PHOSPHATE_RECORDS = [
