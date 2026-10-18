@@ -213,13 +213,15 @@
         "sphere_radius_angstrom": 0.4,
         "bond_radius_angstrom": 0.22,
         "sphere_scale": {
-          "Li": 2.5
+          "Li": 2.5,
+          "Mo": 1.5,
+          "S": 1.5
         },
-        "why": "The plate's values (0.4 and 0.22 A); Li at 2.5 times, as on the vermiculite plate."
+        "why": "The plate's values (0.4 and 0.22 A); Li at 2.5 times, as on the vermiculite plate; Mo and S at 1.5 times (2026-10-18) so the sheets read as atoms rather than as the grey stick lattice between them."
       },
       "rig": "Cycles, molrender's PRODUCTION tier with the excited-states hero's settings (manifest light and quality, Patrick 2026-10-17): diffuse and glossy bounces 5, Fast GI kept on but taking over only at bounce 5 (ao_bounces_render 5, fast_gi_method REPLACE); the RIG lights (three-point key at 2 W, sun fill 1.5 W/m2, side light 12 W) plus the light from below at 8 W (under_power), studio HDRI at 0.8; every material molrender's Principled BSDF Solid at the matte settings (roughness 0.9, specular 0.15). Species colours from constants.SPECIES_COLOUR, no manifest override; sticks in the palette's carbon. molrender at commit 4b26311 on fix-masked-layer-collision ('-dirty' is an uncommitted docs edit in molrender that is not this work's). Rendered inside the session sandbox, where no GPU is visible (no /dev/nvidia*), so Cycles ran on the CPU.",
-      "wall_time_s": 160,
-      "summary_line": "hero: 652 atoms, wall 160 s, blender exit 0, src/content/work/figures/two-dimensional-and-confined/hero.png, crop skipped (uncaged, but 1728 x 972 is not square), border strays (row, column, rgb): [(0, 1727, [235, 255, 236])], versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (4b26311-dirty)",
+      "wall_time_s": 19,
+      "summary_line": "hero: 652 atoms, wall 19 s, blender exit 0, crop skipped (uncaged, but 1728 x 972 is not square), versions: Blender 5.1.2, Molecular Nodes 4.5.13, molrender 0.1.0 (9ed1235-dirty); Cycles on the GPUs, outside the sandbox",
       "png": {
         "path": "src/content/work/figures/two-dimensional-and-confined/hero.png",
         "size_px": [
@@ -227,6 +229,13 @@
           972
         ],
         "mode": "RGB"
+      },
+      "brightness_revision": {
+        "date": "2026-10-18",
+        "request": "Patrick: the hero is 'very dark'; then 'The mos2 needs to be brighter, but the h2O and ions not.'",
+        "measured_before": "ink luma (Rec. 709, non-white pixels): upper sheet 75.9, water band 131.9, lower sheet 80.6; 30% of the upper sheet below 60",
+        "rejected": "More light (key 4, sun 4.5, side 20) and a stronger HDRI (World.strength 1.4, 2.0): the sheets rose to 105-120 but the water and lithium brightened with them (water 162-171), which Patrick did not want.",
+        "chosen": "Unchanged light; molybdenum #143a39 -> #5b8a8f and sulfur #53562a -> #b3a447 site-wide (--species-mo, --species-s; used only by this render), Mo and S spheres 1.5 times. Sheets 137.8 / 145.4, water 128.4. Patrick chose this ('brass sulfur') over softer ochre #9c9358 and khaki #8f8a63."
       }
     },
     "vermiculite-li-film": {
